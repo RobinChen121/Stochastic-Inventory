@@ -12,7 +12,7 @@ import umontreal.ssj.rng.RandomStream;
 /** 
 * @author chen zhen 
 * @version 创建时间：2018年4月11日 下午4:18:55 
-* @value 类说明: random sampling and latin hypercube sampling
+* @value random sampling and latin hypercube sampling
 */
 
 public class Sampling {
