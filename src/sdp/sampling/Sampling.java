@@ -2,8 +2,6 @@ package sdp.sampling;
 
 import java.util.Arrays;
 
-import cern.jet.random.Uniform;
-import sdp.inventory.State;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.randvar.UniformGen;
@@ -136,8 +134,7 @@ public class Sampling {
 		for (int i = 0; i < meanDemand.length; i++)
 			distributions[i] = new PoissonDist(meanDemand[i]);
 		
-		Sampling sampling =new Sampling();
-		double[][] samples = sampling.generateRanSamples(distributions, sampleNum);
+		double[][] samples = Sampling.generateRanSamples(distributions, sampleNum);
 		System.out.println(Arrays.deepToString(samples));
 		
 		for (int i = 0; i < meanDemand.length; i++) {
