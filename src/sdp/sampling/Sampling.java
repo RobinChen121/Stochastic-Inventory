@@ -2,6 +2,8 @@ package sdp.sampling;
 
 import java.util.Arrays;
 
+import cern.jet.random.Uniform;
+import sdp.inventory.State;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.randvar.UniformGen;
@@ -22,17 +24,23 @@ public class Sampling {
 	/**
 	 * Reinitializes the stream to its initial state.
 	 */
-	public void resetStartStream(){
+	public static void resetStartStream(){
 		stream.resetStartStream();
 	}
 	
+	/**
+	 * Reinitializes the stream to the beginning of its next substream.
+	 */
+	public static void resetNextSubstream(){
+		stream.resetNextSubstream();
+	}
 	
 	/** random sampling
 	 * @param distributions
 	 * @param sampleNum
 	 * @return a 2D random samples
 	 */
-	public double[][] generateRanSamples(Distribution[] distributions, int sampleNum){
+	public static double[][] generateRanSamples(Distribution[] distributions, int sampleNum){
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum]; 
 		
@@ -44,17 +52,33 @@ public class Sampling {
 		return samples;
 	}
 	
+	/**
+	 * 
+	 * @param distributions
+	 * @return one demands sample
+	 */
+	
+	public static double[] getNextSample(Distribution[] distributions) {
+		int periodNum = distributions.length;
+		double[] sample = new double[periodNum];
+		UniformGen uniform = new UniformGen(stream);
+		for (int i = 0; i < periodNum; i++) {
+			sample[i] = distributions[i].inverseF(uniform.nextDouble());
+		}
+		return sample;
+	}
+	
 	
 	/** latin hypercube sampling
 	 * @param distributions
 	 * @param sampleNum
 	 * @return a 2D random samples
 	 */
-	public double[][] generateLHSamples(Distribution[] distributions, int sampleNum){
+	public static double[][] generateLHSamples(Distribution[] distributions, int sampleNum){
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum]; 
 		
-		// 在每个[i/n, (i+1)/n] 内生成一个随机概率，然后根据概率得到指定分布的数
+		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
 		for (int i = 0; i < periodNum; i++)
 			for (int j = 0; j < sampleNum; j++) {
 				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
@@ -72,7 +96,7 @@ public class Sampling {
 	 * @param sampleNum
 	 * @return a 2D random samples
 	 */
-	public double[][] generateLHSamples(Distribution[] distributions, int sampleNum, double frac){
+	public static double[][] generateLHSamples(Distribution[] distributions, int sampleNum, double frac){
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum]; 
 		

@@ -4,6 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/apache"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ssj"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/cplex"/>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="capacitated/fitss/StructureDPforTwosS.java" kind="src" path="src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

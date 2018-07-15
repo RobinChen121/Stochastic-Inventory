@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 import javax.swing.JFrame;
 
@@ -18,7 +19,9 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import umontreal.ssj.probdist.NormalDist;
+import sdp.inventory.GetPmf;
+import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.PoissonDist;
 
 public class MIPsS {
 	double iniInventory;
@@ -52,30 +55,12 @@ public class MIPsS {
 		this.pmf = getPmf(demands);
 	}
 	
-	double[][][] getPmf(double[] demands){
+	double[][][] getPmf(double[] meanDemand){
 		int T = demands.length;
-		NormalDist[] distributions = new NormalDist[T];
-		double[] supportLB = new double[T];
-		double[] supportUB = new double[T];
 		
-		for (int i = 0; i < T; i++) {
-			distributions[i] = new NormalDist(demands[i], 0.25*demands[i]);
-			supportLB[i] = distributions[i].inverseF(1-truncationQuantile);
-			supportUB[i] = distributions[i].inverseF(truncationQuantile);
-		}
-
-		double[][][] pmf = new double[T][][];
-		for (int i=0; i<T; i++)
-		{
-			int demandLength = (int) ((supportUB[i] - supportLB[i]+1)/stepSize);
-			pmf[i] = new double[demandLength][];
-			for (int j=0; j<demandLength; j++) {
-				pmf[i][j] = new double[2];
-				pmf[i][j][0] = supportLB[i] + j*stepSize;
-				pmf[i][j][1] = (distributions[i].cdf(pmf[i][j][0] + stepSize/2)-distributions[i].cdf(pmf[i][j][0] - stepSize/2))
-						/truncationQuantile;
-			}
-		}
+		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+				.mapToObj(i -> new PoissonDist(meanDemand[i])).toArray(PoissonDist[]::new);
+		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 		return pmf;
 	}
 	
@@ -186,9 +171,9 @@ public class MIPsS {
 	void drawGy(int minInventory, int maxInventory) {	
 		ArrayList<Double> recordG = new ArrayList<Double>();
 		XYSeries seriesG = new XYSeries("xySeries");
+		setForGy();
 	    for (int iniInventory = minInventory; iniInventory <= maxInventory; iniInventory = iniInventory + 1) {
-	    	  int period = 1;
-	    	  setForGy();
+	    	  int period = 1;	    	  
 	    	  State initialState = new State(period, iniInventory);
 	    	  double finalValue = f(initialState);
 	    	  recordG.add(finalValue);
@@ -214,6 +199,38 @@ public class MIPsS {
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
+	
+	void drawxQ(int minInventory, int maxInventory) {	
+		ArrayList<Double> recordQ = new ArrayList<Double>();
+		XYSeries seriesQ = new XYSeries("xySeries");
+	    for (int iniInventory = minInventory; iniInventory <= maxInventory; iniInventory = iniInventory + 1) {
+	    	  int period = 1;
+	    	  State initialState = new State(period, iniInventory);
+	    	  f(initialState);
+	    	  double optQ = cacheActions.get(initialState);
+	    	  recordQ.add(optQ);
+	    	  seriesQ.add(iniInventory, optQ); 	  
+	    }
+				
+		XYSeriesCollection seriesCollection = new XYSeriesCollection();
+		seriesCollection.addSeries(seriesQ);
+		
+		JFreeChart chart = ChartFactory.createXYLineChart(
+				"Q with different x", // chart title
+				"x", // x axis label
+				"Q", // y axis label
+				seriesCollection, // data
+				PlotOrientation.VERTICAL,
+				false, // include legend
+				true, // tooltips
+				false // urls
+				);
+		
+		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
 		
 	public static void runMIPLB(double initialInventory, double[] meandemand, double fixedOrderingCost, 
 			double proportionalOrderingCost, double penaltyCost, int maxOrderQuantity) {
@@ -223,22 +240,26 @@ public class MIPsS {
 	
 	
 	public static void main(String[] args) {	
-		double[] demands = {20, 40, 60, 40};
+		double[] demands = {9, 23, 53, 29 };
 
 		double initialInventory = 0; 
 		double[] meanDemand = demands;
-		double fixedOrderingCost = 100; 
+		double fixedOrderingCost = 500; 
 		double proportionalOrderingCost = 0; 
-		double holdingCost = 1;
+		double holdingCost = 2;
 		double penaltyCost = 10;
-		int maxOrderQuantity = 200;
+		int maxOrderQuantity = 100;
 		
 		MIPsS inventory = new MIPsS(initialInventory, fixedOrderingCost, proportionalOrderingCost, holdingCost, penaltyCost, 
 				meanDemand, maxOrderQuantity);
 		
 		inventory.runSDP();
-		int minInventory = 0;
+		int minInventory = -66;
 		int maxInventory = 200;
-	    inventory.drawGy(minInventory, maxInventory);
+		inventory.drawxQ(minInventory, maxInventory);
+		// since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again
+		MIPsS inventory2 = new MIPsS(initialInventory, fixedOrderingCost, proportionalOrderingCost, holdingCost, penaltyCost, 
+				meanDemand, maxOrderQuantity);
+	    inventory2.drawGy(minInventory, maxInventory);
 	}
 }
