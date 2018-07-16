@@ -17,7 +17,7 @@ import umontreal.ssj.probdist.PoissonDist;
  *@author: Zhen Chen
  *@email: 15011074486@163.com
  *@date: Jul 14, 2018---1:06:15 PM
- *@description:  
+ *@description:  fit (s, S) levels for capacitated lot sizing problem
  */
 
 public class LevelFitsS {

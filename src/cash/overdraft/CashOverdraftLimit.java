@@ -17,7 +17,7 @@ import umontreal.ssj.probdist.PoissonDist;
 
 /**
  * @author chen zhen
- * @version 创建时间：2018年4月10日 下午9:38:22
+ * @version 2018, April 10th, 9:38:22 pm
  * @Description: consider business overdraft with limit in a cash stochastic lot
  *               sizing problem
  */

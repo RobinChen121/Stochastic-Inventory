@@ -19,7 +19,7 @@ import umontreal.ssj.probdist.PoissonDist;
 
 /**
  * @author chen zhen
- * @version 创建时间：2018年4月15日 上午10:32:46
+ * @version 2018, April 15th, 10:32:46 am
  * @Description: drawing pictures, see K convexity
  */
 public class CashConstraintDraw {

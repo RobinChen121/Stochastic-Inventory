@@ -18,7 +18,7 @@ import umontreal.ssj.probdist.PoissonDist;
 
 /** 
 * @author chen zhen 
-* @version 创建时间：2018年4月23日 下午9:38:22 
+* @version 2018, April 22th, 9:38:22 
 * @value testing for overdraft limit problem
 */
 public class CashOverdraftLimitTesting{

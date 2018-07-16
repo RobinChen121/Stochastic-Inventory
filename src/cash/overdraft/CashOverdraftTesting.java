@@ -19,7 +19,7 @@ import umontreal.ssj.probdist.PoissonDist;
 
 /**
  * @author chen zhen
- * @version 创建时间：2018年3月15日 下午6:31:10
+ * @version 2018 March 15th, 6:31:10 pm
  * @Description: testing overdraft sdp, 
  * if cash is integer, computation time is 35s; if one decimal, time is 312s
  */

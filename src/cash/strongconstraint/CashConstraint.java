@@ -17,9 +17,9 @@ import umontreal.ssj.probdist.PoissonDist;
 /**
  * @author: Zhen Chen
  * @email: 15011074486@163.com
- * @date 2018年3月3日 下午6:31:10
+ * @date 2018, March 3th, 6:31:10 pm
  * @Description stochastic lot sizing problem with strong cash balance
- *              constraint, provide a （s, C, S) policy
+ *              constraint, provide a (s, C, S) policy
  *
  */
 

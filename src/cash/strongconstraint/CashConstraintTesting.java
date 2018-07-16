@@ -17,7 +17,7 @@ import umontreal.ssj.probdist.PoissonDist;
 
 /** 
  * @author chen zhen 
- * @version 创建时间：2018年3月3日 下午6:31:10 
+ * @version 2018, March 3rd, 6:31:10 pm 
  * @Description: strong cash constraints testing
  */
 

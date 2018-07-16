@@ -11,7 +11,7 @@ import umontreal.ssj.rng.RandomStream;
 
 /** 
 * @author chen zhen 
-* @version 创建时间：2018年4月11日 下午4:18:55 
+* @version 2018, April 11th, 4:18:55 pm 
 * @value random sampling and latin hypercube sampling
 */
 
