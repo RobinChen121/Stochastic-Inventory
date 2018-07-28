@@ -27,15 +27,15 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = { 8, 10, 10 };
+		double[] meanDemand = {4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7};
 
-		double iniCash = 20;
+		double iniCash = 15;
 		double fixOrderCost = 10;
 		double variCost = 1;
-		double holdingCost = 1;
-		double price = 5;
+		double price = 4;
+		double holdingCost = 1;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 2000; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -83,7 +83,7 @@ public class CashConstraint {
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			// cash is integer or not
-			//nextCash = Math.round(nextCash * 100) / 100.00; 
+			//nextCash = Math.round(nextCash * 1) / 1; 
 			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 		};
 
@@ -97,8 +97,8 @@ public class CashConstraint {
 		CashState initialState = new CashState(period, iniInventory, iniCash);
 		long currTime = System.currentTimeMillis();
 		recursion.setTreeMapCacheAction();
-		double finalCash = iniCash + recursion.getExpectedValue(initialState);
-		System.out.println("final optimal cash is: " + finalCash);
+		double finalValue = iniCash + recursion.getExpectedValue(initialState);
+		System.out.println("final optimal cash is: " + finalValue);
 		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
@@ -108,7 +108,7 @@ public class CashConstraint {
 		 */
 		int sampleNum = 10000;
 		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion);
-		simuation.simulateSDPGivenSamplNum(initialState);
+		double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
 		double error = 0.0001; 
 		double confidence = 0.95;
 		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);
@@ -120,8 +120,10 @@ public class CashConstraint {
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(T, iniCash);
 		double[][] optsCS = findsCS.getsCS(optTable);
-		double simsBSFinalValue = simuation.simulatesCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
-		System.out.printf("Optimality gap is: %.2f%%\n", (finalCash -simsBSFinalValue)/finalCash*100);
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
+		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	
+		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 		
 		/*******************************************************************
 		 * Check (s, C, S) policy, 
@@ -129,7 +131,7 @@ public class CashConstraint {
 		 * for some state C is 12, and 13 in other state, 
 		 * we use heuristic step by choosing maximum one
 		 */		
-		findsCS.checksBS(optsCS, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+ 		findsCS.checksBS(optsCS, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 	}
 
 }

@@ -25,15 +25,15 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashConstraintDraw {
 
 	public static void main(String[] args) {
-		double[] meanDemand = { 8, 10, 10 };
+		double[] meanDemand = {6.6, 9.3, 11.1, 12.9, 16.8, 21.6, 24, 26.4};
 
-		double iniCash = 20;
-		double fixOrderCost = 10;
+		double iniCash = 30;
+		double fixOrderCost = 20;
 		double variCost = 1;
-		double holdingCost = 1;
-		double price = 5;
+		double price = 4;
+		double holdingCost = 1;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 2000; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 		boolean isForDrawGy = true;
 
 		double truncationQuantile = 0.9999;
@@ -128,7 +128,7 @@ public class CashConstraintDraw {
 		 * Drawing x Q
 		 */
 		int minInventorys = 0;
-		int maxInventorys = 50; // for drawing pictures
+		int maxInventorys = 100; // for drawing pictures
 		int xLength = maxInventorys - minInventorys + 1;
 		double[][] xQ = new double[xLength][2];
 		int index = 0;

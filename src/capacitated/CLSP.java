@@ -19,7 +19,7 @@ import umontreal.ssj.probdist.PoissonDist;
  * @author: Zhen Chen
  * @email: 15011074486@163.com
  * @date: Jul 9, 2018---12:48:56 PM
- * @description: solving capacitated lot sizing problem, the code imitate
+ * @description: solving capacitated lot sizing problem, the code imitates
  *               Roberto Rossi's; use Interface to define several functions and
  *               apply lambda expressions
  * 
