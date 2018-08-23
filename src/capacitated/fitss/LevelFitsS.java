@@ -27,19 +27,23 @@ public class LevelFitsS {
 		double minInventory = -500;
 		double maxInventory = 500;
 
-		double fixedOrderingCost = 500;
-		double variOrderingCost = 0;
-		double penaltyCost = 10;
-		double[] meanDemand = { 9, 23, 53, 29 };
+		double fixedOrderingCost = 100;
+		double variOrderingCost = 1;
+		double penaltyCost = 15;
+		double[] meanDemand = { 23, 30 };
 		double holdingCost = 2;
-		int maxOrderQuantity = 100;
+		int maxOrderQuantity = 10;
 
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
 				.toArray(PoissonDist[]::new);
-		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
+		//double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
+		double[][][] pmf = {{{4, 0.1}, {9, 0.6 }, {14, 0.3}}, 
+								{{34, 0.1}, {23, 0.7 }, {14, 0.2}}, 
+								{{64, 0.1}, {53, 0.7 }, {4, 0.3}},
+								{{14, 0.3}, {29, 0.3 }, {18, 0.4}}};
 
 		// feasible actions
 		Function<State, double[]> getFeasibleAction = s -> {

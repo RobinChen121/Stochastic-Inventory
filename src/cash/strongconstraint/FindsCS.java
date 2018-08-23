@@ -3,6 +3,10 @@ package cash.strongconstraint;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import javax.enterprise.inject.Default;
+
+import com.google.common.base.CaseFormat;
+
 
 /**
  * @author: Zhen Chen
@@ -19,8 +23,14 @@ public class FindsCS {
 		this.T = T;
 		this.iniCash = iniCash;
 	}
+	
+	public enum FindCCrieria{
+		MAX,
+		MIN,
+		AVG;
+	}
 
-	double[][] getsCS(double[][] optimalTable) {
+	double[][] getsCS(double[][] optimalTable, double minCashRequired, FindCCrieria criteria) {
 		double[][] optimalsCS = new double[T][3];
 		optimalsCS[0][0] = optimalTable[0][1];
 		optimalsCS[0][1] = optimalTable[0][2];
@@ -30,7 +40,7 @@ public class FindsCS {
 			int recordTimes = 0;
 			double[][] tOptTable = Arrays.stream(optimalTable).filter(p -> p[0] == i)
 					.map(p -> Arrays.stream(p).toArray()).toArray(double[][]::new);
-			optimalsCS[t][2] = 0;
+			optimalsCS[t][2] = minCashRequired;
 			optimalsCS[t][1] = 0;
 			ArrayList<Double> recordCash = new ArrayList<>();
 			double mark_s = 0;
@@ -45,16 +55,24 @@ public class FindsCS {
 						optimalsCS[t][2] = tOptTable[j][1] + tOptTable[j][3];
 					recordTimes = 1;
 				}
-				// choose a maximum not ordering cash level as C when ordering quantity is 0				
-				if (tOptTable[j][3] == 0 && recordTimes == 1) {
-					recordCash.add(tOptTable[j][2]);
-					if (tOptTable[j][2] > optimalsCS[t][1])
-						optimalsCS[t][1] = tOptTable[j][2];
-				}						
+								
+				if (tOptTable[j][3] == 0 && recordTimes == 1) 
+					recordCash.add(tOptTable[j][2]);					
 			}
+			// choose a maximum not ordering cash level as C when ordering quantity is 0
 			// or choose an average value
-			if (recordCash.stream().mapToDouble(p -> p).average().isPresent())
-				optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).average().getAsDouble();
+			// or choose a minimum value
+			switch (criteria) {
+				case MAX:
+					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).max().isPresent() ? recordCash.stream().mapToDouble(p -> p).max().getAsDouble() : minCashRequired;
+					break;
+				case MIN:
+					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).min().isPresent() ? recordCash.stream().mapToDouble(p -> p).min().getAsDouble() : minCashRequired;
+					break;
+				default:
+					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).average().isPresent() ? recordCash.stream().mapToDouble(p -> p).average().getAsDouble() : minCashRequired;
+					
+			}
 		}
 		System.out.println("(s, C, S) are: " + Arrays.deepToString(optimalsCS));
 		return optimalsCS;

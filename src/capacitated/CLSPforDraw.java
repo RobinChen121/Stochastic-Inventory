@@ -35,12 +35,12 @@ public class CLSPforDraw {
 		double minInventory = -500;
 		double maxInventory = 500;
 
-		double fixedOrderingCost = 500;
+		double fixedOrderingCost = 200;
 		double variOrderingCost = 0;
-		double penaltyCost = 10;
-		double[] meanDemand = { 9, 23, 53, 29 };
+		double penaltyCost = 8;
+		double[] meanDemand = { 63};
 		double holdingCost = 2;
-		int maxOrderQuantity = 100;
+		int maxOrderQuantity = 1;
 		boolean isForDrawGy = true;
 
 		// get demand possibilities for each period

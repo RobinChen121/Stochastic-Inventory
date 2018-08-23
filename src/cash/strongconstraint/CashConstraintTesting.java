@@ -4,6 +4,7 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
+import cash.strongconstraint.FindsCS.FindCCrieria;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
@@ -39,11 +40,12 @@ public class CashConstraintTesting {
 				{4.4, 11.6, 26.4, 14.4, 14.6, 19.8, 7.4, 18.3},
 				{4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7}};
 
-		double[] K = {10, 20}; 
-		double[] v = {1, 2};
-		double[] B0 = {1, 2}; // change to K + v * 5
-		double[] p = {4, 8};
-
+		double[] K = {50}; 
+		double[] v = {1};
+		double[] B0 = {60}; // change to K + v * 5
+		double[] p = {6};
+		
+		FindCCrieria criteria = FindCCrieria.AVG;
 		double truncationQuantile = 0.9999;  
 		int stepSize = 1;
 		double holdingCost = 1;
@@ -104,7 +106,7 @@ public class CashConstraintTesting {
 										nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 										nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 										// cash is integer or not
-										//nextCash = Math.round(nextCash * 100) / 100.00; 
+										nextCash = Math.round(nextCash * 1) / 1; 
 										return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 									};
 
@@ -137,7 +139,7 @@ public class CashConstraintTesting {
 									System.out.println("");
 									double[][] optTable = recursion.getOptTable();
 									FindsCS findsCS = new FindsCS(T, iniCash);
-									double[][] optsCS = findsCS.getsCS(optTable);
+									double[][] optsCS = findsCS.getsCS(optTable, minCashState, criteria);
 									double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 									double gap1 = (finalValue -simsCSFinalValue)/finalValue;
 									double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	

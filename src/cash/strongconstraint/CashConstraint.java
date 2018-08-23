@@ -4,6 +4,7 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
+import cash.strongconstraint.FindsCS.FindCCrieria;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashRecursion.OptDirection;
 import sdp.cash.CashSimulation;
@@ -27,15 +28,15 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7};
-
-		double iniCash = 15;
-		double fixOrderCost = 10;
+		double[] meanDemand = {20,40,60};
+		double iniCash = 150;
+		double fixOrderCost = 100;
 		double variCost = 1;
-		double price = 4;
+		double price = 8;
+		FindCCrieria criteria = FindCCrieria.MAX;
 		double holdingCost = 1;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 250; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -73,17 +74,13 @@ public class CashConstraint {
 		StateTransitionFunction<CashState, Double, Double, CashState> stateTransition = (state, action,
 				randomDemand) -> {
 			double nextInventory = Math.max(0, state.getIniInventory() + action - randomDemand);
-			double revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
-			double fixedCost = action > 0 ? fixOrderCost : 0;
-			double variableCost = variCost * action;
-			double holdCosts = holdingCost * Math.max(nextInventory, 0);
-			double nextCash = state.getIniCash() + revenue - fixedCost - variableCost - holdCosts;
+			double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			// cash is integer or not
-			//nextCash = Math.round(nextCash * 1) / 1; 
+			nextCash = Math.round(nextCash * 1) / 1; 
 			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 		};
 
@@ -119,7 +116,7 @@ public class CashConstraint {
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(T, iniCash);
-		double[][] optsCS = findsCS.getsCS(optTable);
+		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
 		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
 		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	

@@ -4,6 +4,7 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
+import cash.strongconstraint.FindsCS.FindCCrieria;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
@@ -20,29 +21,42 @@ import umontreal.ssj.probdist.PoissonDist;
 /**
  * @author chen zhen
  * @version 2018, April 15th, 10:32:46 am
- * @Description: drawing pictures, see K convexity
+ * @Description: drawing pictures, see K convexity;
+ * an example of two local minimums:
+ * double[] meanDemand = {20,40,60};
+	double iniCash = 200;
+		double fixOrderCost = 100;
+		double variCost = 1;
+		double price = 8;
+		double holdingCost = 1;	
+		double minCashRequired = 0; 
+		double maxOrderQuantity = 250;
+ * 
+ * 
+ * 
+ * 
  */
 public class CashConstraintDraw {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {6.6, 9.3, 11.1, 12.9, 16.8, 21.6, 24, 26.4};
-
-		double iniCash = 30;
-		double fixOrderCost = 20;
+		double[] meanDemand = {20,40,60};
+		double iniCash = 110;
+		double fixOrderCost = 100;
 		double variCost = 1;
-		double price = 4;
+		double price = 8;
+		FindCCrieria criteria = FindCCrieria.MAX;
 		double holdingCost = 1;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
-		boolean isForDrawGy = true;
+		double maxOrderQuantity = 250; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
 		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
-		double maxCashState = 2000;
-
+		double maxCashState = 2000;	
+		
+		boolean isForDrawGy = true;
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
@@ -63,17 +77,10 @@ public class CashConstraintDraw {
 			double fixedCost = 0;
 			double variableCost = 0;
 			double inventoryLevel = 0;
-			if (isForDrawGy == true && state.getPeriod() == 1) {
-				revenue = price * Math.min(state.getIniInventory(), randomDemand);
-				fixedCost = 0;
-				variableCost = variCost * state.getIniInventory();
-				inventoryLevel = state.getIniInventory() - randomDemand;
-			} else {
-				revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
-				fixedCost = action > 0 ? fixOrderCost : 0;
-				variableCost = variCost * action;
-				inventoryLevel = state.getIniInventory() + action - randomDemand;
-			}
+			revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
+			fixedCost = action > 0 ? fixOrderCost : 0;
+			variableCost = variCost * action;
+			inventoryLevel = state.getIniInventory() + action - randomDemand;
 			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
 			double cashIncrement = revenue - fixedCost - variableCost - holdCosts;
 			return cashIncrement;
@@ -82,13 +89,8 @@ public class CashConstraintDraw {
 		// state transition function
 		StateTransitionFunction<CashState, Double, Double, CashState> stateTransition = (state, action,
 				randomDemand) -> {
-			double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
-					: state.getIniInventory() + action - randomDemand;
-			double revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
-			double fixedCost = action > 0 ? fixOrderCost : 0;
-			double variableCost = variCost * action;
-			double holdCosts = holdingCost * Math.max(nextInventory, 0);
-			double nextCash = state.getIniCash() + revenue - fixedCost - variableCost - holdCosts;
+			double nextInventory = state.getIniInventory() + action - randomDemand;
+			double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
@@ -119,10 +121,22 @@ public class CashConstraintDraw {
 		 */
 		int sampleNum = 10000;
 		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion);
-		simuation.simulateSDPGivenSamplNum(initialState);
+		double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
 		double error = 0.0001;
 		double confidence = 0.95;
 		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);
+		
+		/*******************************************************************
+		 * Find (s, C, S) and simulate
+		 */
+		System.out.println("");
+		double[][] optTable = recursion.getOptTable();
+		FindsCS findsCS = new FindsCS(T, iniCash);
+		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		double gap1 = (finalCash -simsCSFinalValue)/finalCash;
+		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	
+		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 
 		/*******************************************************************
 		 * Drawing x Q
@@ -141,6 +155,25 @@ public class CashConstraintDraw {
 		}
 		Drawing drawing = new Drawing();
 		drawing.drawXQ(xQ);
+//		
+//		/*******************************************************************
+//		 * Drawing y C
+//		 */
+//		index = 0;
+//		int minCash= 0; int maxCash = 500;
+//		int BLength = maxCash - minCash + 1;
+//		double[][] BC = new double[BLength][2];
+//		double[][] BQ = new double[BLength][2];
+//		for (int initialCash = 0; initialCash <= 500; initialCash++) {
+//			BC[index][0] = initialCash;
+//			BQ[index][0] = initialCash;
+//			recursion.getExpectedValue(new CashState(period, iniInventory, initialCash));
+//			BC[index][1] = -recursion.getExpectedValue(new CashState(period, iniInventory, initialCash));
+//			BQ[index][1] = recursion.getAction(new CashState(period, iniInventory, initialCash));
+//			index++;
+//		}
+//		drawing.drawBC(BC);
+//		drawing.drawBQ(BQ);
 
 		/*******************************************************************
 		 * Drawing y G since comupteIfAbsent, we need initializing a new class to draw
@@ -174,11 +207,7 @@ public class CashConstraintDraw {
 				randomDemand) -> {
 			double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
 					: state.getIniInventory() + action - randomDemand;
-			double revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
-			double fixedCost = action > 0 ? fixOrderCost : 0;
-			double variableCost = variCost * action;
-			double holdCosts = holdingCost * Math.max(nextInventory, 0);
-			double nextCash = state.getIniCash() + revenue - fixedCost - variableCost - holdCosts;
+			double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
@@ -195,8 +224,7 @@ public class CashConstraintDraw {
 			yG[index][1] = -recursion2.getExpectedValue(new CashState(period, initialInventory, iniCash));
 			index++;
 		}
-		drawing.drawSimpleG(yG);
+		drawing.drawSimpleG(yG, iniCash);
 		drawing.drawGAndsS(yG, fixOrderCost);
 	}
-
 }

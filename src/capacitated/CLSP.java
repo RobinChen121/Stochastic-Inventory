@@ -97,7 +97,7 @@ public class CLSP {
 		int maxOrderQuantity = 100;
 
 		double fixedOrderingCost = 500;
-		double proportionalOrderingCost = 0;
+		double proportionalOrderingCost = 1;
 		double penaltyCost = 10;
 		double holdingCost = 2;
 

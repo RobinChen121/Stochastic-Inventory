@@ -87,7 +87,7 @@ public class Recursion {
 			double[][] dAndP = pmf[s.getPeriod() - 1]; // demandAndPossibility
 			double[] QValues = new double[feasibleActions.length];
 			double val = optDirection == OptDirection.MIN ? Double.MAX_VALUE
-														  : Double.MIN_VALUE;
+														  : -Double.MAX_VALUE;
 			double bestOrderQty = 0;
 			for (int i = 0; i < feasibleActions.length; i++) {
 				double orderQty = feasibleActions[i];
