@@ -9,6 +9,7 @@ import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
 import sdp.cash.CashRecursion.OptDirection;
+import sdp.inventory.CheckKConvexity;
 import sdp.inventory.Drawing;
 import sdp.inventory.GetPmf;
 
@@ -40,7 +41,7 @@ public class CashConstraintDraw {
 
 	public static void main(String[] args) {
 		double[] meanDemand = {20,40,60};
-		double iniCash = 110;
+		double iniCash = 150;
 		double fixOrderCost = 100;
 		double variCost = 1;
 		double price = 8;
@@ -67,7 +68,7 @@ public class CashConstraintDraw {
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
 			double maxQ = (int) Math.min(maxOrderQuantity,
-					Math.max(0, (s.getIniCash() - -minCashRequired - fixOrderCost) / variCost));
+					Math.max(0, (s.getIniCash() - minCashRequired - fixOrderCost) / variCost));
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -154,7 +155,7 @@ public class CashConstraintDraw {
 			index++;
 		}
 		Drawing drawing = new Drawing();
-		drawing.drawXQ(xQ);
+		//drawing.drawXQ(xQ);
 //		
 //		/*******************************************************************
 //		 * Drawing y C
@@ -208,15 +209,18 @@ public class CashConstraintDraw {
 			double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
 					: state.getIniInventory() + action - randomDemand;
 			double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
+			//if (isForDrawGy == true && state.getPeriod() == 1)
+				//nextCash -= fixOrderCost;
 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 		};
+		
 
-		CashRecursion recursion2 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition2,
-				immediateValue2);
+		CashRecursion recursion2 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition,
+				immediateValue);
 		double[][] yG = new double[xLength][2];
 		index = 0;
 		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
@@ -224,6 +228,7 @@ public class CashConstraintDraw {
 			yG[index][1] = -recursion2.getExpectedValue(new CashState(period, initialInventory, iniCash));
 			index++;
 		}
+		CheckKConvexity.check(yG, fixOrderCost);
 		drawing.drawSimpleG(yG, iniCash);
 		drawing.drawGAndsS(yG, fixOrderCost);
 	}

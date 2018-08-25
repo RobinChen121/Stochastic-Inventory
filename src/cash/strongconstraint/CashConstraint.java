@@ -8,6 +8,7 @@ import cash.strongconstraint.FindsCS.FindCCrieria;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashRecursion.OptDirection;
 import sdp.cash.CashSimulation;
+import sdp.inventory.CheckKConvexity;
 import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
@@ -28,11 +29,11 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {20,40,60};
-		double iniCash = 150;
-		double fixOrderCost = 100;
+		double[] meanDemand = {8, 10, 10};
+		double iniCash = 20;
+		double fixOrderCost = 10;
 		double variCost = 1;
-		double price = 8;
+		double price = 5;
 		FindCCrieria criteria = FindCCrieria.MAX;
 		double holdingCost = 1;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
@@ -129,6 +130,21 @@ public class CashConstraint {
 		 * we use heuristic step by choosing maximum one
 		 */		
  		findsCS.checksBS(optsCS, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+ 		
+ 		/*******************************************************************
+		 * Check K-convexity
+		 */	
+ 		int minInventorys = 0;
+		int maxInventorys = 100; 
+		int xLength = maxInventorys - minInventorys + 1;
+ 		double[][] yG = new double[xLength][2];
+		int index = 0;
+		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+			yG[index][0] = initialInventory;
+			yG[index][1] = -recursion.getExpectedValue(new CashState(period, initialInventory, iniCash));
+			index++;
+		}
+ 		CheckKConvexity.check(yG, fixOrderCost);
 	}
 
 }
