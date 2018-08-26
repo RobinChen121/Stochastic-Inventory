@@ -9,6 +9,7 @@ import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
 import sdp.cash.CashRecursion.OptDirection;
+import sdp.inventory.CheckKConvexity;
 import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
@@ -26,7 +27,7 @@ public class CashConstraintTesting {
 
 	// average computation time for 10 periods is 500s, 9 periods is 150s, or 305s, or 400s
 	public static void main(String[] args) {
-		String headString = "K, v, h, I0, price, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, nonOptStatesCount, gap1, gap2";
+		String headString = "K, v, h, I0, price, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, nonOptStatesCount, gap1, gap2, convexity";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
 		double[][] meanDemands = {{15, 15, 15, 15, 15, 15, 15, 15},
@@ -40,10 +41,10 @@ public class CashConstraintTesting {
 				{4.4, 11.6, 26.4, 14.4, 14.6, 19.8, 7.4, 18.3},
 				{4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7}};
 
-		double[] K = {50}; 
-		double[] v = {1};
-		double[] B0 = {60}; // change to K + v * 5
-		double[] p = {6};
+		double[] K = {10, 20}; 
+		double[] v = {1, 2};
+		double[] B0 = {1, 2}; // change to K + v * 5
+		double[] p = {4, 8};
 		
 		FindCCrieria criteria = FindCCrieria.AVG;
 		double truncationQuantile = 0.9999;  
@@ -68,7 +69,7 @@ public class CashConstraintTesting {
 							double iniCash = fixOrderCost + variCost * B0[iB] * 5; 
 							
 							// get demand possibilities for each period
-							int T = meanDemand.length;
+							int T = meanDemand.length - 3;
 							Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 									.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
 									.toArray(PoissonDist[]::new);
@@ -152,8 +153,23 @@ public class CashConstraintTesting {
 									 * we use heuristic step by choosing maximum one
 									 */		
 									int nonOptCount = findsCS.checksBS(optsCS, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
-									System.out.printf("\n*******************************************************************\n");
-														
+									
+									/*******************************************************************
+									 * Check K-convexity
+									 */	
+							 		int minInventorys = 0;
+									int maxInventorys = 100; 
+									int xLength = maxInventorys - minInventorys + 1;
+							 		double[][] yG = new double[xLength][2];
+									int index = 0;
+									for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+										yG[index][0] = initialInventory;
+										yG[index][1] = -recursion.getExpectedValue(new CashState(period, initialInventory, iniCash));
+										index++;
+									}
+							 		String convexity = CheckKConvexity.check(yG, fixOrderCost);
+							 		System.out.printf("\n*******************************************************************\n");
+							 		
 									String out = fixOrderCost + ",\t"+
 											variCost + ",\t"+
 											holdingCost + ",\t"+
@@ -167,7 +183,8 @@ public class CashConstraintTesting {
 											simsCSFinalValue + ",\t" +
 											nonOptCount + ",\t" +
 											gap1 + ",\t" +
-											gap2;
+											gap2+ ",\t" +
+											convexity;
 
 									WriteToCsv.writeToFile("./" + "test_results.csv", out);
 						}
