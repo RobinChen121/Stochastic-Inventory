@@ -88,7 +88,7 @@ public class CLSP {
 	    									  p[1]*f(stateTransition.apply(s, orderQty, p[0])) : 0))
 	    					  .sum())
 	    			  .min()
-	    			  .getAsDouble();
+	    			  .getAsDouble(); 
 	    	  double bestOrderQty = Arrays.stream(s.getFeasibleActions())
 	    			  .filter(orderQty -> Arrays.stream(pmf[s.period-1])
 	    					  .mapToDouble(p -> p[1]*immediateValue.apply(s, orderQty, p[0])+

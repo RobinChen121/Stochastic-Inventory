@@ -1,5 +1,6 @@
 package cash.strongconstraint;
 
+import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -13,6 +14,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.cash.CashState;
+import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
 
@@ -29,15 +31,17 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4.9, 18.8};
-		double iniCash = 40;
+		//double[] meanDemand = {9, 13, 20, 16};
+		double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
+		double iniCash = 30;
+		double iniInventory = 5;
 		double fixOrderCost = 20;
-		double variCost = 2;
-		double price = 8;
+		double variCost = 1;
+		double price = 5;
 		FindCCrieria criteria = FindCCrieria.MAX;
 		double holdingCost = 1;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 250; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 40; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -48,10 +52,18 @@ public class CashConstraint {
 
 		// get demand possibilities for each period
 		int T = meanDemand.length;
+//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+//				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
+//				.toArray(PoissonDist[]::new);
+
+		double[] values = {6, 7};
+		double[] probs = {0.95, 0.05};
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
-				.toArray(PoissonDist[]::new);
+		.mapToObj(i -> new DiscreteDistribution(values, probs, values.length)) // can be changed to other distributions
+		.toArray(DiscreteDistribution[]::new);	
+		
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
+			
 
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
@@ -90,8 +102,7 @@ public class CashConstraint {
 		 */
 		CashRecursion recursion = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition,
 				immediateValue);
-		int period = 1;
-		double iniInventory = 0;
+		int period = 1;		
 		CashState initialState = new CashState(period, iniInventory, iniCash);
 		long currTime = System.currentTimeMillis();
 		recursion.setTreeMapCacheAction();

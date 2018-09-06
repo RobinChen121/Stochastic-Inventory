@@ -31,7 +31,7 @@ public class Drawing {
 	 * drawing a picture about optimal ordering quantities for different initial
 	 * inventory levels
 	 */
-	public void drawXQ(double[][] xQ) {
+	public static void drawXQ(double[][] xQ) {
 		XYSeries seriesQ = new XYSeries("xQSeries");
 		int N = xQ.length;
 		for (int i = 0; i < N; i++) {
@@ -90,7 +90,7 @@ public class Drawing {
 	 * 
 	 * drawing a simple picture for G()
 	 */	
-	public void drawSimpleG(double[][] yG) {
+	public static void drawSimpleG(double[][] yG) {
 		XYSeries seriesG = new XYSeries("yQSeries");
 		int N = yG.length;
 		for (int i = 0; i < N; i++) {
@@ -119,17 +119,21 @@ public class Drawing {
 	 * 
 	 * drawing G() with s, S in different colors
 	 */
-	public void drawGAndsS(double[][] yG, double fixedOrderingCost) {
+	public static void drawGAndsS(double[][] yG, double fixedOrderingCost) {
 		XYSeriesCollection seriesCollection = new XYSeriesCollection();
 		XYSeries seriesG = new XYSeries("yQSeries");
 		XYSeries seriesS = new XYSeries("SSeries");
 		XYSeries seriesSmalls = new XYSeries("seriesSmalls");
 		ArrayList<Double> recordS = new ArrayList<>();
+		ArrayList<Double> records = new ArrayList<>();
 		int N = yG.length; int SNum = 0;
 		for (int i = 0; i < N; i++) {
 			seriesG.add(yG[i][0], yG[i][1]);
-			if (N > 2 && i > 1)
-				if (yG[i - 1][1] < yG[i - 2][1] - 0.01 && yG[i - 1][1] < yG[i][1] - 0.01) {
+		}
+		
+		for (int i = 0; i <= N; i++) {	
+			if (N > 2 && i > 1) {
+				if ( yG[i - 1][1] < yG[i - 2][1] - 0.1 && yG[i - 1][1] < yG[i][1] - 0.1) {
 					seriesS.add(yG[i - 1][0], yG[i - 1][1]);
 					recordS.add(yG[i - 1][1]);
 					SNum++;
@@ -137,23 +141,28 @@ public class Drawing {
 					if (SNum >1) {
 						if (recordS.get(SNum - 1) > recordS.get(SNum-2)) {
 							seriesS.remove(SNum - 1);
+							recordS.remove(SNum - 1);
+							//seriesSmalls.remove(SNum - 1);
+							//records.remove(SNum - 1);
 							SNum--;
 						}
 					}
 					for (int j = i - 1; j >= 0; j--) 
 						if (yG[j][1] > yG[i - 1][1] + fixedOrderingCost) {
 							seriesSmalls.add(yG[j][0], yG[j][1]);
+							records.add(yG[i - 1][1]);
 							System.out.printf("the slope at s is: %.2f\n", yG[j][1] - yG[j - 1][1]);
 							break;
 						}
 				}
-			if (i == N - 1 && SNum == 0) {
-				seriesS.add(yG[i][0], yG[i][1]);
-				for (int j = i - 1; j >= 0; j--) 
-					if (yG[j][1] > yG[i - 1][1] + fixedOrderingCost) {
-						seriesSmalls.add(yG[j][0], yG[j][1]);
-						break;
-					}
+				if (i == N - 1 && SNum == 0) {
+					seriesS.add(yG[i][0], yG[i][1]);
+					for (int j = i - 1; j >= 0; j--) 
+						if (yG[j][1] > yG[i - 1][1] + fixedOrderingCost) {
+							seriesSmalls.add(yG[j][0], yG[j][1]);
+							break;
+						}
+				}
 			}
 		}
 		
@@ -233,6 +242,38 @@ public class Drawing {
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
+	
+	/**
+	 * 
+	 * drawing a picture for C() and different x
+	 */
+	public static void drawXC(double[][] XC) {
+		XYSeries seriesG = new XYSeries("BCSeries");
+		int N = XC.length;
+		for (int i = 0; i < N; i++) {
+			seriesG.add(XC[i][0], XC[i][1]);
+		}
+
+		XYSeriesCollection seriesCollection = new XYSeriesCollection();
+		seriesCollection.addSeries(seriesG);
+
+		JFreeChart chart = ChartFactory.createXYLineChart("C() with different ini cash X", // chart title
+				"X", // x axis label
+				"C()", // y axis label
+				seriesCollection, // data
+				PlotOrientation.VERTICAL, false, // include legend
+				true, // tooltips
+				false // urls
+				);
+
+		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	
+	
 	/**
 	 * 
 	 * drawing a picture for Q() and different B with fixed x

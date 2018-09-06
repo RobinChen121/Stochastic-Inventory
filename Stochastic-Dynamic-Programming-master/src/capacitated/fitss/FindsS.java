@@ -7,6 +7,7 @@ import ilog.concert.IloException;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
+import sun.awt.www.content.image.jpeg;
 
 /**
  * @author: Zhen Chen
@@ -30,7 +31,7 @@ public class FindsS {
 	 * 
 	 * @param optTable   [t, i, Q] in each row
 	 * @param maxOrderQuantity  maximum ordreing quantity
-	 * @return return s,S level index in one period
+	 * @return return s level index in one period
 	 */
 	public int[] levelIndex(double[][] optTable) {
 		ArrayList<Integer> indexArr = new ArrayList<>();
@@ -38,13 +39,17 @@ public class FindsS {
 		for (int j = 0; j < optTable.length; j++) {
 			if (optTable[j][2] < maxOrderQuantity && !mark) {
 				mark = true;
-			} else if (optTable[j][2] == maxOrderQuantity && mark) {
+			} 
+			else if (optTable[j][2] == maxOrderQuantity && mark && j != optTable.length - 1) {
 				mark = false;
 				indexArr.add(j);
 			}
 			if (optTable[j][2] == 0) {
 				indexArr.add(j);
 				break;
+			}
+			if (j == optTable.length - 1) {
+				indexArr.add(j);
 			}
 		}
 		return indexArr.stream().mapToInt(p -> p.intValue()).toArray();
@@ -90,7 +95,7 @@ public class FindsS {
 	
 	public double[][] getSinglesS(double[][] optimalTable) {
 		double[][] optimalsS = new double[T][2];
-		optimalsS[0][0] = optimalTable[0][1];
+		optimalsS[0][0] = optimalTable[0][1] + 1;
 		optimalsS[0][1] = optimalTable[0][1] + optimalTable[0][2];
 		for (int t = 1; t < T; t++) {
 			final int i = t + 1;
@@ -100,6 +105,11 @@ public class FindsS {
 			if (numIndex.length == 1 && numIndex[0] != 0) {
 				optimalsS[t][0] = tOptTable[numIndex[0]][1];
 				optimalsS[t][1] = tOptTable[numIndex[0] - 1][1] + tOptTable[numIndex[0] - 1][2];
+				if (numIndex[0] == tOptTable.length - 1 && tOptTable[numIndex[0]][2] == maxOrderQuantity) {
+					optimalsS[t][0] = tOptTable[numIndex[0]][1] + 1;
+					optimalsS[t][1] = tOptTable[numIndex[0]][1] + tOptTable[numIndex[0]][2];
+				}
+				
 			} else if (numIndex.length == 1 && numIndex[0] == 0) {  // s, S are both zeros
 				optimalsS[t][0] = tOptTable[numIndex[0]][1];
 				optimalsS[t][1] = tOptTable[numIndex[0]][1];
@@ -117,9 +127,9 @@ public class FindsS {
 	
 	public double[][] getTwosS(double[][] optimalTable){
 		double[][] optimalsS = new double[T][4];
-		optimalsS[0][0] = optimalTable[0][1];
+		optimalsS[0][0] = optimalTable[0][1] + 1;
 		optimalsS[0][1] = optimalTable[0][1] + optimalTable[0][2];
-		optimalsS[0][2] = optimalTable[0][1];
+		optimalsS[0][2] = optimalsS[0][0]; 
 		optimalsS[0][3] = optimalTable[0][1] + optimalTable[0][2];
 		for (int t = 1; t < T; t++) {
 			final int i = t + 1;
@@ -129,8 +139,13 @@ public class FindsS {
 			if (numIndex.length == 1 && numIndex[0] != 0) {
 				optimalsS[t][0] = tOptTable[numIndex[0]][1];
 				optimalsS[t][1] = tOptTable[numIndex[0] - 1][1] + tOptTable[numIndex[0] - 1][2];
-				optimalsS[t][2] = tOptTable[numIndex[0]][1];
-				optimalsS[t][3] = tOptTable[numIndex[0] - 1][1] + tOptTable[numIndex[0] - 1][2];
+				if (numIndex[0] == tOptTable.length - 1 && tOptTable[numIndex[0]][2] == maxOrderQuantity) {
+					optimalsS[t][0] = tOptTable[numIndex[0]][1] + 1;
+					optimalsS[t][1] = tOptTable[numIndex[0]][1] + tOptTable[numIndex[0]][2];
+				}
+				optimalsS[t][2] = optimalsS[t][0];
+				optimalsS[t][3] = optimalsS[t][1];
+				
 			}
 			else if (numIndex.length == 1 && numIndex[0] == 0) {
 				optimalsS[t][0] = tOptTable[numIndex[0]][1];
@@ -149,6 +164,10 @@ public class FindsS {
 				optimalsS[t][1] = tOptTable[numIndex[0] - 1][1] + tOptTable[numIndex[0] - 1][2];
 				optimalsS[t][2] = tOptTable[numIndex[1]][1];
 				optimalsS[t][3] = tOptTable[numIndex[1] - 1][1] + tOptTable[numIndex[1] - 1][2];
+				if (numIndex[1] == tOptTable.length - 1 && tOptTable[numIndex[1]][2] == maxOrderQuantity) {
+					optimalsS[t][2] = tOptTable[numIndex[1]][1] + 1;
+					optimalsS[t][3] = tOptTable[numIndex[1]][1] + tOptTable[numIndex[1]][2];
+				}
 			}
 			
 			else {
@@ -166,11 +185,11 @@ public class FindsS {
 	
 	public double[][] getThreesS(double[][] optimalTable){
 		double[][] optimalsS = new double[T][6];
-		optimalsS[0][0] = optimalTable[0][1];
+		optimalsS[0][0] = optimalTable[0][1] + 1;
 		optimalsS[0][1] = optimalTable[0][1] + optimalTable[0][2];
-		optimalsS[0][2] = optimalTable[0][1];
+		optimalsS[0][2] = optimalsS[0][0];
 		optimalsS[0][3] = optimalTable[0][1] + optimalTable[0][2];
-		optimalsS[0][4] = optimalTable[0][1];
+		optimalsS[0][4] = optimalsS[0][0];
 		optimalsS[0][5] = optimalTable[0][1] + optimalTable[0][2];
 		for (int t = 1; t < T; t++) {
 			final int i = t + 1;
@@ -180,10 +199,14 @@ public class FindsS {
 			if (numIndex.length == 1 && numIndex[0] != 0) {
 				optimalsS[t][0] = tOptTable[numIndex[0]][1];
 				optimalsS[t][1] = tOptTable[numIndex[0] - 1][1] + tOptTable[numIndex[0] - 1][2];
-				optimalsS[t][2] = tOptTable[numIndex[0]][1];
-				optimalsS[t][3] = tOptTable[numIndex[0] - 1][1] + tOptTable[numIndex[0] - 1][2];
-				optimalsS[t][4] = tOptTable[numIndex[0]][1];
-				optimalsS[t][5] = tOptTable[numIndex[0] - 1][1] + tOptTable[numIndex[0] - 1][2];
+				if (numIndex[0] == tOptTable.length - 1  && tOptTable[numIndex[0]][2] == maxOrderQuantity) {
+					optimalsS[t][0] = tOptTable[numIndex[0]][1] + 1;
+					optimalsS[t][1] = tOptTable[numIndex[0]][1] + tOptTable[numIndex[0]][2];
+				}
+				optimalsS[t][2] = optimalsS[t][0];
+				optimalsS[t][3] = optimalsS[t][1];
+				optimalsS[t][4] = optimalsS[t][0];
+				optimalsS[t][5] = optimalsS[t][1];
 			}
 			else if (numIndex.length == 1 && numIndex[0] == 0) {
 				optimalsS[t][0] = tOptTable[numIndex[0]][1];
@@ -206,8 +229,12 @@ public class FindsS {
 				optimalsS[t][1] = tOptTable[numIndex[0] - 1][1] + tOptTable[numIndex[0] - 1][2];
 				optimalsS[t][2] = tOptTable[numIndex[1]][1];
 				optimalsS[t][3] = tOptTable[numIndex[1] - 1][1] + tOptTable[numIndex[1] - 1][2];
-				optimalsS[t][4] = tOptTable[numIndex[1]][1];
-				optimalsS[t][5] = tOptTable[numIndex[1] - 1][1] + tOptTable[numIndex[1] - 1][2];
+				if (numIndex[1] == tOptTable.length - 1 && tOptTable[numIndex[1]][2] == maxOrderQuantity) {
+					optimalsS[t][2] = tOptTable[numIndex[1]][1] + 1;
+					optimalsS[t][3] = tOptTable[numIndex[1]][1] + tOptTable[numIndex[1]][2];
+				}			
+				optimalsS[t][4] = optimalsS[t][2];
+				optimalsS[t][5] = optimalsS[t][3];
 			}
 			else if (numIndex.length == 3) {
 				optimalsS[t][0] = tOptTable[numIndex[0]][1];
@@ -216,6 +243,10 @@ public class FindsS {
 				optimalsS[t][3] = tOptTable[numIndex[1] - 1][1] + tOptTable[numIndex[1] - 1][2];
 				optimalsS[t][4] = tOptTable[numIndex[2]][1];
 				optimalsS[t][5] = tOptTable[numIndex[2] - 1][1] + tOptTable[numIndex[2] - 1][2];
+				if (numIndex[2] == tOptTable.length - 1 && tOptTable[numIndex[2]][2] == maxOrderQuantity) {
+					optimalsS[t][4] = tOptTable[numIndex[2]][1] + 1;
+					optimalsS[t][5] = tOptTable[numIndex[2]][1] + tOptTable[numIndex[2]][2];
+				}
 			}
 			else {
 				int sIndex3 = numIndex[numIndex.length - 1];

@@ -120,9 +120,9 @@ public class CashSimulation {
 			for (int t = 0; t < samples[0].length; t++)
 			{
 				double optQ;
-				if ( t== 0) 
-					optQ = optsCS[t][2];
-				else {
+//				if ( t == 0) 
+//					optQ = optsCS[t][2];
+//				else {
 					double maxOrderQuantity = Math.max(0, (state.iniCash -minCashRequired - fixOrderCost)/variCost);
 					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
 					// not include equal
@@ -130,7 +130,7 @@ public class CashSimulation {
 						optQ = Math.min(maxOrderQuantity, optsCS[t][2] - state.getIniInventory());
 					else
 						optQ = 0;
-				}
+//				}
 				double randomDemand = samples[i][t];
 				sum += immediateValue.apply(state, optQ, randomDemand);
 				state = stateTransition.apply(state, optQ, randomDemand);
