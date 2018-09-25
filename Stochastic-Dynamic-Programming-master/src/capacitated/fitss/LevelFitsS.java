@@ -36,6 +36,8 @@ public class LevelFitsS {
 		double[] meanDemand = { 47.1, 30, 12.9, 6,12.9,30,47.1,54,47.1,30 };
 		double holdingCost = 1;
 		int maxOrderQuantity = 100;
+		
+		double discountFactor = 0.95;
 
 		// get demand possibilities for each period
 //		int T = meanDemand.length;

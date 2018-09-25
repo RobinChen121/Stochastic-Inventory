@@ -1,6 +1,8 @@
 package cash.strongconstraint;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -11,6 +13,7 @@ import sdp.cash.CashRecursion.OptDirection;
 import sdp.cash.CashSimulation;
 import sdp.inventory.CheckKConvexity;
 import sdp.inventory.GetPmf;
+import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.cash.CashState;
@@ -31,17 +34,18 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		//double[] meanDemand = {9, 13, 20, 16};
-		double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 30;
-		double iniInventory = 5;
-		double fixOrderCost = 20;
+		double[] meanDemand = {20, 40, 60, 40};
+		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
+		double iniCash = 150;
+		double iniInventory = 0;
+		double fixOrderCost = 100;
 		double variCost = 1;
 		double price = 5;
-		FindCCrieria criteria = FindCCrieria.MAX;
+		double salvageValue = 0.5;
+		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double holdingCost = 1;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 40; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 150; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -49,18 +53,20 @@ public class CashConstraint {
 		double maxInventoryState = 500;
 		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
 		double maxCashState = 2000;
+		
+		double discountFactor = 1;
 
 		// get demand possibilities for each period
 		int T = meanDemand.length;
-//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-//				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
-//				.toArray(PoissonDist[]::new);
-
-		double[] values = {6, 7};
-		double[] probs = {0.95, 0.05};
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-		.mapToObj(i -> new DiscreteDistribution(values, probs, values.length)) // can be changed to other distributions
-		.toArray(DiscreteDistribution[]::new);	
+				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
+				.toArray(PoissonDist[]::new);
+
+//		double[] values = {6, 7};
+//		double[] probs = {0.95, 0.05};
+//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+//		.mapToObj(i -> new DiscreteDistribution(values, probs, values.length)) // can be changed to other distributions
+//		.toArray(DiscreteDistribution[]::new);	
 		
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 			
@@ -80,6 +86,8 @@ public class CashConstraint {
 			double inventoryLevel = state.getIniInventory() + action - randomDemand;
 			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
 			double cashIncrement = revenue - fixedCost - variableCost - holdCosts;
+			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
+			cashIncrement += salValue;
 			return cashIncrement;
 		};
 
@@ -101,7 +109,7 @@ public class CashConstraint {
 		 * Solve
 		 */
 		CashRecursion recursion = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition,
-				immediateValue);
+				immediateValue, discountFactor);
 		int period = 1;		
 		CashState initialState = new CashState(period, iniInventory, iniCash);
 		long currTime = System.currentTimeMillis();
@@ -116,7 +124,9 @@ public class CashConstraint {
 		 * Simulating sdp results
 		 */
 		int sampleNum = 10000;
-		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion);
+		
+		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
+				fixOrderCost, price, variCost, holdingCost, salvageValue);
 		double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
 		double error = 0.0001; 
 		double confidence = 0.95;
@@ -127,9 +137,11 @@ public class CashConstraint {
 		 */
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
-		FindsCS findsCS = new FindsCS(T, iniCash);
+		FindsCS findsCS = new FindsCS(iniCash, meanDemand, fixOrderCost, price, variCost, holdingCost, salvageValue);
 		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		Map<State, Double> cacheCValues = new TreeMap<>();
+		cacheCValues = findsCS.cacheCValues;
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheCValues, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
 		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	
 		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
@@ -157,5 +169,6 @@ public class CashConstraint {
 		}
  		CheckKConvexity.check(yG, fixOrderCost);
 	}
-
+	
+	
 }

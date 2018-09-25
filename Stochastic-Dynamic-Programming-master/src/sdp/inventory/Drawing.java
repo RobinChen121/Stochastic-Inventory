@@ -131,7 +131,7 @@ public class Drawing {
 			seriesG.add(yG[i][0], yG[i][1]);
 		}
 		
-		for (int i = 0; i <= N; i++) {	
+		for (int i = 0; i <= N - 1; i++) {	
 			if (N > 2 && i > 1) {
 				if ( yG[i - 1][1] < yG[i - 2][1] - 0.1 && yG[i - 1][1] < yG[i][1] - 0.1) {
 					seriesS.add(yG[i - 1][0], yG[i - 1][1]);
