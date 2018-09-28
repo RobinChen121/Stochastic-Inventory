@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.jfree.chart.event.MarkerChangeEvent;
+
 import com.sun.org.apache.bcel.internal.generic.INVOKEINTERFACE;
 
 import sdp.cash.CashState;
@@ -57,6 +59,9 @@ public class FindsCS {
 		AVG,
 		XRELATE;
 	}
+	
+	
+	// C bound is a big factor causing optimality gaps. Find C through searching in tOptTable, not by computing Ly
 
 	double[][] getsCS(double[][] optimalTable, double minCashRequired, FindCCrieria criteria) {
 		double[][] optimalsCS = new double[T][3];
@@ -83,19 +88,24 @@ public class FindsCS {
 				}
 				optimalsCS[T - 1][1] = 0; // C 的默认值为 0
 				for (int j = (int) S; j >= 0; j--) {
-					for (int jj = j + 1; jj <= (int) S; jj++) {
+					int jj = 0;
+					for (jj = j + 1; jj <= (int) S; jj++) {
 						if (Ly(jj,  t) > fixOrderCost + Ly(j, t)) {
 							optimalsCS[t][1] = fixOrderCost + variOrderCost * (jj - 1 - j); // C for x = 0 at last
 							cacheCValues.put(new State(t + 1, j), optimalsCS[t][1]);
 							break;
 						}
 					}
+					if (Ly(S, t) < fixOrderCost) { // choose a large value for C, since expected profit is too small
+						optimalsCS[t][1] = fixOrderCost * 20;
+						cacheCValues.put(new State(t + 1, j), optimalsCS[t][1]);
+					}
 				}
 				break;
 			}				
 			
 			optimalsCS[t][2] = minCashRequired;
-			optimalsCS[t][1] = 0; // default value for C is 0
+			optimalsCS[t][1] = fixOrderCost; // default value for C is K
 			ArrayList<Double> recordCash = new ArrayList<>();
 			double mark_s = 0; //backward, the first inventory level that starts ordering is s
 			for (int j = tOptTable.length - 1; j >= 0; j--) {
@@ -116,7 +126,7 @@ public class FindsCS {
 			// choose a maximum not ordering cash level as C when ordering quantity is 0
 			// or choose an average value
 			// or choose a minimum value
-			// or related with x (initial inventory), this C is a lower bound
+			// or related with x (initial inventory)
 			switch (criteria) {
 				case MAX:
 					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).max().isPresent() ? recordCash.stream().mapToDouble(p -> p).max().getAsDouble() : minCashRequired;
@@ -127,17 +137,44 @@ public class FindsCS {
 				case AVG:
 					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).average().isPresent() ? recordCash.stream().mapToDouble(p -> p).average().getAsDouble() : minCashRequired;
 				case XRELATE:
-					Distribution distribution = new PoissonDist(meanD[t]);
-					double S = distribution.inverseF((price - variOrderCost) / (holdCost  + price));
-					for (int j = 0; j <= (int) S; j++) {
-						for (int jj = j + 1; jj <= (int) S; jj++) {
-							if (Ly(jj,  t) > fixOrderCost + Ly(j, t)) {
-								optimalsCS[t][1] = fixOrderCost + variOrderCost * (jj - 1 - j); // C for x = 0 at last
-								cacheCValues.put(new State(t + 1, j), optimalsCS[t][1]);
-								break;
+					double markInventory = -0.5;
+					for (int j = 0; j < tOptTable.length - 1; j++) {
+						if (tOptTable[j][1] < optimalsCS[t][0]) {
+							if (tOptTable[j][3] > 0) {
+								if (tOptTable[j][1] > markInventory) {
+									optimalsCS[t][1] = j > 1 ? tOptTable[j - 1][2] : tOptTable[j][2] - 1;
+									markInventory = tOptTable[j][1];
+								}
 							}
+							else {
+								optimalsCS[t][1] = fixOrderCost * 20;
+							}
+							cacheCValues.put(new State(t + 1, tOptTable[j][1]), optimalsCS[t][1]);
 						}
-					}				
+						else 
+							break;
+					}
+									
+					
+					//double meands = t == T - 1 ? meanD[t] : meanD[t] + meanD[t + 1]; // a heuristic step
+//					double meands = meanD[t];
+//					Distribution distribution = new PoissonDist(meands);
+//					double S = distribution.inverseF((price - variOrderCost) / (holdCost  + price));
+//					for (int j = 0; j <= (int) S; j++) {
+//						int jj = 0;
+//						for (jj = j + 1; jj <= (int) S; jj++) {
+//							if (Ly(jj,  t) > fixOrderCost + Ly(j, t)) {
+//								optimalsCS[t][1] = fixOrderCost + variOrderCost * (jj - 1 - j); // C for x = 0 at last
+//								cacheCValues.put(new State(t + 1, j), optimalsCS[t][1]);
+//								break;
+//							}				
+//							
+//						}
+//						if (Ly(S, t) < fixOrderCost) { // choose a large value for C, since expected profit is too small
+//							optimalsCS[t][1] = fixOrderCost * 20;
+//							cacheCValues.put(new State(t + 1, j), optimalsCS[t][1]);
+//						}
+//					}				
 			}
 		}
 		System.out.println("(s, C, S) are: " + Arrays.deepToString(optimalsCS));
@@ -152,6 +189,7 @@ public class FindsCS {
 	 */
 	double Ly(double y, int t) {
 		double meands = t == T - 1 ? meanD[t] : meanD[t] + meanD[t + 1]; // a heuristic step
+		//double meands = meanD[t];
 		Distribution distribution = new PoissonDist(meands);
 		
 		double meanI = 0;

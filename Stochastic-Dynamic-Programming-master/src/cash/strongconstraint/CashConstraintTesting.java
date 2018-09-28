@@ -25,6 +25,9 @@ import umontreal.ssj.probdist.PoissonDist;
  * @author chen zhen
  * @version 2018, March 3rd, 6:31:10 pm
  * @Description: strong cash constraints testing
+ * if mean demand < 1, optimal ordering pattern may be strange :
+ * there are some states, same initial inventory, different initial cash,
+ * low initial cash order while high initial cash not ordering
  */
 
 public class CashConstraintTesting {
@@ -32,13 +35,13 @@ public class CashConstraintTesting {
 	// average computation time for 10 periods is 500s, 9 periods is 150s, or 305s,
 	// or 400s
 	public static void main(String[] args) {
-		String headString = "K, v, h, I0, price, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, nonOptStatesCount, gap1, gap2, convexity, firstQ";
+		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, nonOptStatesCount, gap1, gap2, convexity, firstQ";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
 		double[][] iniMeanDemands = { { 15, 15, 15, 15, 15, 15, 15, 15 },
 				{ 21.15, 18.9, 17.7, 16.5, 15.15, 13.95, 12.75, 11.55 }, { 6.6, 9.3, 11.1, 12.9, 16.8, 21.6, 24, 26.4 },
 				{ 9, 13, 20, 16, 10, 16, 22, 15 }, { 22, 18, 11, 16, 22, 12, 14, 21 },
-				{ 41.8, 6.6, 0.4, 21.8, 44.8, 9.6, 2.6, 17 }, { 4.08, 12.16, 37.36, 21.44, 39.12, 35.68, 19.84, 22.48 },
+				{ 41.8, 6.6, 2, 21.8, 44.8, 9.6, 2.6, 17 }, { 4.08, 12.16, 37.36, 21.44, 39.12, 35.68, 19.84, 22.48 },
 				{ 4.7, 8.1, 23.6, 39.4, 16.4, 28.7, 50.8, 39.1 }, { 4.4, 11.6, 26.4, 14.4, 14.6, 19.8, 7.4, 18.3 },
 				{ 4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7 } };
 
@@ -70,7 +73,7 @@ public class CashConstraintTesting {
 				meanDemands[i][j] = iniMeanDemands[i][j];
 			}
 
-		for (int idemand = 0; idemand < meanDemands.length; idemand++)
+		for (int idemand = 5; idemand < 6; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
@@ -94,9 +97,10 @@ public class CashConstraintTesting {
 								/*******************************************************************
 								 * Initial inventory setting
 								 */
-								Distribution jointDistibution = new PoissonDist(meanDemand[0]);
-								double iniInventory = jointDistibution
-										.inverseF((price - variCost) / (holdingCost  + price));
+//								Distribution jointDistibution = new PoissonDist(meanDemand[0]);
+//								double iniInventory = jointDistibution
+//										.inverseF((price - variCost) / (holdingCost  + price));
+								double iniInventory = 0;
 
 								// feasible actions
 								Function<CashState, double[]> getFeasibleAction = s -> {
@@ -203,12 +207,12 @@ public class CashConstraintTesting {
 //									index++;
 //								}
 //								String convexity = CheckKConvexity.check(yG, fixOrderCost);
-//								System.out.printf(
-//										"\n*******************************************************************\n");
+								System.out.printf(
+										"\n*******************************************************************\n");
 								
 								String convexity = "unknown";
 								String out = fixOrderCost + ",\t" + variCost + ",\t" + holdingCost + ",\t"
-										+ iniInventory + ",\t" + price + ",\t" + iniCash + ",\t" + (idemand + 1) + ",\t"
+										+ iniInventory + ",\t" + price + ",\t" + salvageValue + ",\t" + iniCash + ",\t" + (idemand + 1) + ",\t"
 										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t" + simsCSFinalValue
 										+ ",\t" + nonOptCount + ",\t" + gap1 + ",\t" + gap2 + ",\t" + convexity + ",\t"
 										+ firstQ;

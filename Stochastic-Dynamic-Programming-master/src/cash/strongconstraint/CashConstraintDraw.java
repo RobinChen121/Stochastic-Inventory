@@ -44,22 +44,21 @@ import umontreal.ssj.probdist.PoissonDist;
  */
 public class CashConstraintDraw {
 
-	private static double variOrderCost;
 
 	public static void main(String[] args) {
-		double[] meanDemand = {40};
+		double[] meanDemand = {2, 21.8};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 150;
+		double iniCash = 30;
 		double iniInventory = 0;
-		double fixOrderCost = 100;
-		double variCost = 1;
-		double price = 5;
-		double salvageValue = 0.5;
-		
+		double fixOrderCost = 10;
+		double variCost = 2;
+		double price = 8;
+		double salvageValue = 0;
 		FindCCrieria criteria = FindCCrieria.XRELATE;
-		double holdingCost = 1;	
+		double holdingCost = 3;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 250; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 150; // maximum ordering quantity when having enough cash
+		
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -164,7 +163,7 @@ public class CashConstraintDraw {
 		 * Drawing x Q
 		 */
 		int minInventorys = 0;
-		int maxInventorys = 100; // for drawing pictures
+		int maxInventorys = 50; // for drawing pictures
 		int xLength = maxInventorys - minInventorys + 1;
 		double[][] xQ = new double[xLength][2];
 		int index = 0;
@@ -212,7 +211,7 @@ public class CashConstraintDraw {
 				randomDemand) -> {
 			double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
 					: state.getIniInventory() + action - randomDemand;
-			double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
+			double nextCash = state.getIniCash() + immediateValue2.apply(state, action, randomDemand);
 			if (isForDrawGy == true && state.getPeriod() == 1)
 				nextCash -= fixOrderCost;
 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
@@ -236,8 +235,9 @@ public class CashConstraintDraw {
 		drawing.drawSimpleG(yG2, iniCash);
 		
 		/*******************************************************************
-		 * Drawing another G() that not has fixed ordering cost in the 
-		 * first period
+		 * Drawing another G() that not has fixed ordering cost transition in the 
+		 * first period,
+		 * the difference lies in state transition function
 		 */
 		
 		// state transition function 3
@@ -245,7 +245,7 @@ public class CashConstraintDraw {
 				randomDemand) -> {
 			double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
 						: state.getIniInventory() + action - randomDemand;
-			double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
+			double nextCash = state.getIniCash() + immediateValue2.apply(state, action, randomDemand);
 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
@@ -263,5 +263,6 @@ public class CashConstraintDraw {
 			index++;
 		}
 		drawing.drawSimpleG(yG3, iniCash);
+		drawing.drawTwoG(yG3, yG2, iniCash);
 	}
 }

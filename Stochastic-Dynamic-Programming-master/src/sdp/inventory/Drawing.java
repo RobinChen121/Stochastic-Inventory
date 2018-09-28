@@ -1,5 +1,6 @@
 package sdp.inventory;
 
+import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.text.NumberFormat;
@@ -14,9 +15,12 @@ import org.jfree.chart.labels.StandardXYItemLabelGenerator;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+
+import com.sun.prism.paint.Color;
 
 /**
  * @author: Zhen Chen
@@ -86,34 +90,6 @@ public class Drawing {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
-	/**
-	 * 
-	 * drawing a simple picture for G()
-	 */	
-	public static void drawSimpleG(double[][] yG) {
-		XYSeries seriesG = new XYSeries("yQSeries");
-		int N = yG.length;
-		for (int i = 0; i < N; i++) {
-			seriesG.add(yG[i][0], yG[i][1]);
-		}
-
-		XYSeriesCollection seriesCollection = new XYSeriesCollection();
-		seriesCollection.addSeries(seriesG);
-
-		JFreeChart chart = ChartFactory.createXYLineChart("G(y) with different order-up-to level y", // chart title
-				"y", // x axis label
-				"G(y)", // y axis label
-				seriesCollection, // data
-				PlotOrientation.VERTICAL, false, // include legend
-				true, // tooltips
-				false // urls
-				);
-
-		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
-		frame.pack();
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	}
 
 	/**
 	 * 
@@ -273,7 +249,6 @@ public class Drawing {
 	}
 	
 	
-	
 	/**
 	 * 
 	 * drawing a picture for Q() and different B with fixed x
@@ -297,6 +272,87 @@ public class Drawing {
 				false // urls
 				);
 
+		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	
+	/**
+	 * 
+	 * drawing a simple picture for G()
+	 */	
+	public static void drawSimpleG(double[][] yG) {
+		XYSeries seriesG = new XYSeries("yGSeries");
+		int N = yG.length;
+		for (int i = 0; i < N; i++) {
+			seriesG.add(yG[i][0], yG[i][1]);
+		}
+
+		XYSeriesCollection seriesCollection = new XYSeriesCollection();
+		seriesCollection.addSeries(seriesG);
+
+		JFreeChart chart = ChartFactory.createXYLineChart("G(y) with different order-up-to level y", // chart title
+				"y", // x axis label
+				"G(y)", // y axis label
+				seriesCollection, // data
+				PlotOrientation.VERTICAL, 
+				false, // include legend
+				true, // tooltips
+				false // urls
+				);
+
+		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	/**
+	 * 
+	 * drawing a picture for Q() and different B with fixed x
+	 */
+	public void drawTwoG(double[][] GA, double[][] GB, double iniCash) {
+		XYSeries seriesGA = new XYSeries("GA");
+		XYSeries seriesGB = new XYSeries("GB");
+		int N = GA.length;
+		for (int i = 0; i < N; i++) {
+			seriesGA.add(GA[i][0], GA[i][1]);
+			seriesGB.add(GB[i][0], GB[i][1]);
+		}
+
+		XYSeriesCollection seriesCollectionA = new XYSeriesCollection(seriesGA);
+		XYSeriesCollection seriesCollectionB = new XYSeriesCollection(seriesGB);
+		
+		String cashString = String.valueOf(iniCash);
+		String title = "G(y) with different order-up-to level y, B0 = " + cashString;
+		
+		JFreeChart chart = ChartFactory.createXYLineChart(title, // chart title
+				"y", // x axis label
+				"G()", // y axis label
+				seriesCollectionA, // data
+				PlotOrientation.VERTICAL, 
+				true, // include legend
+				true, // tooltips
+				false // urls
+				);
+		
+		XYPlot plot = (XYPlot) chart.getPlot();
+		
+		// "0" is the GA plot, "1" is the GB plot		
+		plot.setDataset(0, seriesCollectionA); // first data set
+		plot.setDataset(1, seriesCollectionB); // second data set
+//		//plot.mapDatasetToRangeAxis(1, 0); // same axis, different data set
+		
+		XYItemRenderer renderer0 = new XYLineAndShapeRenderer(true, false); // boolean lines, boolean shapes
+		XYItemRenderer renderer1 = new XYLineAndShapeRenderer(true, false); // boolean lines, boolean shapes
+		plot.setRenderer(0, renderer0); 
+		plot.setRenderer(1, renderer1); 
+//		
+		//plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, null); 
+		//plot.getRendererForDataset(plot.getDataset(1)).setSeriesPaint(1, null);
+			
 		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
 		frame.pack();
 		frame.setVisible(true);
