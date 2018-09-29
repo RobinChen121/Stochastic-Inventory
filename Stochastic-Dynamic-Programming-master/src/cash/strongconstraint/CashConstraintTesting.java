@@ -73,7 +73,7 @@ public class CashConstraintTesting {
 				meanDemands[i][j] = iniMeanDemands[i][j];
 			}
 
-		for (int idemand = 5; idemand < 6; idemand++)
+		for (int idemand = 0; idemand < meanDemands.length; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
