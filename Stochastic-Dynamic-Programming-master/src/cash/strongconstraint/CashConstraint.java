@@ -34,7 +34,7 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {15, 15, 15, 15};
+		double[] meanDemand = {15, 15, 15, 15, 15, 15, 15, 15};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniCash = 15;
 		double iniInventory = 0;

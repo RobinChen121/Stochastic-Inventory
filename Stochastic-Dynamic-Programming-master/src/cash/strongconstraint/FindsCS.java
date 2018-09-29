@@ -142,7 +142,7 @@ public class FindsCS {
 						if (tOptTable[j][1] < optimalsCS[t][0]) {
 							if (tOptTable[j][3] > 0) {
 								if (tOptTable[j][1] > markInventory) {
-									optimalsCS[t][1] = j > 1 ? tOptTable[j - 1][2] : tOptTable[j][2] - 1;
+									optimalsCS[t][1] = tOptTable[j][2] - 1;
 									markInventory = tOptTable[j][1];
 								}
 							}
