@@ -4,12 +4,15 @@ import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import sdp.inventory.CheckKConvexity;
 import sdp.inventory.GetPmf;
+import sdp.inventory.Drawing;
 import sdp.inventory.Recursion;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.Recursion.OptDirection;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
 
@@ -22,29 +25,35 @@ import umontreal.ssj.probdist.PoissonDist;
 
 public class LevelFitsS {
 	public static void main(String[] args) {
-		double truncationQuantile = 0.9999;
+		double truncationQuantile = 1;
 		double stepSize = 1;
 		double minInventory = -500;
 		double maxInventory = 500;
 
-		double fixedOrderingCost = 100;
+		double fixedOrderingCost = 22;
 		double variOrderingCost = 1;
-		double penaltyCost = 15;
-		double[] meanDemand = { 23, 30 };
-		double holdingCost = 2;
-		int maxOrderQuantity = 10;
+		double penaltyCost = 10;
+		double[] meanDemand = { 47.1, 30, 12.9, 6,12.9,30,47.1,54,47.1,30 };
+		double holdingCost = 1;
+		int maxOrderQuantity = 100;
+		
+		double discountFactor = 0.95;
 
 		// get demand possibilities for each period
-		int T = meanDemand.length;
+//		int T = meanDemand.length;
+//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+//				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
+//				.toArray(PoissonDist[]::new);
+//		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
+		
+		int T = 8;
+		double[] values = {6, 7};
+		double[] probs = {0.95, 0.05};
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
-				.toArray(PoissonDist[]::new);
-		//double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
-		double[][][] pmf = {{{4, 0.1}, {9, 0.6 }, {14, 0.3}}, 
-								{{34, 0.1}, {23, 0.7 }, {14, 0.2}}, 
-								{{64, 0.1}, {53, 0.7 }, {4, 0.3}},
-								{{14, 0.3}, {29, 0.3 }, {18, 0.4}}};
-
+		.mapToObj(i -> new DiscreteDistribution(values, probs, values.length)) // can be changed to other distributions
+		.toArray(DiscreteDistribution[]::new);	
+		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
+		
 		// feasible actions
 		Function<State, double[]> getFeasibleAction = s -> {
 			double[] feasibleActions = new double[(int) (maxOrderQuantity / stepSize) + 1];
@@ -104,6 +113,7 @@ public class LevelFitsS {
 		 */
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
+		
 		FindsS findsS = new FindsS(maxOrderQuantity, T);
 		double[][] optsS = findsS.getSinglesS(optTable);
 		System.out.println("single s, S level: " + Arrays.deepToString(optsS));
@@ -114,6 +124,23 @@ public class LevelFitsS {
 		simuation.simulateSinglesS(initialState, optsS, maxOrderQuantity);
 		simuation.simulateTwosS(initialState, optsS, maxOrderQuantity);
 		simuation.simulateThreesS(initialState, optsS, maxOrderQuantity);
+		
+ 		/*******************************************************************
+		 * Check K-convexity
+		 */	
+ 		int minInventorys = 0;
+		int maxInventorys = 100; 
+		int xLength = maxInventorys - minInventorys + 1;
+ 		double[][] yG = new double[xLength][2];
+		int index = 0;
+		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+			yG[index][0] = initialInventory;
+			yG[index][1] = recursion.getExpectedValue(new State(period, initialInventory));
+			index++;
+		}
+ 		CheckKConvexity.check(yG, fixedOrderingCost);
+ 		Drawing.drawXC(yG);
+ 		Drawing.drawGAndsS(yG, fixedOrderingCost);
 	}
 }
 

@@ -14,9 +14,11 @@ import org.jfree.chart.labels.StandardXYItemLabelGenerator;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+
 
 /**
  * @author: Zhen Chen
@@ -31,7 +33,7 @@ public class Drawing {
 	 * drawing a picture about optimal ordering quantities for different initial
 	 * inventory levels
 	 */
-	public void drawXQ(double[][] xQ) {
+	public static void drawXQ(double[][] xQ) {
 		XYSeries seriesQ = new XYSeries("xQSeries");
 		int N = xQ.length;
 		for (int i = 0; i < N; i++) {
@@ -86,50 +88,26 @@ public class Drawing {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
-	/**
-	 * 
-	 * drawing a simple picture for G()
-	 */	
-	public void drawSimpleG(double[][] yG) {
-		XYSeries seriesG = new XYSeries("yQSeries");
-		int N = yG.length;
-		for (int i = 0; i < N; i++) {
-			seriesG.add(yG[i][0], yG[i][1]);
-		}
-
-		XYSeriesCollection seriesCollection = new XYSeriesCollection();
-		seriesCollection.addSeries(seriesG);
-
-		JFreeChart chart = ChartFactory.createXYLineChart("G(y) with different order-up-to level y", // chart title
-				"y", // x axis label
-				"G(y)", // y axis label
-				seriesCollection, // data
-				PlotOrientation.VERTICAL, false, // include legend
-				true, // tooltips
-				false // urls
-				);
-
-		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
-		frame.pack();
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	}
 
 	/**
 	 * 
 	 * drawing G() with s, S in different colors
 	 */
-	public void drawGAndsS(double[][] yG, double fixedOrderingCost) {
+	public static void drawGAndsS(double[][] yG, double fixedOrderingCost) {
 		XYSeriesCollection seriesCollection = new XYSeriesCollection();
 		XYSeries seriesG = new XYSeries("yQSeries");
 		XYSeries seriesS = new XYSeries("SSeries");
 		XYSeries seriesSmalls = new XYSeries("seriesSmalls");
 		ArrayList<Double> recordS = new ArrayList<>();
+		ArrayList<Double> records = new ArrayList<>();
 		int N = yG.length; int SNum = 0;
 		for (int i = 0; i < N; i++) {
 			seriesG.add(yG[i][0], yG[i][1]);
-			if (N > 2 && i > 1)
-				if (yG[i - 1][1] < yG[i - 2][1] - 0.01 && yG[i - 1][1] < yG[i][1] - 0.01) {
+		}
+		
+		for (int i = 0; i <= N - 1; i++) {	
+			if (N > 2 && i > 1) {
+				if ( yG[i - 1][1] < yG[i - 2][1] - 0.1 && yG[i - 1][1] < yG[i][1] - 0.1) {
 					seriesS.add(yG[i - 1][0], yG[i - 1][1]);
 					recordS.add(yG[i - 1][1]);
 					SNum++;
@@ -137,23 +115,28 @@ public class Drawing {
 					if (SNum >1) {
 						if (recordS.get(SNum - 1) > recordS.get(SNum-2)) {
 							seriesS.remove(SNum - 1);
+							recordS.remove(SNum - 1);
+							//seriesSmalls.remove(SNum - 1);
+							//records.remove(SNum - 1);
 							SNum--;
 						}
 					}
 					for (int j = i - 1; j >= 0; j--) 
 						if (yG[j][1] > yG[i - 1][1] + fixedOrderingCost) {
 							seriesSmalls.add(yG[j][0], yG[j][1]);
+							records.add(yG[i - 1][1]);
 							System.out.printf("the slope at s is: %.2f\n", yG[j][1] - yG[j - 1][1]);
 							break;
 						}
 				}
-			if (i == N - 1 && SNum == 0) {
-				seriesS.add(yG[i][0], yG[i][1]);
-				for (int j = i - 1; j >= 0; j--) 
-					if (yG[j][1] > yG[i - 1][1] + fixedOrderingCost) {
-						seriesSmalls.add(yG[j][0], yG[j][1]);
-						break;
-					}
+				if (i == N - 1 && SNum == 0) {
+					seriesS.add(yG[i][0], yG[i][1]);
+					for (int j = i - 1; j >= 0; j--) 
+						if (yG[j][1] > yG[i - 1][1] + fixedOrderingCost) {
+							seriesSmalls.add(yG[j][0], yG[j][1]);
+							break;
+						}
+				}
 			}
 		}
 		
@@ -233,6 +216,37 @@ public class Drawing {
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
+	
+	/**
+	 * 
+	 * drawing a picture for C() and different x
+	 */
+	public static void drawXC(double[][] XC) {
+		XYSeries seriesG = new XYSeries("BCSeries");
+		int N = XC.length;
+		for (int i = 0; i < N; i++) {
+			seriesG.add(XC[i][0], XC[i][1]);
+		}
+
+		XYSeriesCollection seriesCollection = new XYSeriesCollection();
+		seriesCollection.addSeries(seriesG);
+
+		JFreeChart chart = ChartFactory.createXYLineChart("C() with different ini cash X", // chart title
+				"X", // x axis label
+				"C()", // y axis label
+				seriesCollection, // data
+				PlotOrientation.VERTICAL, false, // include legend
+				true, // tooltips
+				false // urls
+				);
+
+		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	
 	/**
 	 * 
 	 * drawing a picture for Q() and different B with fixed x
@@ -256,6 +270,87 @@ public class Drawing {
 				false // urls
 				);
 
+		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	
+	/**
+	 * 
+	 * drawing a simple picture for G()
+	 */	
+	public static void drawSimpleG(double[][] yG) {
+		XYSeries seriesG = new XYSeries("yGSeries");
+		int N = yG.length;
+		for (int i = 0; i < N; i++) {
+			seriesG.add(yG[i][0], yG[i][1]);
+		}
+
+		XYSeriesCollection seriesCollection = new XYSeriesCollection();
+		seriesCollection.addSeries(seriesG);
+
+		JFreeChart chart = ChartFactory.createXYLineChart("G(y) with different order-up-to level y", // chart title
+				"y", // x axis label
+				"G(y)", // y axis label
+				seriesCollection, // data
+				PlotOrientation.VERTICAL, 
+				false, // include legend
+				true, // tooltips
+				false // urls
+				);
+
+		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	/**
+	 * 
+	 * drawing a picture for Q() and different B with fixed x
+	 */
+	public void drawTwoG(double[][] GA, double[][] GB, double iniCash) {
+		XYSeries seriesGA = new XYSeries("GA");
+		XYSeries seriesGB = new XYSeries("GB");
+		int N = GA.length;
+		for (int i = 0; i < N; i++) {
+			seriesGA.add(GA[i][0], GA[i][1]);
+			seriesGB.add(GB[i][0], GB[i][1]);
+		}
+
+		XYSeriesCollection seriesCollectionA = new XYSeriesCollection(seriesGA);
+		XYSeriesCollection seriesCollectionB = new XYSeriesCollection(seriesGB);
+		
+		String cashString = String.valueOf(iniCash);
+		String title = "G(y) with different order-up-to level y, B0 = " + cashString;
+		
+		JFreeChart chart = ChartFactory.createXYLineChart(title, // chart title
+				"y", // x axis label
+				"G()", // y axis label
+				seriesCollectionA, // data
+				PlotOrientation.VERTICAL, 
+				true, // include legend
+				true, // tooltips
+				false // urls
+				);
+		
+		XYPlot plot = (XYPlot) chart.getPlot();
+		
+		// "0" is the GA plot, "1" is the GB plot		
+		plot.setDataset(0, seriesCollectionA); // first data set
+		plot.setDataset(1, seriesCollectionB); // second data set
+//		//plot.mapDatasetToRangeAxis(1, 0); // same axis, different data set
+		
+		XYItemRenderer renderer0 = new XYLineAndShapeRenderer(true, false); // boolean lines, boolean shapes
+		XYItemRenderer renderer1 = new XYLineAndShapeRenderer(true, false); // boolean lines, boolean shapes
+		plot.setRenderer(0, renderer0); 
+		plot.setRenderer(1, renderer1); 
+//		
+		//plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, null); 
+		//plot.getRendererForDataset(plot.getDataset(1)).setSeriesPaint(1, null);
+			
 		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
 		frame.pack();
 		frame.setVisible(true);

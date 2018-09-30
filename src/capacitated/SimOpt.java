@@ -72,7 +72,12 @@ public class SimOpt {
 				costs += orderingCost(Q);
 				inventory += Q;
 			}
-			inventory -= d[t][0];
+			try {
+			inventory -= d[0][t];
+			}
+			catch (Exception e) {
+				System.out.println(t);
+			}
 			costs += inventoryCost(inventory);
 		}
 		return costs;
@@ -134,7 +139,7 @@ public class SimOpt {
 				costs += orderingCost(Q);
 				inventory += Q;
 			}
-			inventory -= d[t][0];
+			inventory -= d[0][t];
 			costs += inventoryCost(inventory);
 		}
 		return costs;
@@ -228,9 +233,9 @@ public class SimOpt {
 									distributions, maxOrderQuantity);
 							long currTime1 = System.currentTimeMillis();
 							double[] stats = simOpt.simulate();
-							System.out.println("sim-opt final value:" + stats[0] + " " + stats[1]);
+							System.out.println("sim-opt final value: " + stats[0] + " " + stats[1]);
 							double time = (System.currentTimeMillis() - currTime1) / 1000;
-							System.out.println("running time is " + time + " GetPmf");
+							System.out.println("running time is " + time + " s");
 
 							String out = fixOrderCost + ",\t" + variOrderCost + ",\t" + holdingCost + ",\t"
 									+ penaltyCost + ",\t" + maxOrderQuantity + ",\t" + (idemand + 1) + ",\t" + stats[0]

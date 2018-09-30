@@ -30,11 +30,13 @@ public class CashOverdraftLimitTesting{
 		double[] K = {10,15};
 		double[] v = {1,2};
 		double[] S = {5,10}; // selling price
+		double salvageValue = 0.5;
 
 		double[] minCash = {-40,-80};
 		double[] b = {0.1,0.2};
 
 		int initialCash[] = {0,20};
+		double discountFactor = 0.95;
 
 		double[][] demands = {{7,7,7,7,7,7},
 				{2,3,4,5,6,7},
@@ -131,7 +133,7 @@ public class CashOverdraftLimitTesting{
 									 * Solve
 									 */
 									CashRecursion recursion = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction,
-											stateTransition, immediateValue);
+											stateTransition, immediateValue, discountFactor);
 									int period = 1;
 									double iniInventory = 0;
 									CashState initialState = new CashState(period, iniInventory, iniCash);
@@ -148,12 +150,13 @@ public class CashOverdraftLimitTesting{
 									 * Find (s, C, S) and simulate
 									 */
 									int sampleNum = 10000;
-									CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion);
+									CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
+											fixOrderCost, price, variCost, holdingCost, salvageValue);
 									System.out.println("");
 									double[][] optTable = recursion.getOptTable();
 									FindsSOverDraft findsCS = new FindsSOverDraft(T, iniCash);
 									double[][] optsCS = findsCS.getsCS(optTable);
-									double simsSFinalValue = simuation.simulatesCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+									double simsSFinalValue = simuation.simulatesCSDraft(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 									double gap = (finalValue -simsSFinalValue)/finalValue*100;
 									System.out.printf("Optimality gap is: %.2f%%\n", gap);
 									

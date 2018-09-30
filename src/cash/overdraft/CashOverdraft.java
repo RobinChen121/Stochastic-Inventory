@@ -33,6 +33,7 @@ public class CashOverdraft {
 		double variCost = 1;
 		double holdingCost = 0;
 		double price = 10;
+		double salvageValue = 0.5;
 
 		double iniCash = 10;
 		double interestRate = 0.8;
@@ -45,6 +46,8 @@ public class CashOverdraft {
 		double maxInventoryState = 100;
 		double minCashState = -500;
 		double maxCashState = 1000;
+		double discountFactor = 0.95;
+		
 
 		// get demand possibilities for each period
 		int T = meanDemand.length;
@@ -97,7 +100,7 @@ public class CashOverdraft {
 		 * Solve
 		 */
 		CashRecursion recursion = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition,
-				immediateValue);
+				immediateValue, discountFactor);
 		int period = 1; double iniInventory = 0;
 		CashState initialState = new CashState(period, iniInventory, iniCash);
 		long currTime = System.currentTimeMillis();
@@ -112,7 +115,8 @@ public class CashOverdraft {
 		 * Simulating sdp results
 		 */
 		int sampleNum = 10000;
-		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion);
+		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
+				fixOrderCost, price, variCost, holdingCost, salvageValue);
 		simuation.simulateSDPGivenSamplNum(initialState);
 		double error = 0.0001; 
 		double confidence = 0.95;

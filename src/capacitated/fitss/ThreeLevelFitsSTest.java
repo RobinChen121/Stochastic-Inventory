@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import sdp.inventory.CheckKConvexity;
 import sdp.inventory.GetPmf;
 import sdp.inventory.Recursion;
 import sdp.inventory.State;
@@ -26,7 +27,7 @@ public class ThreeLevelFitsSTest {
 
 
 	public static void main(String[] args) {
-		String headString = "K, v, h, I0, pai, Qmax, DemandPatt, OpValue, Time(sec), simValue, error";
+		String headString = "K, v, h, I0, pai, Qmax, DemandPatt, OpValue, Time(sec), simValue, error, K-convexity";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
 		double[][] demands = {{30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30},
@@ -44,7 +45,7 @@ public class ThreeLevelFitsSTest {
 		double[] K = {500,800,200};// 1500, 1000, 500
 		double[] v = {0,5,10};
 		double[] pai = {15, 10, 5}; // 15, 10, 5
-		double[] capacity = {4, 3, 4}; // 3, 5, 7
+		double[] capacity = {2, 3, 4}; // 3, 5, 7
 
 		double truncationQuantile = 0.999;  
 		double stepSize = 1; 
@@ -59,8 +60,7 @@ public class ThreeLevelFitsSTest {
 						for ( int icapacity = 0; icapacity < capacity.length; icapacity++){	      
 
 
-							//double[] meanDemand = demands[idemand];
-							double[] meanDemand = {9, 23, 53, 29};
+							double[] meanDemand = demands[idemand];
 							double fixedOrderingCost = K[iK];
 							double proportionalOrderingCost = v[iv];
 							double penaltyCost = pai[ipai];
@@ -68,7 +68,7 @@ public class ThreeLevelFitsSTest {
 									.round(Arrays.stream(meanDemand).sum() / meanDemand.length) * capacity[icapacity]);
 
 							// get demand possibilities for each period
-							int T = meanDemand.length;
+							int T = meanDemand.length - 10; //
 							Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 									.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
 									.toArray(PoissonDist[]::new);
@@ -133,6 +133,21 @@ public class ThreeLevelFitsSTest {
 							double simFinalValue = simuation.simulateThreesS(initialState, optsS, maxOrderQuantity);
 							System.out.printf("Optimality gap is: %.2f%%\n",
 									(simFinalValue - finalValue) / finalValue * 100);
+							
+					 		/*******************************************************************
+							 * Check K-convexity
+							 */	
+					 		int minInventorys = 0;
+							int maxInventorys = 100; 
+							int xLength = maxInventorys - minInventorys + 1;
+					 		double[][] yG = new double[xLength][2];
+							int index = 0;
+							for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+								yG[index][0] = initialInventory;
+								yG[index][1] = recursion.getExpectedValue(new State(period, initialInventory));
+								index++;
+							}
+					 		String string = CheckKConvexity.check(yG, fixedOrderingCost);
 							String out = fixedOrderingCost + ",\t" 
 									+ proportionalOrderingCost + ",\t" 
 									+ holdingCost + ",\t" 
@@ -143,7 +158,8 @@ public class ThreeLevelFitsSTest {
 									+ finalValue + ",\t" 
 									+ time + ",\t" 
 									+ simFinalValue + ",\t"
-									+ (simFinalValue - finalValue) / finalValue;
+									+ (simFinalValue - finalValue) / finalValue + ",\t"
+									+ string;
 							WriteToCsv.writeToFile("./" + "test_results.csv", out);
 						}
 				}

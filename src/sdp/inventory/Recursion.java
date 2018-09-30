@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+import sdp.cash.CashState;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 
@@ -20,7 +22,7 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 public class Recursion {
 	
 	Map<State, Double> cacheActions = new TreeMap<>();	
-	Map<State, Double> cacheValues = new HashMap<>();
+	Map<State, Double> cacheValues = new TreeMap<>();
 	
 	double[][][] pmf;	
 	OptDirection optDirection;	
@@ -42,6 +44,11 @@ public class Recursion {
 		this.getFeasibleActions = getFeasibleAction;
 		this.stateTransition = stateTransition ;
 		this.immediateValue = immediateValue;
+		Comparator<State> keyComparator = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
+			o1.getPeriod() == o2.getPeriod() ? o1.getIniInventory() > o2.getIniInventory() ? 1 : 
+				o1.getIniInventory() == o2.getIniInventory() ? 0 : -1 : -1;
+		this.cacheActions = new TreeMap<>(keyComparator);
+		this.cacheValues = new TreeMap<>(keyComparator);
 	}
 		
 	public StateTransitionFunction<State, Double, Double, State> getStateTransitionFunction(){

@@ -40,7 +40,9 @@ public class GetPmf {
 				pmf[i][j][0] = supportLB[i] + j * stepSize;
 				if (distributions[0] instanceof DiscreteDistribution) {
 					double probilitySum = distributions[i].cdf(supportUB[i]) - distributions[i].cdf(supportLB[i] - 1);
-					pmf[i][j][1] = ((DiscreteDistribution) distributions[i]).prob((int) pmf[i][j][0]) / probilitySum;
+					//System.out.println(((DiscreteDistribution) distributions[i]).prob(i)); // probability of ith element
+					//System.out.println(((DiscreteDistribution) distributions[i]).prob((int) pmf[i][j][0]));
+					pmf[i][j][1] = ((DiscreteDistribution) distributions[i]).prob(j) / probilitySum;
 				} else {
 					double probilitySum = distributions[i].cdf(supportUB[i] + 0.5 * stepSize)
 							- distributions[i].cdf(supportLB[i] - 0.5 * stepSize);

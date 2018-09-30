@@ -35,6 +35,8 @@ public class CashOverdraftTesting {
 		double[] P = { 5, 10 };
 		double[] b = { 0.05, 0.2 };
 		int initialCash[] = { 0, 20 };
+		double salvageValue = 0.5;
+		double discountFactor = 0.95;
 
 		double[][] demands = { { 7, 7, 7, 7, 7, 7 }, { 2, 3, 4, 5, 6, 7 }, { 8, 7, 6, 5, 4, 3 }, { 5, 6, 7, 8, 7, 6 },
 				{ 8, 5, 2, 1, 2, 5 }, { 8, 4, 1, 3, 1, 3 }, { 1, 3, 8, 4, 8, 7 }, { 1, 4, 7, 3, 5, 8 },
@@ -121,7 +123,7 @@ public class CashOverdraftTesting {
 								 * Solve
 								 */
 								CashRecursion recursion = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction,
-										stateTransition, immediateValue);
+										stateTransition, immediateValue, discountFactor);
 								int period = 1;
 								double iniInventory = 0;
 								CashState initialState = new CashState(period, iniInventory, iniCash);
@@ -138,7 +140,8 @@ public class CashOverdraftTesting {
 								 * Find (s, S) and simulate
 								 */
 								int sampleNum = 10000;
-								CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion);
+								CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
+										fixOrderCost, price, variCost, holdingCost, salvageValue);
 								System.out.println("");
 								double[][] optTable = recursion.getOptTable();
 								FindsSOverDraft findsS = new FindsSOverDraft(T, iniCash);

@@ -1,10 +1,12 @@
 package sdp.cash;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
@@ -19,13 +21,14 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 
 public class CashRecursion {
 	Map<CashState, Double> cacheActions = new TreeMap<>();	
-	Map<CashState, Double> cacheValues = new HashMap<>();
+	Map<CashState, Double> cacheValues = new TreeMap<>();
 	
 	double[][][] pmf;	
 	OptDirection optDirection;	
 	Function<CashState, double[]> getFeasibleActions;
 	StateTransitionFunction<CashState, Double, Double, CashState> stateTransition;
 	ImmediateValueFunction<CashState, Double, Double, Double> immediateValue;
+	double discountFactor;
 	
 	public enum OptDirection{
 		MIN,
@@ -35,7 +38,8 @@ public class CashRecursion {
 	public CashRecursion(OptDirection optDirection, double[][][] pmf, 
 			         Function<CashState, double[]> getFeasibleAction,
 			         StateTransitionFunction<CashState, Double, Double, CashState> stateTransition,
-			         ImmediateValueFunction<CashState, Double, Double, Double> immediateValue) {
+			         ImmediateValueFunction<CashState, Double, Double, Double> immediateValue, 
+			         double discountFactor) {
 		this.optDirection = optDirection;
 		this.pmf = pmf;
 		this.getFeasibleActions = getFeasibleAction;
@@ -46,6 +50,8 @@ public class CashRecursion {
 				o1.getIniInventory() == o2.getIniInventory() ? o1.iniCash > o2.iniCash  ? 1 :
 					o1.iniCash == o2.iniCash ? 0 : -1 : -1 : -1;
 		this.cacheActions = new TreeMap<>(keyComparator);
+		this.cacheValues = new TreeMap<>(keyComparator);
+		this.discountFactor = discountFactor;
 	}
 		
 	public StateTransitionFunction<CashState, Double, Double, CashState> getStateTransitionFunction(){
@@ -101,7 +107,7 @@ public class CashRecursion {
 					thisQValue += dAndP[j][1] * immediateValue.apply(s, orderQty, dAndP[j][0]);
 					if (s.getPeriod() < pmf.length) {
 						CashState newState = stateTransition.apply(s, orderQty, dAndP[j][0]);
-						thisQValue += dAndP[j][1] * getExpectedValue(newState);
+						thisQValue += dAndP[j][1] * discountFactor * getExpectedValue(newState);
 					}
 				}
 				QValues[i] = thisQValue;
@@ -118,7 +124,12 @@ public class CashRecursion {
 					}
 				}
 			}
+			try {
 			this.cacheActions.putIfAbsent(s, bestOrderQty);
+			}
+			catch (Exception e) {
+				System.out.println("error");
+			}
 			return val;
 		});
 	}

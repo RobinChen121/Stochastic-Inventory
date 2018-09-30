@@ -1,5 +1,7 @@
 package cash.overdraft;
 
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -9,6 +11,7 @@ import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
 import sdp.cash.CashRecursion.OptDirection;
 import sdp.inventory.GetPmf;
+import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 
@@ -30,6 +33,7 @@ public class CashOverdraftLimit {
 		double variCost = 2;
 		double holdingCost = 0;
 		double price = 5;
+		double salvageValue = 0.5;
 
 		double iniCash = 0;
 		double interestRate = 0.2;
@@ -42,6 +46,7 @@ public class CashOverdraftLimit {
 		double maxInventoryState = 100;
 		double minCashState = -200; // 资金不可能减少
 		double maxCashState = 800;
+		double discountFactor = 0.95;
 
 		// get demand possibilities for each period
 		int T = meanDemand.length;
@@ -95,7 +100,7 @@ public class CashOverdraftLimit {
 		 * Solve
 		 */
 		CashRecursion recursion = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition,
-				immediateValue);
+				immediateValue, discountFactor);
 		int period = 1;
 		double iniInventory = 0;
 		CashState initialState = new CashState(period, iniInventory, iniCash);
@@ -111,7 +116,8 @@ public class CashOverdraftLimit {
 		 * Simulating sdp results
 		 */
 		int sampleNum = 10000;
-		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion);
+		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
+				fixOrderCost, price, variCost, holdingCost, salvageValue);
 		simuation.simulateSDPGivenSamplNum(initialState);
 		double error = 0.0001; 
 		double confidence = 0.95;
@@ -123,8 +129,8 @@ public class CashOverdraftLimit {
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		FindsSOverDraft findsCS = new FindsSOverDraft(T, iniCash);
-		double[][] optsCS = findsCS.getsCS(optTable);
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		double[][] optsCS = findsCS.getsCS(optTable);		
+		double simsCSFinalValue = simuation.simulatesCSDraft(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 		System.out.printf("Optimality gap is: %.2f%%\n", (finalCash -simsCSFinalValue)/finalCash*100);
 	}
 }
