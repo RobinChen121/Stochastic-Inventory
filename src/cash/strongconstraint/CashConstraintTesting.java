@@ -48,7 +48,7 @@ public class CashConstraintTesting {
 		double[] v = { 1, 2 };
 		double[] B0 = { 5, 10 }; // ini cash can order 5 or 10 items
 		double[] p = { 4, 8 };
-		double[] h = { 2, 3 };
+		double[] h = { 1, 3 };
 		
 		double salvageValue = 0.5;
 		FindCCrieria criteria = FindCCrieria.XRELATE;
