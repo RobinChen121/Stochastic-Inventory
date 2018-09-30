@@ -1,6 +1,5 @@
 package sdp.inventory;
 
-import cern.colt.list.adapter.DoubleListAdapter;
 
 public class CheckKConvexity {
 	

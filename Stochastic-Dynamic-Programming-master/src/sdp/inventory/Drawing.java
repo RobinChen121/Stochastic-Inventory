@@ -1,6 +1,5 @@
 package sdp.inventory;
 
-import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.text.NumberFormat;
@@ -20,7 +19,6 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import com.sun.prism.paint.Color;
 
 /**
  * @author: Zhen Chen
