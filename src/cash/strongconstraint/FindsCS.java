@@ -70,7 +70,7 @@ public class FindsCS {
 				
 		for (int t = 1; t < T; t++) {
 			final int i = t + 1;
-			int recordTimes = 0;
+			boolean sHasRecorded = false;
 			double[][] tOptTable = Arrays.stream(optimalTable).filter(p -> p[0] == i)
 					.map(p -> Arrays.stream(p).toArray()).toArray(double[][]::new);
 			
@@ -84,12 +84,12 @@ public class FindsCS {
 						break;
 					}
 				}
-				optimalsCS[T - 1][1] = 0; // C 的默认值为 0
+				optimalsCS[T - 1][1] = 0; // C default value is 0
 				for (int j = (int) S; j >= 0; j--) {
 					int jj = 0;
 					for (jj = j + 1; jj <= (int) S; jj++) {
 						if (Ly(jj,  t) > fixOrderCost + Ly(j, t)) {
-							optimalsCS[t][1] = fixOrderCost + variOrderCost * (jj - 1 - j); // C for x = 0 at last
+							optimalsCS[t][1] = fixOrderCost + variOrderCost * (jj - 1 - j); // C for x = 0 at last period
 							cacheCValues.put(new State(t + 1, j), optimalsCS[t][1]);
 							break;
 						}
@@ -102,29 +102,36 @@ public class FindsCS {
 				break;
 			}				
 			
-			optimalsCS[t][2] = minCashRequired;
+			optimalsCS[t][2] = 0;
 			optimalsCS[t][1] = fixOrderCost; // default value for C is K
 			ArrayList<Double> recordCash = new ArrayList<>();
+			ArrayList<Double> recordS= new ArrayList<>();
 			double mark_s = 0; //backward, the first inventory level that starts ordering is s
 			for (int j = tOptTable.length - 1; j >= 0; j--) {
 				if (tOptTable[j][3] != 0) {
 					if (mark_s == 0) {
-						optimalsCS[t][0] = j + 1 < tOptTable.length ? tOptTable[j + 1][1]
+						optimalsCS[t][0] = j + 1 < tOptTable.length ? tOptTable[j+1][1] 
 																	    : tOptTable[j][1] + 1; // maximum not ordering inventory level as s
 						mark_s = 1;
 					}
 					if (tOptTable[j][1] + tOptTable[j][3] > optimalsCS[t][2]) //  maximum order-up-to level as S
 						optimalsCS[t][2] = tOptTable[j][1] + tOptTable[j][3];
-					recordTimes = 1; // 
+						//if (tOptTable[j][2] > fixOrderCost + variOrderCost * tOptTable[j][3])
+							//recordS.add(tOptTable[j][1] + tOptTable[j][3]); // average order-up-to level as S, is worse than choosing maximum S
+					sHasRecorded = true; // 
 				}
 								
-				if (tOptTable[j][3] == 0 && recordTimes == 1) 
+				if (tOptTable[j][3] == 0 && sHasRecorded == true) 
 					recordCash.add(tOptTable[j][2]);					
 			}
+			// average order-up-to level as S
+			//optimalsCS[t][2] = recordS.stream().mapToDouble(p -> p).average().isPresent() ? recordCash.stream().mapToDouble(p -> p).average().getAsDouble() : optimalsCS[t][2];
+			
+			
 			// choose a maximum not ordering cash level as C when ordering quantity is 0
 			// or choose an average value
 			// or choose a minimum value
-			// or related with x (initial inventory)
+			// or related with x (initial inventory)			
 			switch (criteria) {
 				case MAX:
 					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).max().isPresent() ? recordCash.stream().mapToDouble(p -> p).max().getAsDouble() : minCashRequired;
@@ -136,16 +143,18 @@ public class FindsCS {
 					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).average().isPresent() ? recordCash.stream().mapToDouble(p -> p).average().getAsDouble() : minCashRequired;
 				case XRELATE:
 					double markInventory = -0.5;
+					boolean CHasRecoded = false;
 					for (int j = 0; j < tOptTable.length - 1; j++) {
-						if (tOptTable[j][1] < optimalsCS[t][0]) {
+						if (tOptTable[j][1] < optimalsCS[t][0]) {							
 							if (tOptTable[j][3] > 0) {
 								if (tOptTable[j][1] > markInventory) {
 									optimalsCS[t][1] = tOptTable[j][2] - 1;
 									markInventory = tOptTable[j][1];
+									CHasRecoded = true;
 								}
 							}
-							else {
-								optimalsCS[t][1] = fixOrderCost * 20;
+							else { // if for an initial inventory x, order quantity always zero, then C is a large number
+								optimalsCS[t][1] = CHasRecoded == false ? fixOrderCost * 20 : fixOrderCost;
 							}
 							cacheCValues.put(new State(t + 1, tOptTable[j][1]), optimalsCS[t][1]);
 						}

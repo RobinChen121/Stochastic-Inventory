@@ -27,7 +27,7 @@ import umontreal.ssj.probdist.PoissonDist;
  * @version 2018, April 15th, 10:32:46 am
  * @Description: drawing pictures, see K convexity;
  * an example of two local minimums:
- * double[] meanDemand = {20,40,60};
+ * double[] meanDemand = {20,40,60}; 
 	double iniCash = 200;
 		double fixOrderCost = 100;
 		double variCost = 1;
@@ -36,8 +36,6 @@ import umontreal.ssj.probdist.PoissonDist;
 		double minCashRequired = 0; 
 		double maxOrderQuantity = 250;
  * 
- * max gap may be 8%
- * two level (s, C, S) policy may be better
  * 
  * 
  * 
@@ -46,9 +44,9 @@ public class CashConstraintDraw {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {2, 21.8};
+		double[] meanDemand = {1.8, 6.6, 2, 21.8};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 30;
+		double iniCash = 28;
 		double iniInventory = 0;
 		double fixOrderCost = 10;
 		double variCost = 2;

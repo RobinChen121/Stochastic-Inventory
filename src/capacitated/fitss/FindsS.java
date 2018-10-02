@@ -7,7 +7,6 @@ import ilog.concert.IloException;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
-import sun.awt.www.content.image.jpeg;
 
 /**
  * @author: Zhen Chen

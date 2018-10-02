@@ -18,5 +18,10 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/Program Files/Java/cplex.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/D:/Program%20Files/IBM/ILOG/CPLEX_Studio_Community127/doc/html/en-US/refjavacplex/html/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
