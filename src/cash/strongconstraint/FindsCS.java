@@ -2,13 +2,18 @@ package cash.strongconstraint;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.DoubleToLongFunction;
 
-
-
+import jdk.jfr.consumer.RecordedStackTrace;
 import sdp.cash.CashState;
 import sdp.inventory.State;
 import sun.security.provider.JavaKeyStore.CaseExactJKS;
@@ -70,7 +75,6 @@ public class FindsCS {
 				
 		for (int t = 1; t < T; t++) {
 			final int i = t + 1;
-			boolean sHasRecorded = false;
 			double[][] tOptTable = Arrays.stream(optimalTable).filter(p -> p[0] == i)
 					.map(p -> Arrays.stream(p).toArray()).toArray(double[][]::new);
 			
@@ -102,17 +106,19 @@ public class FindsCS {
 				break;
 			}				
 			
-			optimalsCS[t][2] = 0;
+			optimalsCS[t][2] = 0;  // default value for S is 0
 			optimalsCS[t][1] = fixOrderCost; // default value for C is K
-			ArrayList<Double> recordCash = new ArrayList<>();
-			ArrayList<Double> recordS= new ArrayList<>();
-			double mark_s = 0; //backward, the first inventory level that starts ordering is s
+			optimalsCS[t][0] = 0;  // default value for s is 0
+			ArrayList<Double> recordCash = new ArrayList<>();									
+			
+			// backward, the first inventory level that starts ordering is s
+			boolean sHasRecorded = false;; //backward, the first inventory level that starts ordering is s
 			for (int j = tOptTable.length - 1; j >= 0; j--) {
 				if (tOptTable[j][3] != 0) {
-					if (mark_s == 0) {
+					if (sHasRecorded == false) {
 						optimalsCS[t][0] = j + 1 < tOptTable.length ? tOptTable[j+1][1] 
 																	    : tOptTable[j][1] + 1; // maximum not ordering inventory level as s
-						mark_s = 1;
+						sHasRecorded = true;
 					}
 					if (tOptTable[j][1] + tOptTable[j][3] > optimalsCS[t][2]) //  maximum order-up-to level as S
 						optimalsCS[t][2] = tOptTable[j][1] + tOptTable[j][3];
@@ -124,8 +130,6 @@ public class FindsCS {
 				if (tOptTable[j][3] == 0 && sHasRecorded == true) 
 					recordCash.add(tOptTable[j][2]);					
 			}
-			// average order-up-to level as S
-			//optimalsCS[t][2] = recordS.stream().mapToDouble(p -> p).average().isPresent() ? recordCash.stream().mapToDouble(p -> p).average().getAsDouble() : optimalsCS[t][2];
 			
 			
 			// choose a maximum not ordering cash level as C when ordering quantity is 0
@@ -162,6 +166,65 @@ public class FindsCS {
 							break;
 					}
 									
+					// find a most frequent S, sometimes when cash is not enough, S bound can also affect gaps much	
+					HashMap<Double, Integer> recordS = new HashMap<>();
+					double S = 0;
+					for (int j = 0; j < tOptTable.length - 1; j++) {
+						if (tOptTable[j][1] < optimalsCS[t][0]) {
+							if (tOptTable[j][2] > fixOrderCost + variOrderCost * tOptTable[j][3]) {
+								if (tOptTable[j][1] + tOptTable[j][3] != S) {
+									S = tOptTable[j][1] + tOptTable[j][3];
+									recordS.putIfAbsent(S, 1);
+								}
+								else if (recordS.size() != 0)
+									recordS.replace(S, recordS.get(S) + 1);		
+							}
+						}
+					}
+					if (recordS.size() != 0)
+						optimalsCS[t][2] = recordS.entrySet().stream()
+											.max((o1,o2)-> o1.getValue().compareTo(o2.getValue())).get().getKey();
+					
+					
+//					ArrayList<Integer> recordNumber = new ArrayList<>();
+//					ArrayList<Integer> recordIndex = new ArrayList<>();
+//					boolean sHasRecorded = false;
+//					boolean hasStateOrdering = false;
+//					int orderingNumber = 0;
+//					int sIndex = tOptTable.length - 1;						
+//					for (int j = tOptTable.length - 1; j >= 0; j--) {
+//						if (tOptTable[j][3] != 0 ) {
+//							orderingNumber ++;
+//							if (sHasRecorded == false) {
+//								 sIndex = j;
+//								 sHasRecorded  = true;
+//								 recordIndex.add(sIndex);
+//							}		
+//							hasStateOrdering = true; 
+//						}
+//						if ((tOptTable[j][3] == 0 || j == 0) && sHasRecorded  == true) {
+//							recordNumber.add(orderingNumber);
+//							sHasRecorded = false;
+//							orderingNumber = 0;
+//						}				
+//						
+//						if (hasStateOrdering == false && j == 0)
+//							recordNumber.add(0);
+//						if (tOptTable[j][3] == 0 && sHasRecorded == true) 
+//							recordCash.add(tOptTable[j][2]);	
+//						
+//					}
+//					
+//					// choose a most frequent s
+//					int maxNumberIndex = recordNumber.indexOf(Collections.max(recordNumber));
+//					if (recordIndex.size() > 0) {
+//						int optsIndex = recordIndex.get(maxNumberIndex);
+//						optimalsCS[t][0] = tOptTable[optsIndex][1] + 1;
+//						optimalsCS[t][2] = tOptTable[optsIndex - 1][1] + tOptTable[optsIndex - 1][3];
+//					}	
+					
+					
+					
 					
 					//double meands = t == T - 1 ? meanD[t] : meanD[t] + meanD[t + 1]; // a heuristic step
 //					double meands = meanD[t];

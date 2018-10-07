@@ -44,7 +44,7 @@ public class CashConstraintDraw {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {1.8, 6.6, 2, 21.8};
+		double[] meanDemand = {4.9, 18.8, 6.4, 27.9, 45.3};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniCash = 28;
 		double iniInventory = 0;

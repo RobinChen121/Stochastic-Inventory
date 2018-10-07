@@ -28,19 +28,29 @@ import umontreal.ssj.probdist.PoissonDist;
  * @Description stochastic lot sizing problem with strong cash balance
  *              constraint, provide a (s, C, S) policy
  *
+ * a numerical case:
+ * double[] meanDemand = {41.8, 6.6, 2, 21.8};
+ * double iniCash = 15;
+ * double iniInventory = 0;
+ * double fixOrderCost = 10;
+ * double variCost = 1;
+ * double price = 8;
+ * double salvageValue = 0.5;
+ *
+ * there are states: [3, 14, 16, 6], [3, 14, 23, 0]
  */
 
 public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7};
+		double[] meanDemand = {4.9, 18.8, 6.4, 27.9};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniCash = 15;
 		double iniInventory = 0;
 		double fixOrderCost = 10;
 		double variCost = 1;
-		double price = 4;
+		double price = 8;
 		double salvageValue = 0.5;
 		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double holdingCost = 3;	
@@ -123,7 +133,7 @@ public class CashConstraint {
 		/*******************************************************************
 		 * Simulating sdp results
 		 */
-		int sampleNum = 10000;
+		int sampleNum = 100000;
 		
 		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
 				fixOrderCost, price, variCost, holdingCost, salvageValue);
