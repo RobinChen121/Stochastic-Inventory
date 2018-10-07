@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.DoubleToLongFunction;
 
+import com.sun.corba.se.impl.encoding.OSFCodeSetRegistry.Entry;
+
 import jdk.jfr.consumer.RecordedStackTrace;
 import sdp.cash.CashState;
 import sdp.inventory.State;
@@ -166,11 +168,12 @@ public class FindsCS {
 							break;
 					}
 									
-					// find a most frequent S, sometimes when cash is not enough, S bound can also affect gaps much	
-					HashMap<Double, Integer> recordS = new HashMap<>();
+					// find a most frequent S, sometimes when cash is not enough, S bound can also affect gaps much						
+					Map<Double, Integer> recordS = new TreeMap<>();
 					double S = 0;
 					for (int j = 0; j < tOptTable.length - 1; j++) {
-						if (tOptTable[j][1] < optimalsCS[t][0]) {
+						if (tOptTable[j][1] < optimalsCS[t][0] 
+								&& tOptTable[j][2] > cacheCValues.get(new State(t + 1, tOptTable[j][1]))) {
 							if (tOptTable[j][2] > fixOrderCost + variOrderCost * tOptTable[j][3]) {
 								if (tOptTable[j][1] + tOptTable[j][3] != S) {
 									S = tOptTable[j][1] + tOptTable[j][3];
@@ -180,51 +183,17 @@ public class FindsCS {
 									recordS.replace(S, recordS.get(S) + 1);		
 							}
 						}
+						else
+							break;
 					}
-					if (recordS.size() != 0)
+					if (recordS.size() != 0) 
 						optimalsCS[t][2] = recordS.entrySet().stream()
-											.max((o1,o2)-> o1.getValue().compareTo(o2.getValue())).get().getKey();
-					
-					
-//					ArrayList<Integer> recordNumber = new ArrayList<>();
-//					ArrayList<Integer> recordIndex = new ArrayList<>();
-//					boolean sHasRecorded = false;
-//					boolean hasStateOrdering = false;
-//					int orderingNumber = 0;
-//					int sIndex = tOptTable.length - 1;						
-//					for (int j = tOptTable.length - 1; j >= 0; j--) {
-//						if (tOptTable[j][3] != 0 ) {
-//							orderingNumber ++;
-//							if (sHasRecorded == false) {
-//								 sIndex = j;
-//								 sHasRecorded  = true;
-//								 recordIndex.add(sIndex);
-//							}		
-//							hasStateOrdering = true; 
-//						}
-//						if ((tOptTable[j][3] == 0 || j == 0) && sHasRecorded  == true) {
-//							recordNumber.add(orderingNumber);
-//							sHasRecorded = false;
-//							orderingNumber = 0;
-//						}				
-//						
-//						if (hasStateOrdering == false && j == 0)
-//							recordNumber.add(0);
-//						if (tOptTable[j][3] == 0 && sHasRecorded == true) 
-//							recordCash.add(tOptTable[j][2]);	
-//						
-//					}
-//					
-//					// choose a most frequent s
-//					int maxNumberIndex = recordNumber.indexOf(Collections.max(recordNumber));
-//					if (recordIndex.size() > 0) {
-//						int optsIndex = recordIndex.get(maxNumberIndex);
-//						optimalsCS[t][0] = tOptTable[optsIndex][1] + 1;
-//						optimalsCS[t][2] = tOptTable[optsIndex - 1][1] + tOptTable[optsIndex - 1][3];
-//					}	
-					
-					
-					
+											.max((o1,o2)-> o1.getValue() > o2.getValue() ? 1 :
+												o1.getValue() == o2.getValue() ?  
+													o1.getKey() > o2.getKey() ? 1 : -1 : -1).get().getKey();
+					if (recordS.size() == 0 && optimalsCS[t][0] != 0)
+						optimalsCS[t][2] = 500; // a large number when ordering quantity is always full capacity
+										
 					
 					//double meands = t == T - 1 ? meanD[t] : meanD[t] + meanD[t + 1]; // a heuristic step
 //					double meands = meanD[t];
@@ -247,7 +216,7 @@ public class FindsCS {
 //					}				
 			}
 		}
-		System.out.println("(s, C, S) are: " + Arrays.deepToString(optimalsCS));
+  		System.out.println("(s, C, S) are: " + Arrays.deepToString(optimalsCS));
 		return optimalsCS;
 	}
 
