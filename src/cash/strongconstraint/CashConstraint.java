@@ -44,18 +44,18 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = { 9, 13, 20, 16};
+		double[] meanDemand = {15, 15, 15, 15};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 30;
+		double iniCash = 25;
 		double iniInventory = 0;
 		double fixOrderCost = 20;
-		double variCost = 2;
+		double variCost = 1;
 		double price = 8;
 		double salvageValue = 0.5;
 		FindCCrieria criteria = FindCCrieria.XRELATE;
-		double holdingCost = 1;	
+		double holdingCost = 3;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 150; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -149,9 +149,11 @@ public class CashConstraint {
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(iniCash, meanDemand, fixOrderCost, price, variCost, holdingCost, salvageValue);
 		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
-		Map<State, Double> cacheCValues = new TreeMap<>();
-		cacheCValues = findsCS.cacheCValues;
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheCValues, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		Map<State, Double> cacheC1Values = new TreeMap<>();
+		Map<State, Double> cacheC2Values = new TreeMap<>();
+		cacheC1Values = findsCS.cacheC1Values;
+		cacheC2Values = findsCS.cacheC2Values;
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
 		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	
 		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
@@ -162,22 +164,22 @@ public class CashConstraint {
 		 * for some state C is 12, and 13 in other state, 
 		 * we use heuristic step by choosing maximum one
 		 */		
- 		findsCS.checksBS(optsCS, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+ 		findsCS.checksC12S(optsCS, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
  		
  		/*******************************************************************
 		 * Check K-convexity
 		 */	
- 		int minInventorys = 0;
-		int maxInventorys = 100; 
-		int xLength = maxInventorys - minInventorys + 1;
- 		double[][] yG = new double[xLength][2];
-		int index = 0;
-		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
-			yG[index][0] = initialInventory;
-			yG[index][1] = -recursion.getExpectedValue(new CashState(period, initialInventory, iniCash));
-			index++;
-		}
- 		CheckKConvexity.check(yG, fixOrderCost);
+// 		int minInventorys = 0;
+//		int maxInventorys = 100; 
+//		int xLength = maxInventorys - minInventorys + 1;
+// 		double[][] yG = new double[xLength][2];
+//		int index = 0;
+//		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+//			yG[index][0] = initialInventory;
+//			yG[index][1] = -recursion.getExpectedValue(new CashState(period, initialInventory, iniCash));
+//			index++;
+//		}
+// 		CheckKConvexity.check(yG, fixOrderCost);
 	}
 	
 	

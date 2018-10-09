@@ -44,18 +44,18 @@ public class CashConstraintDraw {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {4.9, 18.8, 6.4, 27.9, 45.3};
+		double[] meanDemand = { 6.6, 2, 21.8};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 28;
+		double iniCash = 30;
 		double iniInventory = 0;
-		double fixOrderCost = 10;
-		double variCost = 2;
-		double price = 8;
-		double salvageValue = 0;
+		double fixOrderCost = 20;
+		double variCost = 1;
+		double price = 4;
+		double salvageValue = 0.5;
 		FindCCrieria criteria = FindCCrieria.XRELATE;
-		double holdingCost = 3;	
+		double holdingCost = 1;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 150; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 		
 
 		double truncationQuantile = 0.9999;
@@ -150,9 +150,11 @@ public class CashConstraintDraw {
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(iniCash, meanDemand, fixOrderCost, price, variCost, holdingCost, salvageValue);
 		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
-		Map<State, Double> cacheCValues = new TreeMap<>();
-		cacheCValues = findsCS.cacheCValues;
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheCValues, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		Map<State, Double> cacheC1Values = new TreeMap<>();
+		Map<State, Double> cacheC2Values = new TreeMap<>();
+		cacheC1Values = findsCS.cacheC1Values;
+		cacheC2Values = findsCS.cacheC2Values;
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 		double gap1 = (finalCash -simsCSFinalValue)/finalCash;
 		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	
 		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);

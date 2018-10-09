@@ -37,7 +37,8 @@ public class CashSimulation {
 	double holdCost;
 	double salvageValue;
 	
-	Map<State, Double> cacheCValues = new TreeMap<>();
+	Map<State, Double> cacheC1Values = new TreeMap<>();
+	Map<State, Double> cacheC2Values = new TreeMap<>();
 
 	/**
 	 * simulation for cash sdp problem
@@ -129,32 +130,87 @@ public class CashSimulation {
 	/**
 	 * 
 	 * @param iniState
-	 * @return simulate (s, C, S) policy in strong cash constraint
+	 * @return simulate (s, C1, C2, S) policy in strong cash constraint
 	 */
-	public double simulatesCS(CashState iniState, double[][] optsCS, Map<State, Double> cacheCValues, double minCashRequired, Double maxQ, double fixOrderCost, double variCost) {
+	public double simulatesCS(CashState iniState, double[][] optsCS, Map<State, Double> cacheC1Values, 
+			Map<State, Double> cacheC2Values, double minCashRequired, Double maxQ, double fixOrderCost, double variCost) {
 		Sampling.resetStartStream();
-		this.cacheCValues = cacheCValues;
+		this.cacheC1Values = cacheC1Values;
+		this.cacheC2Values = cacheC2Values;
 		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];		
+		int M = 10000;
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; CashState state = iniState;
 			for (int t = 0; t < samples[0].length; t++)
 			{
 				double optQ;
 				if ( t == 0) 
-					optQ = optsCS[t][2] - optsCS[t][0];
+					optQ = optsCS[t][3] - optsCS[t][0];
 				else {
 					double maxOrderQuantity = Math.max(0, (state.iniCash - minCashRequired - fixOrderCost)/variCost);
 					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
 					if (state.getIniInventory() < optsCS[t][0]) {
-						if (cacheCValues.get(new State(state.getPeriod(), state.getIniInventory())) == null)
+						if (cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory())) == null)
 							optsCS[t][1] = 0;	
 						else 
-							optsCS[t][1] = cacheCValues.get(new State(state.getPeriod(), state.getIniInventory()));
+							optsCS[t][1] = cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory()));
+						if (cacheC2Values.get(new State(state.getPeriod(), state.getIniInventory())) == null)
+							optsCS[t][2] = M;	
+						else 
+							optsCS[t][2] = cacheC2Values.get(new State(state.getPeriod(), state.getIniInventory()));
+					}
+					// not include equal
+					if (state.getIniInventory() < optsCS[t][0] && state.getIniCash() > optsCS[t][1]
+							       && state.getIniCash() < optsCS[t][2])
+						optQ = Math.min(maxOrderQuantity, optsCS[t][3] - state.getIniInventory());
+					else
+						optQ = 0;
+				}
+				double randomDemand = samples[i][t];
+				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, optQ, randomDemand);
+				state = stateTransition.apply(state, optQ, randomDemand);
+			}
+			simuValues[i] = sum;
+		}
+		DecimalFormat df2 = new DecimalFormat("###,###");
+		double simFinalValue = Arrays.stream(simuValues).sum()/samples.length + iniState.iniCash;
+		System.out.println("\nfinal simulated (s, C1, C2, S) policy expected value in " + df2.format(sampleNum) + " samples is: " + simFinalValue);
+		return simFinalValue;
+	}
+	
+	
+	/**
+	 * 
+	 * @param iniState
+	 * @return simulate (s, C, S) policy in strong cash constraint
+	 */
+	public double simulatesCS(CashState iniState, double[][] optsCS, Map<State, Double> cacheC1Values, 
+			double minCashRequired, Double maxQ, double fixOrderCost, double variCost) {
+		Sampling.resetStartStream();
+		this.cacheC1Values = cacheC1Values;
+		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		double[] simuValues = new double[samples.length];		
+		int M = 10000;
+		for (int i = 0; i < samples.length; i++) {
+			double sum = 0; CashState state = iniState;
+			for (int t = 0; t < samples[0].length; t++)
+			{
+				double optQ;
+				if ( t == 0) 
+					optQ = optsCS[t][3] - optsCS[t][0];
+				else {
+					double maxOrderQuantity = Math.max(0, (state.iniCash - minCashRequired - fixOrderCost)/variCost);
+					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
+					if (state.getIniInventory() < optsCS[t][0]) {
+						if (cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory())) == null)
+							optsCS[t][1] = 0;	
+						else 
+							optsCS[t][1] = cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory()));
 					}
 					// not include equal
 					if (state.getIniInventory() < optsCS[t][0] && state.getIniCash() > optsCS[t][1])
-						optQ = Math.min(maxOrderQuantity, optsCS[t][2] - state.getIniInventory());
+						optQ = Math.min(maxOrderQuantity, optsCS[t][3] - state.getIniInventory());
 					else
 						optQ = 0;
 				}

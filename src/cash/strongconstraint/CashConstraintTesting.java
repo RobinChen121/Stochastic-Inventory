@@ -34,7 +34,7 @@ public class CashConstraintTesting {
 	// average computation time for 10 periods is 500s, 9 periods is 150s, or 305s,
 	// or 400s
 	public static void main(String[] args) {
-		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, nonOptStatesCount, gap1, gap2, convexity, firstQ";
+		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, nonOptStatesCount, gap1, gap2, totalStates, firstQ";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
 		double[][] iniMeanDemands = { { 15, 15, 15, 15, 15, 15, 15, 15 },
@@ -45,12 +45,13 @@ public class CashConstraintTesting {
 				{ 4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7 } };
 
 		double[] K = { 10, 20 };
-		double[] v = { 1, 2 };
+		double[] v = {1, 3};
 		double[] B0 = { 5, 10 }; // ini cash can order 5 or 10 items
 		double[] p = { 4, 8 };
-		double[] h = { 1, 3 };
-		
+		double[] h = {1, 3};
 		double salvageValue = 0.5;
+		
+		
 		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -65,14 +66,14 @@ public class CashConstraintTesting {
 		/*******************************************************************
 		 * set demands length, for testing 
 		 */
-		int newLength = 4;
+		int newLength = 8;
 		double[][] meanDemands = new double[iniMeanDemands.length][newLength];
 		for (int i = 0; i < iniMeanDemands.length; i++)
 			for (int j = 0; j < newLength; j++) {
 				meanDemands[i][j] = iniMeanDemands[i][j];
 			}
 
-		for (int idemand = 0; idemand < 10; idemand++)
+		for (int idemand = 0; idemand < meanDemands.length; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
@@ -174,11 +175,13 @@ public class CashConstraintTesting {
 								System.out.println("");
 								double[][] optTable = recursion.getOptTable();
 								FindsCS findsCS = new FindsCS(iniCash, meanDemand, fixOrderCost, price, variCost, holdingCost, salvageValue);
-								double[][] optsCS = findsCS.getsCS(optTable, minCashState, criteria);
-								Map<State, Double> cacheCValues = new TreeMap<>();
-								cacheCValues = findsCS.cacheCValues;
-								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheCValues, minCashRequired,
-										maxOrderQuantity, fixOrderCost, variCost);
+								double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+								Map<State, Double> cacheC1Values = new TreeMap<>();
+								Map<State, Double> cacheC2Values = new TreeMap<>();
+								cacheC1Values = findsCS.cacheC1Values;
+								cacheC2Values = findsCS.cacheC2Values;
+								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, 
+										cacheC2Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 								double gap1 = (finalValue - simsCSFinalValue) / finalValue;
 								double gap2 = (simFinalValue - simsCSFinalValue) / simFinalValue;
 								System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
@@ -188,7 +191,7 @@ public class CashConstraintTesting {
 								 * for some state C is 12, and 13 in other state, we use heuristic step by
 								 * choosing maximum one
 								 */
-								int nonOptCount = findsCS.checksBS(optsCS, optTable, minCashRequired, maxOrderQuantity,
+								int nonOptCount = findsCS.checksC12S(optsCS, optTable, minCashRequired, maxOrderQuantity,
 										fixOrderCost, variCost);
 
 								/*******************************************************************
@@ -209,11 +212,11 @@ public class CashConstraintTesting {
 								System.out.printf(
 										"\n*******************************************************************\n");
 								
-								String convexity = "unknown";
+								long totalStates = optTable.length;
 								String out = fixOrderCost + ",\t" + variCost + ",\t" + holdingCost + ",\t"
 										+ iniInventory + ",\t" + price + ",\t" + salvageValue + ",\t" + iniCash + ",\t" + (idemand + 1) + ",\t"
 										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t" + simsCSFinalValue
-										+ ",\t" + nonOptCount + ",\t" + gap1 + ",\t" + gap2 + ",\t" + convexity + ",\t"
+										+ ",\t" + nonOptCount + ",\t" + gap1 + ",\t" + gap2 + ",\t" + totalStates + ",\t"
 										+ firstQ;
 
 								WriteToCsv.writeToFile("./" + "test_results.csv", out);
