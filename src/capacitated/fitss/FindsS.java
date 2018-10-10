@@ -13,6 +13,9 @@ import ilog.cplex.IloCplex;
  * @email: 15011074486@163.com
  * @date: Jul 12, 2018---8:48:27 PM
  * @description: find s, S for capacitated lot sizing problem
+ * 
+ * in this class, you need have a cplex.jar library, download CPLEX software from 
+ * https://www.ibm.com/analytics/cplex-optimizer
  */
 
 public class FindsS {

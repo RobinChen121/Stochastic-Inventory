@@ -44,16 +44,16 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {15, 15, 15, 15};
+		double[] meanDemand = {15, 15, 15, 15, 15, 15, 15, 15};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 25;
+		double iniCash = 35;
 		double iniInventory = 0;
 		double fixOrderCost = 20;
-		double variCost = 1;
+		double variCost = 3;
 		double price = 8;
 		double salvageValue = 0.5;
 		FindCCrieria criteria = FindCCrieria.XRELATE;
-		double holdingCost = 3;	
+		double holdingCost = 1;	
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
@@ -133,7 +133,7 @@ public class CashConstraint {
 		/*******************************************************************
 		 * Simulating sdp results
 		 */
-		int sampleNum = 100000;
+		int sampleNum = 10000;
 		
 		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
 				fixOrderCost, price, variCost, holdingCost, salvageValue);

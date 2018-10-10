@@ -148,7 +148,7 @@ public class CashSimulation {
 				if ( t == 0) 
 					optQ = optsCS[t][3] - optsCS[t][0];
 				else {
-					double maxOrderQuantity = Math.max(0, (state.iniCash - minCashRequired - fixOrderCost)/variCost);
+					double maxOrderQuantity = (int) Math.max(0, (state.iniCash - minCashRequired - fixOrderCost)/variCost);
 					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
 					if (state.getIniInventory() < optsCS[t][0]) {
 						if (cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory())) == null)
