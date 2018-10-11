@@ -198,57 +198,72 @@ public class FindsCS {
 					//Comparator<Map.Entry<Double, Integer>> comparator = (o1, o2) -> o1.getValue() > o2.getValue() ? 1
 					//																: o1.getValue() == o2.getValue() ?
 					//																  o1.getKey() > o2.getKey() ? 1 : -1 : -1;
-//					Map<Double, Integer> recordS = new TreeMap<>();
-//					double S = 0;
-//					for (int j = tOptTable.length - 1; j >= 0; j--) {
-//						if (tOptTable[j][1] < optimalsCS[t][0] && tOptTable[j][3] > 0) {
-//							int maxQ = (int) Math.max(0, (tOptTable[j][2] - minCashRequired - fixOrderCost) / variOrderCost);
-//							if (tOptTable[j][2] >= fixOrderCost + variOrderCost * tOptTable[j][3]) {								
-//								if (tOptTable[j][3] < maxQ - 0.1) {
+					Map<Double, Integer> recordS = new HashMap<>();
+					double S = 0;
+					for (int j = tOptTable.length - 1; j >= 0; j--) {
+						if (tOptTable[j][1] < optimalsCS[t][0] && tOptTable[j][3] > 0) {
+							int maxQ = (int) Math.max(0, (tOptTable[j][2] - minCashRequired - fixOrderCost) / variOrderCost);
+							if (tOptTable[j][2] >= fixOrderCost + variOrderCost * tOptTable[j][3]) {								
+//								if (tOptTable[j][3] < maxQ - 0.1) { 
 //									S = tOptTable[j][1] + tOptTable[j][3];	
 //									if (recordS.containsKey(S))
 //										recordS.replace(S, recordS.get(S) + 1);
 //									else
 //										recordS.putIfAbsent(S, 1);
 //								}
-//								if (j == tOptTable.length - 1 && tOptTable[j][3] > maxQ - 0.1) {
+//								if (j == tOptTable.length - 1 && tOptTable[j][3] > maxQ - 0.1) { // S at end
 //									S = tOptTable[j][1] + tOptTable[j][3];
 //									recordS.putIfAbsent(S, 1);
 //								}
-//								if (j != tOptTable.length - 1 && tOptTable[j + 1][3] == 0 && tOptTable[j][3] > maxQ - 0.1) {
+								if (tOptTable[j][3] < maxQ - 0.1 || 
+										(j != tOptTable.length - 1 && tOptTable[j + 1][3] == 0 && tOptTable[j][3] > maxQ - 0.1)) {
+									if (recordS.size() != 0) {
+										S = (double) recordS.keySet().toArray()[recordS.size() - 1];
+										if (tOptTable[j][1] + tOptTable[j][3] >= S) {
+											int num = recordS.get(S) + 1;
+											recordS.remove(S);
+											S = tOptTable[j][1] + tOptTable[j][3];									
+											recordS.putIfAbsent(S, num);
+										}
+										else {
+											if (tOptTable[j][3] < maxQ - 0.1) // new S
+												recordS.putIfAbsent(tOptTable[j][1] + tOptTable[j][3], 1);
+											else
+												recordS.replace(S, recordS.get(S) + 1);
+										}
+									}
+									else {
+										S = tOptTable[j][1] + tOptTable[j][3];
+										recordS.putIfAbsent(S, 1);
+									}
+								}
+								if (j != tOptTable.length - 1) {
+									int maxQ2 = (int) Math.max(0, (tOptTable[j + 1][2] - minCashRequired - fixOrderCost) / variOrderCost);
+									if (tOptTable[j][3] > maxQ - 0.1 && tOptTable[j + 1][3] > 0 && tOptTable[j + 1][3] > maxQ2 - 0.1) {
+										if (tOptTable[j][1] + tOptTable[j][3] > tOptTable[j + 1][1] + tOptTable[j + 1][3]) {
+											int num = recordS.get(S) + 1;
+											recordS.remove(S);
+											S = tOptTable[j][1] + tOptTable[j][3];									
+											recordS.putIfAbsent(S, num);
+										}
+										else {
+											recordS.replace(S, recordS.get(S) + 1);
+										}										
+									}												
+								}					
+//								if (j != tOptTable.length - 1 && tOptTable[j + 1][1] != tOptTable[j][1] && tOptTable[j][3] > maxQ - 0.1)
 //									S = tOptTable[j][1] + tOptTable[j][3];
-//									if (recordS.containsKey(S))
-//										recordS.replace(S, recordS.get(S) + 1);
-//									else
-//										recordS.putIfAbsent(S, 1);
-//								}
-//								if (j != tOptTable.length - 1) {
-//									int maxQ2 = (int) Math.max(0, (tOptTable[j + 1][2] - minCashRequired - fixOrderCost) / variOrderCost);
-//									if (tOptTable[j][3] > maxQ - 0.1 && tOptTable[j + 1][3] > maxQ2 - 0.1) {
-//										if (tOptTable[j][1] + tOptTable[j][3] > tOptTable[j + 1][1] + tOptTable[j + 1][3]) {
-//											int num = recordS.get(S) + 1;
-//											recordS.remove(S);
-//											S = tOptTable[j][1] + tOptTable[j][3];									
-//											recordS.putIfAbsent(S, num);
-//										}
-//										else {
-//											recordS.replace(S, recordS.get(S) + 1);
-//										}										
-//									}												
-//								}					
-////								if (j != tOptTable.length - 1 && tOptTable[j + 1][1] != tOptTable[j][1] && tOptTable[j][3] > maxQ - 0.1)
-////									S = tOptTable[j][1] + tOptTable[j][3];
-//									
-//							}
-//						}
-//					}				
-//					if (recordS.size() != 0) 
-//						optimalsCS[t][3] = recordS.entrySet().stream()
-//											.max((o1,o2)-> o1.getValue() > o2.getValue() ? 1 :
-//												o1.getValue() == o2.getValue() ?  
-//													o1.getKey() > o2.getKey() ? 1 : -1 : -1).get().getKey();
-//					if (recordS.size() == 0 && optimalsCS[t][0] != 0)
-//						optimalsCS[t][3] = M; // a large number when ordering quantity is always full capacity
+									
+							}
+						}
+					}				
+					if (recordS.size() != 0) 
+						optimalsCS[t][3] = recordS.entrySet().stream()
+											.max((o1,o2)-> o1.getValue() > o2.getValue() ? 1 :
+												o1.getValue() == o2.getValue() ?  
+													o1.getKey() > o2.getKey() ? 1 : -1 : -1).get().getKey();
+					if (recordS.size() == 0 && optimalsCS[t][0] != 0)
+						optimalsCS[t][3] = M; // a large number when ordering quantity is always full capacity
 										
 					
 					//double meands = t == T - 1 ? meanD[t] : meanD[t] + meanD[t + 1]; // a heuristic step
