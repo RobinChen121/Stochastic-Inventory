@@ -1,7 +1,7 @@
-# Stochastic-Dynamic-Programming
-Stochastic dynamic programming code in Java to solve stochastic operational research problems
+# Stochastic-Lot-Sizing
+Codes in Java to solve stochastic lot sizing problems in which demands are stochastic.
 
-This is a library of java for solving lot sizing problems coded by Zhen Chen, okchen321@163.com.
+Coded by Zhen Chen, 15011074486@163.com.
 
 
 MIT licence.
