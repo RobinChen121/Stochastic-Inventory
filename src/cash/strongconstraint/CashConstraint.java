@@ -44,16 +44,15 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {21.15, 18.9, 17.7, 16.5, 15.15, 13.95, 12.75, 11.55};
-		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 50;
-		double iniInventory = 0;
+		double[] meanDemand = {6.6, 3, 21.8};
+		double iniInventory = 1;
+		double iniCash = 28;		
 		double fixOrderCost = 20;
-		double variCost = 3;
-		double price = 8;
+		double variCost = 1;
+		double holdingCost = 2;
+		double price = 4;
 		double salvageValue = 0.5;
-		FindCCrieria criteria = FindCCrieria.XRELATE;
-		double holdingCost = 1;	
+		FindCCrieria criteria = FindCCrieria.XRELATE;			
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
@@ -72,11 +71,17 @@ public class CashConstraint {
 				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
 				.toArray(PoissonDist[]::new);
 
-//		double[] values = {6, 7};
-//		double[] probs = {0.95, 0.05};
-//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-//		.mapToObj(i -> new DiscreteDistribution(values, probs, values.length)) // can be changed to other distributions
+//		double[] values1 = {2, 3};
+//		double[] probs1 = {0.95, 0.05};
+//		Distribution[] distributions = IntStream.iterate(0, i -> i + 2).limit(T)
+//		.mapToObj(i -> new DiscreteDistribution(values1, probs1, values1.length)) // can be changed to other distributions
 //		.toArray(DiscreteDistribution[]::new);	
+//			
+//		double[] values2 = {50, 55};
+//		double[] probs2 = {0.95, 0.05};
+//		distributions = IntStream.iterate(1, i -> i + 2).limit(T)
+//				.mapToObj(i -> new DiscreteDistribution(values2, probs2, values2.length)) // can be changed to other distributions
+//				.toArray(DiscreteDistribution[]::new);
 		
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 			
@@ -147,8 +152,8 @@ public class CashConstraint {
 		 */
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
-		FindsCS findsCS = new FindsCS(iniCash, meanDemand, fixOrderCost, price, variCost, holdingCost, salvageValue);
-		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
+		double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
 		Map<State, Double> cacheC1Values = new TreeMap<>();
 		Map<State, Double> cacheC2Values = new TreeMap<>();
 		cacheC1Values = findsCS.cacheC1Values;

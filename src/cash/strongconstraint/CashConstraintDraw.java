@@ -148,7 +148,7 @@ public class CashConstraintDraw {
 		 */
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
-		FindsCS findsCS = new FindsCS(iniCash, meanDemand, fixOrderCost, price, variCost, holdingCost, salvageValue);
+		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
 		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
 		Map<State, Double> cacheC1Values = new TreeMap<>();
 		Map<State, Double> cacheC2Values = new TreeMap<>();

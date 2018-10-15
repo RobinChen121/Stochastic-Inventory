@@ -198,7 +198,7 @@ public class CashSimulation {
 			{
 				double optQ;
 				if ( t == 0) 
-					optQ = optsCS[t][3] - optsCS[t][0];
+					optQ = optsCS[t][2] - optsCS[t][0];
 				else {
 					double maxOrderQuantity = Math.max(0, (state.iniCash - minCashRequired - fixOrderCost)/variCost);
 					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
@@ -210,7 +210,7 @@ public class CashSimulation {
 					}
 					// not include equal
 					if (state.getIniInventory() < optsCS[t][0] && state.getIniCash() > optsCS[t][1])
-						optQ = Math.min(maxOrderQuantity, optsCS[t][3] - state.getIniInventory());
+						optQ = Math.min(maxOrderQuantity, optsCS[t][2] - state.getIniInventory());
 					else
 						optQ = 0;
 				}

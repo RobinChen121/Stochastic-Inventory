@@ -52,7 +52,7 @@ public class CashConstraintTesting {
 		double salvageValue = 0.5;
 		
 		
-		FindCCrieria criteria = FindCCrieria.XRELATE;
+		FindCCrieria criteria = FindCCrieria.AVG;
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
@@ -66,14 +66,14 @@ public class CashConstraintTesting {
 		/*******************************************************************
 		 * set demands length, for testing 
 		 */
-		int newLength = 8;
+		int newLength = 4;
 		double[][] meanDemands = new double[iniMeanDemands.length][newLength];
 		for (int i = 0; i < iniMeanDemands.length; i++)
 			for (int j = 0; j < newLength; j++) {
 				meanDemands[i][j] = iniMeanDemands[i][j];
 			}
 
-		for (int idemand = 0; idemand < meanDemands.length; idemand++)
+		for (int idemand = 0; idemand < 10; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
@@ -174,24 +174,22 @@ public class CashConstraintTesting {
 								 */
 								System.out.println("");
 								double[][] optTable = recursion.getOptTable();
-								FindsCS findsCS = new FindsCS(iniCash, meanDemand, fixOrderCost, price, variCost, holdingCost, salvageValue);
+								FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
 								double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
 								Map<State, Double> cacheC1Values = new TreeMap<>();
 								Map<State, Double> cacheC2Values = new TreeMap<>();
 								cacheC1Values = findsCS.cacheC1Values;
-								cacheC2Values = findsCS.cacheC2Values;
+								//cacheC2Values = findsCS.cacheC2Values;
 								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, 
-										cacheC2Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+										minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 								double gap1 = (finalValue - simsCSFinalValue) / finalValue;
 								double gap2 = (simFinalValue - simsCSFinalValue) / simFinalValue;
 								System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 
 								/*******************************************************************
-								 * Check (s, C, S) policy, sometimes not always hold, because in certain period
-								 * for some state C is 12, and 13 in other state, we use heuristic step by
-								 * choosing maximum one
+								 * Check (s, C, S) policy, sometimes not always hold
 								 */
-								int nonOptCount = findsCS.checksC12S(optsCS, optTable, minCashRequired, maxOrderQuantity,
+								int nonOptCount = findsCS.checksCS(optsCS, optTable, minCashRequired, maxOrderQuantity,
 										fixOrderCost, variCost);
 
 								/*******************************************************************
