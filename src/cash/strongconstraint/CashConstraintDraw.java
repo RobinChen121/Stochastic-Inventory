@@ -46,7 +46,7 @@ public class CashConstraintDraw {
 	public static void main(String[] args) {
 		double[] meanDemand = { 6.6, 2, 21.8};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 30;
+		double iniCash = 80;
 		double iniInventory = 0;
 		double fixOrderCost = 20;
 		double variCost = 1;
@@ -149,7 +149,7 @@ public class CashConstraintDraw {
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+		double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
 		Map<State, Double> cacheC1Values = new TreeMap<>();
 		Map<State, Double> cacheC2Values = new TreeMap<>();
 		cacheC1Values = findsCS.cacheC1Values;

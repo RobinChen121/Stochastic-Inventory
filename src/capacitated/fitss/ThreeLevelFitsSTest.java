@@ -30,7 +30,7 @@ public class ThreeLevelFitsSTest {
 		String headString = "K, v, h, I0, pai, Qmax, DemandPatt, OpValue, Time(sec), simValue, error, K-convexity";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
-		double[][] demands = {{30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30},
+		double[][] iniMeanDemands = {{30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30},
 				{6.6,9.3,11.1,12.9,16.8,21.6,24,26.4,31.5,33.9,36.3,40.8,44.4,47.1,48.3,50.1,50.1,48.9,47.1,44.4},
 				{45.9,48.6,49.8,49.8,48.6,45.9,42.3,37.8,35.4,33,30.3,27.9,25.5,23.1,20.7,18.3,14.4,10.8,8.1,6.3},
 				{36.3,30,23.7,21,23.7,30,36.3,39,36.3,30,23.7,21,23.7,30,36.3,30.9,24.3,21.3,26.4,33},
@@ -52,14 +52,22 @@ public class ThreeLevelFitsSTest {
 		double minInventory = -300;
 		double maxInventory = 800;
 		double holdingCost = 1;
-
+		
+		/*******************************************************************
+		 * set demands length, for testing 
+		 */
+		int newLength = 6;
+		double[][] demands = new double[iniMeanDemands.length][newLength];
+		for (int i = 0; i < iniMeanDemands.length; i++)
+			for (int j = 0; j < newLength; j++) {
+				demands[i][j] = iniMeanDemands[i][j];
+			}
+		
 		for (int iK = 0; iK < K.length; iK++) {
 			for (int iv = 0; iv < v.length; iv++) {
 				for (int ipai = 0; ipai < pai.length; ipai++) {
 					for (int idemand = 0; idemand < demands.length; idemand++) //demands.length
 						for ( int icapacity = 0; icapacity < capacity.length; icapacity++){	      
-
-
 							double[] meanDemand = demands[idemand];
 							double fixedOrderingCost = K[iK];
 							double proportionalOrderingCost = v[iv];
@@ -68,7 +76,7 @@ public class ThreeLevelFitsSTest {
 									.round(Arrays.stream(meanDemand).sum() / meanDemand.length) * capacity[icapacity]);
 
 							// get demand possibilities for each period
-							int T = meanDemand.length - 10; //
+							int T = meanDemand.length; //
 							Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 									.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
 									.toArray(PoissonDist[]::new);
@@ -147,7 +155,7 @@ public class ThreeLevelFitsSTest {
 								yG[index][1] = recursion.getExpectedValue(new State(period, initialInventory));
 								index++;
 							}
-					 		String string = CheckKConvexity.check(yG, fixedOrderingCost);
+					 		String string = CheckKConvexity.checkCK(yG, fixedOrderingCost, (int) maxOrderQuantity);
 							String out = fixedOrderingCost + ",\t" 
 									+ proportionalOrderingCost + ",\t" 
 									+ holdingCost + ",\t" 

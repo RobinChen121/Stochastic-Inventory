@@ -21,6 +21,8 @@ import umontreal.ssj.probdist.PoissonDist;
  *@email: 15011074486@163.com
  *@date: Jul 14, 2018---1:06:15 PM
  *@description:  fit (s, S) levels for capacitated lot sizing problem
+ *
+ * may be not k-convex
  */
 
 public class LevelFitsS {
@@ -33,11 +35,11 @@ public class LevelFitsS {
 		double fixedOrderingCost = 22;
 		double variOrderingCost = 1;
 		double penaltyCost = 10;
-		double[] meanDemand = { 47.1, 30, 12.9, 6,12.9,30,47.1,54,47.1,30 };
-		double holdingCost = 1;
-		int maxOrderQuantity = 100;
+		double[] meanDemand = { 4.9, 18.8, 6.4, 27.9};
+		double holdingCost = 3;
+		int maxOrderQuantity = 10;  
 		
-		double discountFactor = 0.95;
+		double discountFactor = 1;
 
 		// get demand possibilities for each period
 //		int T = meanDemand.length;
@@ -138,7 +140,7 @@ public class LevelFitsS {
 			yG[index][1] = recursion.getExpectedValue(new State(period, initialInventory));
 			index++;
 		}
- 		CheckKConvexity.check(yG, fixedOrderingCost);
+ 		CheckKConvexity.checkCK(yG, fixedOrderingCost, maxOrderQuantity);
  		Drawing.drawXC(yG);
  		Drawing.drawGAndsS(yG, fixedOrderingCost);
 	}

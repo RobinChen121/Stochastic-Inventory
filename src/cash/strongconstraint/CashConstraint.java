@@ -44,12 +44,12 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {6.6, 3, 21.8};
-		double iniInventory = 1;
-		double iniCash = 28;		
+		double[] meanDemand = {4.9, 18.8, 6.4, 27.9};
+		double iniInventory = 0;
+		double iniCash = 30;		
 		double fixOrderCost = 20;
 		double variCost = 1;
-		double holdingCost = 2;
+		double holdingCost = 3;
 		double price = 4;
 		double salvageValue = 0.5;
 		FindCCrieria criteria = FindCCrieria.XRELATE;			
@@ -71,17 +71,17 @@ public class CashConstraint {
 				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
 				.toArray(PoissonDist[]::new);
 
-//		double[] values1 = {2, 3};
+//		double[] values1 = {4, 4};
 //		double[] probs1 = {0.95, 0.05};
-//		Distribution[] distributions = IntStream.iterate(0, i -> i + 2).limit(T)
-//		.mapToObj(i -> new DiscreteDistribution(values1, probs1, values1.length)) // can be changed to other distributions
-//		.toArray(DiscreteDistribution[]::new);	
-//			
-//		double[] values2 = {50, 55};
-//		double[] probs2 = {0.95, 0.05};
-//		distributions = IntStream.iterate(1, i -> i + 2).limit(T)
-//				.mapToObj(i -> new DiscreteDistribution(values2, probs2, values2.length)) // can be changed to other distributions
-//				.toArray(DiscreteDistribution[]::new);
+//		double[] values2 = {21, 22};
+//		double[] probs2 = {0.5, 0.5};
+//		DiscreteDistribution[] distributions = new DiscreteDistribution[meanDemand.length];
+//		for (int i = 0; i < meanDemand.length; i++) {
+//			if (i % 2 == 0) 
+//				distributions[i] = new DiscreteDistribution(values1, probs1, values1.length);
+//			else
+//				distributions[i] = new DiscreteDistribution(values2, probs2, values2.length);			
+//		}	
 		
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 			
@@ -89,7 +89,7 @@ public class CashConstraint {
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
 			double maxQ = (int) Math.min(maxOrderQuantity,
-					Math.max(0, (s.getIniCash() -minCashRequired - fixOrderCost) / variCost));
+					Math.max(0, (s.getIniCash() - minCashRequired - fixOrderCost) / variCost));
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -148,17 +148,17 @@ public class CashConstraint {
 		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);
 		
 		/*******************************************************************
-		 * Find (s, C, S) and simulate
+		 * Find (s, C, S) by SDP and simulate
 		 */
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-		double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
+		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
 		Map<State, Double> cacheC1Values = new TreeMap<>();
 		Map<State, Double> cacheC2Values = new TreeMap<>();
 		cacheC1Values = findsCS.cacheC1Values;
-		cacheC2Values = findsCS.cacheC2Values;
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		//cacheC2Values = findsCS.cacheC2Values;
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
 		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	
 		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
@@ -169,7 +169,18 @@ public class CashConstraint {
 		 * for some state C is 12, and 13 in other state, 
 		 * we use heuristic step by choosing maximum one
 		 */		
- 		findsCS.checksC12S(optsCS, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+ 		findsCS.checksCS(optsCS, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+ 		System.out.printf(
+				"\n*******************************************************************\n");
+ 		
+ 		/*******************************************************************
+		 * Find (s, C, S) by MIP and simulate
+		 */
+ 		MipHeuristic mipHeuristic = new MipHeuristic(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
+ 		double[][] xB = mipHeuristic.findsCS(); 
+ 		
+ 		
+ 		
  		
  		/*******************************************************************
 		 * Check K-convexity
@@ -184,7 +195,8 @@ public class CashConstraint {
 //			yG[index][1] = -recursion.getExpectedValue(new CashState(period, initialInventory, iniCash));
 //			index++;
 //		}
-// 		CheckKConvexity.check(yG, fixOrderCost);
+//		int capacity = (int) Math.max(0, (iniCash - minCashRequired - fixOrderCost) / variCost);
+// 		CheckKConvexity.checkCK(yG, fixOrderCost, capacity);
 	}
 	
 	

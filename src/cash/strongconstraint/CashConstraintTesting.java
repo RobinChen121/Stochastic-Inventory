@@ -12,6 +12,7 @@ import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
 import sdp.cash.CashRecursion.OptDirection;
+import sdp.inventory.CheckKConvexity;
 import sdp.inventory.GetPmf;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
@@ -26,7 +27,9 @@ import umontreal.ssj.probdist.PoissonDist;
  * @Description: strong cash constraints testing
  * if mean demand < 1, optimal ordering pattern may be strange :
  * there are some states, same initial inventory, different initial cash,
- * low initial cash order while high initial cash not ordering
+ * low initial cash order while high initial cash not ordering.
+ * 
+ * Check Ck-convexity
  */
 
 public class CashConstraintTesting {
@@ -34,7 +37,7 @@ public class CashConstraintTesting {
 	// average computation time for 10 periods is 500s, 9 periods is 150s, or 305s,
 	// or 400s
 	public static void main(String[] args) {
-		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, nonOptStatesCount, gap1, gap2, totalStates, firstQ";
+		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, nonOptStatesCount, gap1, gap2, totalStates, firstQ, CKConvexity";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
 		double[][] iniMeanDemands = { { 15, 15, 15, 15, 15, 15, 15, 15 },
@@ -52,7 +55,7 @@ public class CashConstraintTesting {
 		double salvageValue = 0.5;
 		
 		
-		FindCCrieria criteria = FindCCrieria.AVG;
+		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
@@ -175,13 +178,13 @@ public class CashConstraintTesting {
 								System.out.println("");
 								double[][] optTable = recursion.getOptTable();
 								FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-								double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+								double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
 								Map<State, Double> cacheC1Values = new TreeMap<>();
 								Map<State, Double> cacheC2Values = new TreeMap<>();
 								cacheC1Values = findsCS.cacheC1Values;
-								//cacheC2Values = findsCS.cacheC2Values;
+								cacheC2Values = findsCS.cacheC2Values;
 								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, 
-										minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+										cacheC2Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 								double gap1 = (finalValue - simsCSFinalValue) / finalValue;
 								double gap2 = (simFinalValue - simsCSFinalValue) / simFinalValue;
 								System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
@@ -189,24 +192,25 @@ public class CashConstraintTesting {
 								/*******************************************************************
 								 * Check (s, C, S) policy, sometimes not always hold
 								 */
-								int nonOptCount = findsCS.checksCS(optsCS, optTable, minCashRequired, maxOrderQuantity,
+								int nonOptCount = findsCS.checksC12S(optsCS, optTable, minCashRequired, maxOrderQuantity,
 										fixOrderCost, variCost);
 
 								/*******************************************************************
 								 * Check K-convexity
 								 */
-//								int minInventorys = 0;
-//								int maxInventorys = 100;
-//								int xLength = maxInventorys - minInventorys + 1;
-//								double[][] yG = new double[xLength][2];
-//								int index = 0;
-//								for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
-//									yG[index][0] = initialInventory;
-//									yG[index][1] = -recursion
-//											.getExpectedValue(new CashState(period, initialInventory, iniCash));
-//									index++;
-//								}
-//								String convexity = CheckKConvexity.check(yG, fixOrderCost);
+								int minInventorys = 0;
+								int maxInventorys = 100;
+								int xLength = maxInventorys - minInventorys + 1;
+								double[][] yG = new double[xLength][2];
+								int index = 0;
+								for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+									yG[index][0] = initialInventory;
+									yG[index][1] = -recursion
+											.getExpectedValue(new CashState(period, initialInventory, iniCash));
+									index++;
+								}
+								int capacity = (int) Math.max(0, (iniCash - minCashRequired - fixOrderCost) / variCost);
+								String convexity = CheckKConvexity.checkCK(yG, fixOrderCost, capacity);
 								System.out.printf(
 										"\n*******************************************************************\n");
 								
@@ -215,7 +219,7 @@ public class CashConstraintTesting {
 										+ iniInventory + ",\t" + price + ",\t" + salvageValue + ",\t" + iniCash + ",\t" + (idemand + 1) + ",\t"
 										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t" + simsCSFinalValue
 										+ ",\t" + nonOptCount + ",\t" + gap1 + ",\t" + gap2 + ",\t" + totalStates + ",\t"
-										+ firstQ;
+										+ firstQ + ",\t" + convexity;
 
 								WriteToCsv.writeToFile("./" + "test_results.csv", out);
 							}

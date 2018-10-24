@@ -10,7 +10,6 @@ import java.util.TreeMap;
 
 import sdp.inventory.State;
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.probdist.PoissonDist;
 
 
 /**
@@ -446,9 +445,7 @@ public class FindsCS {
 		return sCS;
 	}
 
-	
-	
-	
+		
 	/**
 	 * compute L(y) in a single period
 	 * @param y : order-up-to level y,
