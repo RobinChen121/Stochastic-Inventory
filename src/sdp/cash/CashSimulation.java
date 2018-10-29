@@ -61,6 +61,22 @@ public class CashSimulation {
 		this.holdCost = holdCost;
 		this.salvageValue = salvageValue;
 	}
+	
+	public CashSimulation(Distribution[] distributions, int sampleNum, ImmediateValueFunction<CashState, Double, Double, Double> immediateValue,
+			StateTransitionFunction<CashState, Double, Double, CashState> stateTransition,
+			double discountFactor, double fixOrderCost, double price, 
+			double variOrderCost, double holdCost, double salvageValue) {
+		this.distributions = distributions;
+		this.sampleNum = sampleNum;	
+		this.discountFactor = discountFactor;
+		this.immediateValue = immediateValue;
+		this.stateTransition = stateTransition;
+		this.fixOrderCost = fixOrderCost;
+		this.price = price;
+		this.variOrderCost = variOrderCost;
+		this.holdCost = holdCost;
+		this.salvageValue = salvageValue;
+	}
 
 	public void setSampleNum(int n) {
 		this.sampleNum = n;
@@ -146,7 +162,7 @@ public class CashSimulation {
 			{
 				double optQ;
 				if ( t == 0) 
-					optQ = optsCS[t][3] - optsCS[t][0];
+					optQ = iniState.getIniInventory() < optsCS[t][0] ? optsCS[t][3] - iniState.getIniInventory() : 0;
 				else {
 					double maxOrderQuantity = (int) Math.max(0, (state.iniCash - minCashRequired - fixOrderCost)/variCost);
 					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
@@ -198,7 +214,7 @@ public class CashSimulation {
 			{
 				double optQ;
 				if ( t == 0) 
-					optQ = optsCS[t][2] - optsCS[t][0];
+					optQ = iniState.getIniInventory() < optsCS[t][0] ? optsCS[t][2] - iniState.getIniInventory() : 0;
 				else {
 					double maxOrderQuantity = Math.max(0, (state.iniCash - minCashRequired - fixOrderCost)/variCost);
 					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);

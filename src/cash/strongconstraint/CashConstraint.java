@@ -44,11 +44,11 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4.9, 18.8, 6.4, 27.9};
+		double[] meanDemand = {4.7, 8.1, 23.6, 39.4};
 		double iniInventory = 0;
-		double iniCash = 30;		
-		double fixOrderCost = 20;
-		double variCost = 1;
+		double iniCash = 40;		
+		double fixOrderCost = 10;
+		double variCost = 3;
 		double holdingCost = 3;
 		double price = 4;
 		double salvageValue = 0.5;
@@ -155,10 +155,11 @@ public class CashConstraint {
 		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
 		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
 		Map<State, Double> cacheC1Values = new TreeMap<>();
-		Map<State, Double> cacheC2Values = new TreeMap<>();
+		//Map<State, Double> cacheC2Values = new TreeMap<>();
 		cacheC1Values = findsCS.cacheC1Values;
 		//cacheC2Values = findsCS.cacheC2Values;
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, 
+				minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
 		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	
 		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
@@ -177,10 +178,13 @@ public class CashConstraint {
 		 * Find (s, C, S) by MIP and simulate
 		 */
  		MipHeuristic mipHeuristic = new MipHeuristic(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
- 		double[][] xB = mipHeuristic.findsCS(); 
- 		
- 		
- 		
+ 		double[][] sCS = mipHeuristic.findsCS(); 
+ 		cacheC1Values = mipHeuristic.cacheC1Values;
+ 		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		gap1 = (finalValue - simsCSMIPValue)/finalValue;
+		gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
+		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
+		
  		
  		/*******************************************************************
 		 * Check K-convexity

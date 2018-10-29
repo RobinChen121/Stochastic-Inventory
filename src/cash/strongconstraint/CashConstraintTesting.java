@@ -25,11 +25,11 @@ import umontreal.ssj.probdist.PoissonDist;
  * @author chen zhen
  * @version 2018, March 3rd, 6:31:10 pm
  * @Description: strong cash constraints testing
- * if mean demand < 1, optimal ordering pattern may be strange :
+ * 
  * there are some states, same initial inventory, different initial cash,
  * low initial cash order while high initial cash not ordering.
  * 
- * Check Ck-convexity
+ * Check CK-convexity, not CK-convex
  */
 
 public class CashConstraintTesting {
@@ -37,7 +37,9 @@ public class CashConstraintTesting {
 	// average computation time for 10 periods is 500s, 9 periods is 150s, or 305s,
 	// or 400s
 	public static void main(String[] args) {
-		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, nonOptStatesCount, gap1, gap2, totalStates, firstQ, CKConvexity";
+		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, "
+				+ "nonOptStatesCount, gap1, gap2, totalStates, "
+				+ "firstQ, CKConvexity, mipValue, gap11, gap22, time2";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
 		double[][] iniMeanDemands = { { 15, 15, 15, 15, 15, 15, 15, 15 },
@@ -52,8 +54,7 @@ public class CashConstraintTesting {
 		double[] B0 = { 5, 10 }; // ini cash can order 5 or 10 items
 		double[] p = { 4, 8 };
 		double[] h = {1, 3};
-		double salvageValue = 0.5;
-		
+		double salvageValue = 0.5;	
 		
 		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double truncationQuantile = 0.9999;
@@ -69,7 +70,7 @@ public class CashConstraintTesting {
 		/*******************************************************************
 		 * set demands length, for testing 
 		 */
-		int newLength = 4;
+		int newLength = 8;
 		double[][] meanDemands = new double[iniMeanDemands.length][newLength];
 		for (int i = 0; i < iniMeanDemands.length; i++)
 			for (int j = 0; j < newLength; j++) {
@@ -88,6 +89,7 @@ public class CashConstraintTesting {
 								double price = p[ip];
 								double iniCash = fixOrderCost + variCost * B0[iB];
 								double holdingCost = h[ih];
+								double iniInventory = 0;
 
 								// get demand possibilities for each period
 								int T = meanDemand.length;
@@ -96,14 +98,6 @@ public class CashConstraintTesting {
 																						// distributions
 										.toArray(PoissonDist[]::new);
 								double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
-
-								/*******************************************************************
-								 * Initial inventory setting
-								 */
-//								Distribution jointDistibution = new PoissonDist(meanDemand[0]);
-//								double iniInventory = jointDistibution
-//										.inverseF((price - variCost) / (holdingCost  + price));
-								double iniInventory = 0;
 
 								// feasible actions
 								Function<CashState, double[]> getFeasibleAction = s -> {
@@ -178,13 +172,13 @@ public class CashConstraintTesting {
 								System.out.println("");
 								double[][] optTable = recursion.getOptTable();
 								FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-								double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
+								double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
 								Map<State, Double> cacheC1Values = new TreeMap<>();
 								Map<State, Double> cacheC2Values = new TreeMap<>();
 								cacheC1Values = findsCS.cacheC1Values;
-								cacheC2Values = findsCS.cacheC2Values;
+								//cacheC2Values = findsCS.cacheC2Values;
 								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, 
-										cacheC2Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+										minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 								double gap1 = (finalValue - simsCSFinalValue) / finalValue;
 								double gap2 = (simFinalValue - simsCSFinalValue) / simFinalValue;
 								System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
@@ -192,34 +186,52 @@ public class CashConstraintTesting {
 								/*******************************************************************
 								 * Check (s, C, S) policy, sometimes not always hold
 								 */
-								int nonOptCount = findsCS.checksC12S(optsCS, optTable, minCashRequired, maxOrderQuantity,
+								int nonOptCount = findsCS.checksCS(optsCS, optTable, minCashRequired, maxOrderQuantity,
 										fixOrderCost, variCost);
-
+								
+						 		/*******************************************************************
+								 * Find (s, C, S) by MIP and simulate
+								 */
+								currTime = System.currentTimeMillis();
+						 		MipHeuristic mipHeuristic = new MipHeuristic(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
+						 		double[][] sCS = mipHeuristic.findsCS(); 					 		
+						 		double time2 = (System.currentTimeMillis() - currTime) / 1000;
+								System.out.println("running time is " + time2 + "s");
+						 		cacheC1Values = mipHeuristic.cacheC1Values;
+						 		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+								double gap11 = (finalValue - simsCSMIPValue)/finalValue;
+								double gap22 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
+								System.out.printf("Optimality gap by Mip is: %.2f%% or %.2f%%\n", gap11 * 100, gap22 * 100);
+								System.out.printf(
+										"\n*******************************************************************\n");
+								
 								/*******************************************************************
 								 * Check K-convexity
 								 */
-								int minInventorys = 0;
-								int maxInventorys = 100;
-								int xLength = maxInventorys - minInventorys + 1;
-								double[][] yG = new double[xLength][2];
-								int index = 0;
-								for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
-									yG[index][0] = initialInventory;
-									yG[index][1] = -recursion
-											.getExpectedValue(new CashState(period, initialInventory, iniCash));
-									index++;
-								}
-								int capacity = (int) Math.max(0, (iniCash - minCashRequired - fixOrderCost) / variCost);
-								String convexity = CheckKConvexity.checkCK(yG, fixOrderCost, capacity);
-								System.out.printf(
-										"\n*******************************************************************\n");
+								String convexity = "";
+//								int minInventorys = 0;
+//								int maxInventorys = 100;
+//								int xLength = maxInventorys - minInventorys + 1;
+//								double[][] yG = new double[xLength][2];
+//								int index = 0;
+//								for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+//									yG[index][0] = initialInventory;
+//									yG[index][1] = -recursion
+//											.getExpectedValue(new CashState(period, initialInventory, iniCash));
+//									index++;
+//								}
+//								int capacity = (int) Math.max(0, (iniCash - minCashRequired - fixOrderCost) / variCost);
+//								String convexity = CheckKConvexity.checkCK(yG, fixOrderCost, capacity);
+//								System.out.printf(
+//										"\n*******************************************************************\n");
 								
 								long totalStates = optTable.length;
 								String out = fixOrderCost + ",\t" + variCost + ",\t" + holdingCost + ",\t"
 										+ iniInventory + ",\t" + price + ",\t" + salvageValue + ",\t" + iniCash + ",\t" + (idemand + 1) + ",\t"
 										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t" + simsCSFinalValue
 										+ ",\t" + nonOptCount + ",\t" + gap1 + ",\t" + gap2 + ",\t" + totalStates + ",\t"
-										+ firstQ + ",\t" + convexity;
+										+ firstQ + ",\t" + convexity + ",\t"+ 
+										simsCSMIPValue + ",\t" + gap11 + ",\t" + gap22+ ",\t" + time2;
 
 								WriteToCsv.writeToFile("./" + "test_results.csv", out);
 							}

@@ -64,7 +64,7 @@ public class FindsCS {
 	double[][] getsC12S(double[][] optimalTable, double minCashRequired, FindCCrieria criteria) {
 		int M = 10000;
 		double[][] optimalsCS = new double[T][4];
-		optimalsCS[0][0] = optimalTable[0][1] ;
+		optimalsCS[0][0] = optimalTable[0][1] + 1;
 		optimalsCS[0][1] = optimalTable[0][2] ;
 		optimalsCS[0][2] = M; 
 		optimalsCS[0][3] = optimalTable[0][1] + optimalTable[0][3];	
@@ -273,7 +273,7 @@ public class FindsCS {
 	double[][] getsCS(double[][] optimalTable, double minCashRequired, FindCCrieria criteria) {
 		int M = 10000;
 		double[][] optimalsCS = new double[T][4];
-		optimalsCS[0][0] = optimalTable[0][1] ;
+		optimalsCS[0][0] = optimalTable[0][1] + 1;
 		optimalsCS[0][1] = optimalTable[0][2] ;
 		optimalsCS[0][2] = M; 
 		optimalsCS[0][3] = optimalTable[0][1] + optimalTable[0][3];	
