@@ -10,6 +10,7 @@ import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.Recursion.OptDirection;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.milp.MIPFitsS;
 import sdp.write.WriteToCsv;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
@@ -123,7 +124,7 @@ public class TwoLevelFitsSTest {
 							int sampleNum = 10000;
 							SimulateFitsS simuation = new SimulateFitsS(distributions, sampleNum, recursion);
 							double[][] optTable = recursion.getOptTable();
-							FindsS findsS = new FindsS(maxOrderQuantity, T);
+							MIPFitsS findsS = new MIPFitsS(maxOrderQuantity, T);
 							double[][] optsS = findsS.getTwosS(optTable);
 							System.out.println(Arrays.deepToString(optsS));
 							simuation.simulateSDPGivenSamplNum(initialState);

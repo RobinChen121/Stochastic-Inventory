@@ -9,6 +9,7 @@ import sdp.cash.CashState;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.milp.MipCashConstraint;
 import sdp.write.WriteToCsv;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
@@ -120,7 +121,7 @@ public class MIPTesting {
 								 */
 								Map<State, Double> cacheC1Values = new TreeMap<>();
 								long currTime = System.currentTimeMillis();
-						 		MipHeuristic mipHeuristic = new MipHeuristic(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
+						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
 						 		int period = 1;
 						 		int sampleNum = 10000;
 						 		CashState initialState = new CashState(period, iniInventory, iniCash);

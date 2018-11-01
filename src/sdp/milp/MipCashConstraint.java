@@ -1,4 +1,4 @@
-package cash.strongconstraint;
+package sdp.milp;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -31,7 +31,7 @@ import umontreal.ssj.probdist.PoissonDist;
 * 
 */
 
-public class MipHeuristic {
+public class MipCashConstraint {
 	double iniInventory;
 	double iniCash;		
 	double fixOrderCost;
@@ -41,10 +41,10 @@ public class MipHeuristic {
 	double salvageValue;
 	double[] expectedDemand;
 	Distribution[] distributions;
-	Map<State, Double> cacheC1Values = new TreeMap<>(); // record C1 values for different initial inventory x
+	public Map<State, Double> cacheC1Values = new TreeMap<>(); // record C1 values for different initial inventory x
 
 	
-	public MipHeuristic(double iniInventory, double iniCash, double fixOrderCost, double variCost, double holdingCost, 
+	public MipCashConstraint(double iniInventory, double iniCash, double fixOrderCost, double variCost, double holdingCost, 
 			double price, double salvageValue, double[] expectedDemand, Distribution[] distributions) {
 		this.iniInventory = iniInventory;
 		this.iniCash = iniCash;
@@ -61,7 +61,7 @@ public class MipHeuristic {
 		this.cacheC1Values = new TreeMap<>(keyComparator);
 	}
 	
-	double[][] findsCS() {		
+	public double[][] findsCS() {		
 		double[] varx = null;
 		double[] vary;
 		double[] varw;
@@ -229,7 +229,7 @@ public class MipHeuristic {
 //			}
 			
 			// ascertain C
-			for (int j = 0; j <= (int) S; j++) {
+			for (int j = 0; j < (int) s; j++) {
 				int jj = 0;
 				for (jj = j + 1; jj <= (int) S; jj++) {
 					if (Ly(jj, t, distributions[t]) > fixOrderCost + Ly(j, t, distributions[t])) {

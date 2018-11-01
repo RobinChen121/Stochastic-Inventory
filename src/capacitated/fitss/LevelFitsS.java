@@ -12,6 +12,7 @@ import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.Recursion.OptDirection;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.milp.MIPFitsS;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
@@ -116,7 +117,7 @@ public class LevelFitsS {
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		
-		FindsS findsS = new FindsS(maxOrderQuantity, T);
+		MIPFitsS findsS = new MIPFitsS(maxOrderQuantity, T);
 		double[][] optsS = findsS.getSinglesS(optTable);
 		System.out.println("single s, S level: " + Arrays.deepToString(optsS));
 		optsS = findsS.getTwosS(optTable);

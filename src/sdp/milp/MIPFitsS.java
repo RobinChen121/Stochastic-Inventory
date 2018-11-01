@@ -1,4 +1,4 @@
-package capacitated.fitss;
+package sdp.milp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,18 +12,18 @@ import ilog.cplex.IloCplex;
  * @author: Zhen Chen
  * @email: 15011074486@163.com
  * @date: Jul 12, 2018---8:48:27 PM
- * @description: find s, S for capacitated lot sizing problem
+ * @description: find s, S for capacitated lot sizing problem by fitting via Cplex
  * 
  * @note: in this class, you need have a cplex.jar library, download CPLEX software from 
  * https://www.ibm.com/analytics/cplex-optimizer
  */
 
-public class FindsS {
+public class MIPFitsS {
 	
 	int maxOrderQuantity;
 	int T;
 	
-	public FindsS(int maxOrderQuantity, int T) {
+	public MIPFitsS(int maxOrderQuantity, int T) {
 		this.maxOrderQuantity = maxOrderQuantity;
 		this.T = T;
 	}

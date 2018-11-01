@@ -17,6 +17,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.milp.MipCashConstraint;
 import sdp.write.WriteToCsv;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
@@ -193,7 +194,7 @@ public class CashConstraintTesting {
 								 * Find (s, C, S) by MIP and simulate
 								 */
 								currTime = System.currentTimeMillis();
-						 		MipHeuristic mipHeuristic = new MipHeuristic(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
+						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
 						 		double[][] sCS = mipHeuristic.findsCS(); 					 		
 						 		double time2 = (System.currentTimeMillis() - currTime) / 1000;
 								System.out.println("running time is " + time2 + "s");

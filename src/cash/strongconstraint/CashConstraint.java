@@ -16,6 +16,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.milp.MipCashConstraint;
 import sdp.cash.CashState;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
@@ -44,13 +45,13 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4.7, 8.1, 23.6, 39.4};
+		double[] meanDemand = {15, 15, 15, 15};
 		double iniInventory = 0;
-		double iniCash = 40;		
-		double fixOrderCost = 10;
-		double variCost = 3;
-		double holdingCost = 3;
-		double price = 4;
+		double iniCash = 30;		
+		double fixOrderCost = 20;
+		double variCost = 1;
+		double holdingCost = 1;
+		double price = 8;
 		double salvageValue = 0.5;
 		FindCCrieria criteria = FindCCrieria.XRELATE;			
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
@@ -177,7 +178,7 @@ public class CashConstraint {
  		/*******************************************************************
 		 * Find (s, C, S) by MIP and simulate
 		 */
- 		MipHeuristic mipHeuristic = new MipHeuristic(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
+ 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
  		double[][] sCS = mipHeuristic.findsCS(); 
  		cacheC1Values = mipHeuristic.cacheC1Values;
  		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
