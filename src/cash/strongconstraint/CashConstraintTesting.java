@@ -20,6 +20,7 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.milp.MipCashConstraint;
 import sdp.write.WriteToCsv;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 /**
@@ -95,9 +96,9 @@ public class CashConstraintTesting {
 								// get demand possibilities for each period
 								int T = meanDemand.length;
 								Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-										.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other
-																						// distributions
-										.toArray(PoissonDist[]::new);
+										.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
+										//.mapToObj(i -> new PoissonDist(meanDemand[i]))
+										.toArray(Distribution[]::new);
 								double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 
 								// feasible actions

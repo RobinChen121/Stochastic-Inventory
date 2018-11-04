@@ -12,14 +12,11 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
-
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.State;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.sampling.Sampling;
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.stat.Tally;
 
 
@@ -99,7 +96,7 @@ public class CashSimulation {
 			{
 				recursion.getExpectedValue(state);
 				double optQ = recursion.getAction(state);
-				double randomDemand = samples[i][t];
+				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
 				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, optQ, randomDemand);
 				state = stateTransition.apply(state, optQ, randomDemand);
 			}
@@ -125,8 +122,9 @@ public class CashSimulation {
 			{
 				recursion.getExpectedValue(state);
 				double optQ = recursion.getAction(state);
-				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, optQ, realizedDemand[t]);
-				state = stateTransition.apply(state, optQ, realizedDemand[t]);
+				double randomDemand = Math.round(realizedDemand[t]); // integer samples to test sdp
+				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, optQ, randomDemand);
+				state = stateTransition.apply(state, optQ, randomDemand);
 			}
 			costTally.add(sum);
 			if(i >= minRuns) 

@@ -20,6 +20,7 @@ import sdp.milp.MipCashConstraint;
 import sdp.cash.CashState;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 /**
@@ -45,7 +46,7 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {15, 15, 15, 15};
+		double[] meanDemand = {15, 15, 15};
 		double iniInventory = 0;
 		double iniCash = 30;		
 		double fixOrderCost = 20;
@@ -69,8 +70,9 @@ public class CashConstraint {
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
-				.toArray(PoissonDist[]::new);
+				//.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
+				.mapToObj(i -> new PoissonDist(meanDemand[i]))
+				.toArray(Distribution[]::new);
 
 //		double[] values1 = {4, 4};
 //		double[] probs1 = {0.95, 0.05};

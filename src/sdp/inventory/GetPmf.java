@@ -35,13 +35,12 @@ public class GetPmf {
 		for (int i = 0; i < T; i++) {
 			int demandLength = (int) ((supportUB[i] - supportLB[i] + 1) / stepSize);
 			pmf[i] = new double[demandLength][];
+			// demand values are all integers
 			for (int j = 0; j < demandLength; j++) {
 				pmf[i][j] = new double[2];
 				pmf[i][j][0] = supportLB[i] + j * stepSize;
 				if (distributions[0] instanceof DiscreteDistribution) {
 					double probilitySum = distributions[i].cdf(supportUB[i]) - distributions[i].cdf(supportLB[i] - 1);
-					//System.out.println(((DiscreteDistribution) distributions[i]).prob(i)); // probability of ith element
-					//System.out.println(((DiscreteDistribution) distributions[i]).prob((int) pmf[i][j][0]));
 					pmf[i][j][1] = ((DiscreteDistribution) distributions[i]).prob(j) / probilitySum;
 				} else {
 					double probilitySum = distributions[i].cdf(supportUB[i] + 0.5 * stepSize)
