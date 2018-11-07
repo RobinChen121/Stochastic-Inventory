@@ -68,18 +68,18 @@ public class CashConstraint {
 		double discountFactor = 1;
 
 		// get demand possibilities for each period
-		int T = meanDemand.length;
+		int T = 3;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 				//.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
 				.mapToObj(i -> new PoissonDist(meanDemand[i]))
 				.toArray(Distribution[]::new);
 
-//		double[] values1 = {4, 4};
+//		double[] values1 = {6, 7};
 //		double[] probs1 = {0.95, 0.05};
-//		double[] values2 = {21, 22};
-//		double[] probs2 = {0.5, 0.5};
-//		DiscreteDistribution[] distributions = new DiscreteDistribution[meanDemand.length];
-//		for (int i = 0; i < meanDemand.length; i++) {
+//		double[] values2 = {6, 7};
+//		double[] probs2 = {0.95, 0.05};
+//		DiscreteDistribution[] distributions = new DiscreteDistribution[T];
+//		for (int i = 0; i < T; i++) {
 //			if (i % 2 == 0) 
 //				distributions[i] = new DiscreteDistribution(values1, probs1, values1.length);
 //			else
@@ -180,7 +180,7 @@ public class CashConstraint {
  		/*******************************************************************
 		 * Find (s, C, S) by MIP and simulate
 		 */
- 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
+ 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions);
  		double[][] sCS = mipHeuristic.findsCS(); 
  		cacheC1Values = mipHeuristic.cacheC1Values;
  		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);

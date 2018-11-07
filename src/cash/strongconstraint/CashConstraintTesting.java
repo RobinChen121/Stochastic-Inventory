@@ -72,7 +72,7 @@ public class CashConstraintTesting {
 		/*******************************************************************
 		 * set demands length, for testing 
 		 */
-		int newLength = 8;
+		int newLength = 6;
 		double[][] meanDemands = new double[iniMeanDemands.length][newLength];
 		for (int i = 0; i < iniMeanDemands.length; i++)
 			for (int j = 0; j < newLength; j++) {
@@ -174,12 +174,12 @@ public class CashConstraintTesting {
 								System.out.println("");
 								double[][] optTable = recursion.getOptTable();
 								FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-								double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+								double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
 								Map<State, Double> cacheC1Values = new TreeMap<>();
 								Map<State, Double> cacheC2Values = new TreeMap<>();
 								cacheC1Values = findsCS.cacheC1Values;
-								//cacheC2Values = findsCS.cacheC2Values;
-								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, 
+								cacheC2Values = findsCS.cacheC2Values;
+								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values,
 										minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 								double gap1 = (finalValue - simsCSFinalValue) / finalValue;
 								double gap2 = (simFinalValue - simsCSFinalValue) / simFinalValue;
@@ -195,7 +195,7 @@ public class CashConstraintTesting {
 								 * Find (s, C, S) by MIP and simulate
 								 */
 								currTime = System.currentTimeMillis();
-						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, meanDemand, distributions);
+						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions);
 						 		double[][] sCS = mipHeuristic.findsCS(); 					 		
 						 		double time2 = (System.currentTimeMillis() - currTime) / 1000;
 								System.out.println("running time is " + time2 + "s");
@@ -204,6 +204,7 @@ public class CashConstraintTesting {
 								double gap11 = (finalValue - simsCSMIPValue)/finalValue;
 								double gap22 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
 								System.out.printf("Optimality gap by Mip is: %.2f%% or %.2f%%\n", gap11 * 100, gap22 * 100);
+								
 								System.out.printf(
 										"\n*******************************************************************\n");
 								

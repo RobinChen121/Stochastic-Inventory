@@ -12,6 +12,9 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import umontreal.ssj.probdist.DiscreteDistribution;
+import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 public class CLSP {
@@ -126,7 +129,7 @@ public class CLSP {
 		
 		  
 	      double initialInventory = 0; 
-	      double[] meanDemand = {50, 60, 40};
+	      double[] meanDemand = {2, 2};
 	      
 	      double truncationQuantile = 0.99;  // 置信度稍微改一下，泊松分布特殊
 	      double stepSize = 1; 
@@ -134,16 +137,17 @@ public class CLSP {
 	      double maxState = 300;
 	      int T = meanDemand.length;
 
-	      double fixedOrderingCost = 500; 
+	      double fixedOrderingCost = 200; 
 	      double proportionalOrderingCost = 0; 
-	      double penaltyCost = 10;
-	      double holdingCost = 2;
+	      double penaltyCost = 2;
+	      double holdingCost = 100;
 	      int maxOrderQuantity = 100;
 	      
-	      PoissonDist[] distributions = IntStream.iterate(0, i -> i + 1)
+	      Distribution[] distributions = IntStream.iterate(0, i -> i + 1)
 	                                              .limit(T)
-	                                              .mapToObj(i -> new PoissonDist(meanDemand[i]))
-	                                              .toArray(PoissonDist[]::new); // replace for loop
+	                                              //.mapToObj(i -> new PoissonDist(meanDemand[i]))
+	                                              .mapToObj(i -> new NormalDist(meanDemand[i], 0.25))
+	                                              .toArray(Distribution[]::new); // replace for loop
 	      double[] supportLB = IntStream.iterate(0, i -> i + 1)
 	                                    .limit(T)
 	                                    .mapToDouble(i -> distributions[i].inverseF(1-truncationQuantile))
@@ -157,12 +161,20 @@ public class CLSP {
 	      {
 	    	  int demandLength = (int) ((supportUB[i] - supportLB[i]+1)/stepSize);
 	    	  pmf[i] = new double[demandLength][];
-	    	  for (int j=0; j<demandLength; j++) {
-	    		  pmf[i][j] = new double[2];
-	    		  pmf[i][j][0] = supportLB[i] + j*stepSize;
-	    		  pmf[i][j][1] = distributions[i].prob((int)pmf[i][j][0])/truncationQuantile;
-	    	  }
-	    		  
+				// demand values are all integers
+				for (int j = 0; j < demandLength; j++) {
+					pmf[i][j] = new double[2];
+					pmf[i][j][0] = supportLB[i] + j * stepSize;
+					if (distributions[0] instanceof DiscreteDistribution) {
+						double probilitySum = distributions[i].cdf(supportUB[i]) - distributions[i].cdf(supportLB[i] - 1);
+						pmf[i][j][1] = ((DiscreteDistribution) distributions[i]).prob(j) / probilitySum;
+					} else {
+						double probilitySum = distributions[i].cdf(supportUB[i] + 0.5 * stepSize)
+								- distributions[i].cdf(supportLB[i] - 0.5 * stepSize);
+						pmf[i][j][1] = (distributions[i].cdf(pmf[i][j][0] + 0.5 * stepSize)
+								- distributions[i].cdf(pmf[i][j][0] - 0.5 * stepSize)) / probilitySum;
+					}
+				}  
 	      }
 
 	      CLSP inventory = new CLSP(pmf);

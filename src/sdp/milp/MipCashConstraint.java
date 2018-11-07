@@ -39,13 +39,12 @@ public class MipCashConstraint {
 	double holdingCost;
 	double price;
 	double salvageValue;
-	double[] expectedDemand;
 	Distribution[] distributions;
 	public Map<State, Double> cacheC1Values = new TreeMap<>(); // record C1 values for different initial inventory x
 
 	
 	public MipCashConstraint(double iniInventory, double iniCash, double fixOrderCost, double variCost, double holdingCost, 
-			double price, double salvageValue, double[] expectedDemand, Distribution[] distributions) {
+			double price, double salvageValue, Distribution[] distributions) {
 		this.iniInventory = iniInventory;
 		this.iniCash = iniCash;
 		this.fixOrderCost = fixOrderCost;
@@ -53,7 +52,6 @@ public class MipCashConstraint {
 		this.holdingCost = holdingCost;
 		this.price = price;
 		this.salvageValue = salvageValue;
-		this.expectedDemand = expectedDemand;
 		this.distributions = distributions;
 		Comparator<State> keyComparator = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
 			o1.getPeriod() == o2.getPeriod() ? o1.getIniInventory() > o2.getIniInventory() ? 1 : 
@@ -69,7 +67,7 @@ public class MipCashConstraint {
 		double[] varB = null;;
 		
 		try {
-			int T = expectedDemand.length;
+			int T = distributions.length;
 			IloCplex cplex = new IloCplex();
 			cplex.setOut(null); // no cplex logging information
 			
@@ -109,7 +107,7 @@ public class MipCashConstraint {
 			IloNumExpr tTotalOrderCost = cplex.numExpr();
 			
 			for (int i = 0; i < T; i++) {
-				realDemand = cplex.diff(expectedDemand[i], w[i]);
+				realDemand = cplex.diff(distributions[i].getMean(), w[i]);
 				tRevenue = cplex.prod(p[i], realDemand);
 				tHoldCost = cplex.prod(h[i], I[i]);
 				tPurchaseCost = cplex.prod(v[i], y[i]);
@@ -123,7 +121,7 @@ public class MipCashConstraint {
 					cplex.addLe(tTotalOrderCost, iniCash);
 				}
 				else {
-					cplex.addEq(cplex.diff(I[i], I[i - 1]), cplex.diff(cplex.sum(y[i], w[i]), expectedDemand[i]));
+					cplex.addEq(cplex.diff(I[i], I[i - 1]), cplex.diff(cplex.sum(y[i], w[i]), distributions[i].getMean()));
 					cplex.addEq(cplex.diff(B[i], B[i - 1]), cplex.diff(tRevenue, tTotalCost));
 					cplex.addLe(tTotalOrderCost, B[i - 1]);
 				}
@@ -158,7 +156,7 @@ public class MipCashConstraint {
 		
 		
 		// find s, C, S
-		int T = expectedDemand.length;
+		int T = distributions.length;
 		double M = 10000;
 		double[][] sCS = new double[T][3];
 		
@@ -203,7 +201,7 @@ public class MipCashConstraint {
 				if (Arrays.stream(varx).sum() < 0.1) // default values when x are all zeros
 					break;
 				int orderLastTo = nextIndex(varx, t);
-				double demandSum = IntStream.range(t, orderLastTo + 1).mapToObj(i -> expectedDemand[i])
+				double demandSum = IntStream.range(t, orderLastTo + 1).mapToObj(i -> distributions[i].getMean())
 						.reduce(0.0, (x, y) -> x.doubleValue() + y.doubleValue());
 				Distribution distribution = new PoissonDist(demandSum);
 				S = distribution.inverseF((price - variCost) / (holdingCost  + price));
@@ -265,7 +263,7 @@ public class MipCashConstraint {
 			meanI += (y - i) * (distribution.cdf(i + 0.5) - distribution.cdf(i - 0.5));
 		
 		double Ly = 0;
-		if (t == expectedDemand.length - 1)
+		if (t == distributions.length - 1)
 			Ly = (price - variCost) * y- (price + holdingCost - salvageValue) * meanI;
 		else
 			Ly = (price - variCost) * y- (price + holdingCost) * meanI;
