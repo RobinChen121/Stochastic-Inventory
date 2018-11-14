@@ -107,7 +107,7 @@ public class Drawing {
 		
 		for (int i = 0; i <= N - 1; i++) {	
 			if (N > 2 && i > 1) {
-				if ( yG[i - 1][1] < yG[i - 2][1] - 0.1 && yG[i - 1][1] < yG[i][1] - 0.1) {
+				if ( yG[i - 1][1] < yG[i - 2][1] - 0.01 && yG[i - 1][1] < yG[i][1] - 0.01) {
 					seriesS.add(yG[i - 1][0], yG[i - 1][1]);
 					recordS.add(yG[i - 1][1]);
 					SNum++;
@@ -141,8 +141,6 @@ public class Drawing {
 		}
 		
 		// show the slope below s
-		
-
 		seriesCollection.addSeries(seriesG);
 		seriesCollection.addSeries(seriesS);
 		seriesCollection.addSeries(seriesSmalls);

@@ -8,6 +8,7 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import cash.strongconstraint.FindsCS.FindCCrieria;
+import milp.MipCashConstraint;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashRecursion.OptDirection;
 import sdp.cash.CashSimulation;
@@ -16,7 +17,6 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.milp.MipCashConstraint;
 import sdp.cash.CashState;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;

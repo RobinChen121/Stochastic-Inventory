@@ -4,12 +4,12 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 
+import milp.MipCashConstraint;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.milp.MipCashConstraint;
 import sdp.write.WriteToCsv;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;

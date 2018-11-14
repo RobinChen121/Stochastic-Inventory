@@ -1,4 +1,4 @@
-package sdp.milp;
+package milp;
 
 import java.util.Arrays;
 
@@ -9,6 +9,7 @@ import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.CplexStatus;
+import sdp.inventory.Drawing;
 import sun.security.provider.JavaKeyStore.CaseExactJKS;
 
 /**
@@ -36,14 +37,22 @@ public class MipRS {
 	double M;
 	double[][] conSigma;
 	int partionNum;
-	BoundCriteria criteria;
+	BoundCriteria boundCriteria;
+	ComputeGyCx gyCx;
+	boolean outputResults;
 	public enum BoundCriteria{
 		LOWBOUND,
 		UPBOUND
 	}
 	
+	public enum ComputeGyCx{
+		COMPUTG,
+		COMPUTC,
+		NOTCOMPUT;
+	}
+	
 	public MipRS(double[] meanDemand, double[] sigma, double iniInventory, Double fixOrderCost, double variCost, double holdingCost,
-				double penaltyCost, int partionNum, BoundCriteria criteria) {
+				double penaltyCost, int partionNum, BoundCriteria boundCriteria, ComputeGyCx gyCx, boolean outputResults) {
 		this.meanDemand = meanDemand;
 		this.sigma = sigma;
 		this.iniInventory = iniInventory;
@@ -63,14 +72,16 @@ public class MipRS {
 			}
 		this.partionNum = partionNum;
 		this.M = 100000;
-		this.criteria = criteria;
+		this.boundCriteria = boundCriteria;
+		this.gyCx = gyCx;
+		this.outputResults = outputResults;
 	}
 	
 	/*******************************************************************
 	 * solve mip model by cplex, piecewise approximation
 	 * @note: MipRS class must be initialized before invoking this method
 	 */
-	public void solveCPlex() {
+	public double solveCPlex() {
 		// piecewise approximation values
 		double[] prob;
 		double[] means;
@@ -117,16 +128,21 @@ public class MipRS {
 			IloNumVar[] I = cplex.numVarArray(T, -Double.MAX_VALUE, Double.MAX_VALUE);
 			IloNumVar[] Iplus = cplex.numVarArray(T, 0.0, Double.MAX_VALUE); // positive inventory
 			IloNumVar[] Iminus = cplex.numVarArray(T, 0.0, Double.MAX_VALUE); // minus inventory
+			//double I0 = iniInventory;
+			IloNumVar I0 = cplex.numVar(-Double.MAX_VALUE, Double.MAX_VALUE);
 			
 			// objective function
-			IloLinearNumExpr setupCost = cplex.linearNumExpr();
-			IloLinearNumExpr holdCost = cplex.linearNumExpr();
-			IloLinearNumExpr penaCost = cplex.linearNumExpr();
+			IloLinearNumExpr setupCosts = cplex.linearNumExpr();
+			IloLinearNumExpr holdCosts = cplex.linearNumExpr();
+			IloLinearNumExpr penaCosts = cplex.linearNumExpr();
+			IloNumExpr variCosts = cplex.numExpr();
 			
-			setupCost.addTerms(x, S);
-			holdCost.addTerms(h, Iplus);
-			penaCost.addTerms(pai, Iminus);
-			cplex.addMinimize(cplex.sum(setupCost, holdCost, penaCost));
+			setupCosts.addTerms(x, S);
+			holdCosts.addTerms(h, Iplus);
+			penaCosts.addTerms(pai, Iminus);
+			variCosts = cplex.prod(v[0], cplex.diff(I[T - 1], I0));
+			cplex.addMinimize(cplex.sum(setupCosts, variCosts, holdCosts, penaCosts));
+			
 			
 			// constraints
 			
@@ -134,8 +150,8 @@ public class MipRS {
 			// Q_t >= 0
 			for (int t = 0; t < T; t++) {
 				if (t == 0) {
-					cplex.addLe(cplex.sum(I[t], meanDemand[t] - iniInventory), cplex.prod(x[t], M));
-					cplex.addGe(cplex.sum(I[t], meanDemand[t]), iniInventory);
+					cplex.addLe(cplex.sum(I[t], cplex.diff(meanDemand[t], I0)), cplex.prod(x[t], M));
+					cplex.addGe(cplex.sum(I[t], meanDemand[t]), I0);
 				}
 				else {
 					cplex.addLe(cplex.sum(cplex.sum(I[t], meanDemand[t]), cplex.negative(I[t - 1])), cplex.prod(x[t], M));
@@ -164,6 +180,17 @@ public class MipRS {
 					cplex.addGe(P[j][t], cplex.diff(x[j], sumxjt));
 				}
 			
+			// for computing G(y)
+			switch (gyCx) {
+			case COMPUTG:
+				cplex.addEq(x[0], 0);
+				break;
+			case COMPUTC:
+				cplex.addEq(x[0], 1);
+			default:
+				break;
+			}		
+			
 			//  piecewise constraints
 			IloNumExpr Ipk;
 			IloLinearNumExpr PSigma;
@@ -180,13 +207,12 @@ public class MipRS {
 					
 					for (int k = 0; k <= t; k++)
 						PSigma.addTerm(P[k][t], conSigma[k][t]);
-					
-					// upper bound
-					
+									
+					// upper bound					
 					pmeanPSigma = cplex.prod(pmean, PSigma);
 					IloNumExpr IpkMinuspmeanPSigma = cplex.diff(Ipk, pmeanPSigma);
 					
-					switch (criteria) {
+					switch (boundCriteria) {
 					case UPBOUND:
 						// Iplus
 						cplex.addGe(Iplus[t], cplex.sum(IpkMinuspmeanPSigma, cplex.prod(error, PSigma)));
@@ -200,7 +226,7 @@ public class MipRS {
 					case LOWBOUND:
 						// Iplus
 						cplex.addGe(Iplus[t], IpkMinuspmeanPSigma);
-						//cplex.addGe(Iplus[t], 0); // not necessary
+						cplex.addGe(Iplus[t], 0); // not necessary
 						
 						// Iminus
 						cplex.addGe(cplex.sum(Iminus[t], I[t]), IpkMinuspmeanPSigma);
@@ -221,40 +247,68 @@ public class MipRS {
 				for (int i = 0; i < T; i++)
 					for (int j = 0; j < T; j++)
 						varP[i][j] = cplex.getValue(P[i][j]);
-				System.out.println("Solution status = " + cplex.getStatus());
-				System.out.println("Solution value = " + cplex.getObjValue());
-				System.out.println("x = ");
-				System.out.println(Arrays.toString(varx));
-				System.out.println("I = ");
-				System.out.println(Arrays.toString(varI));
-				String bound = criteria == BoundCriteria.LOWBOUND ? "lower bound" : "upper bound";
-				System.out.println("Iplus " + bound + " = ");
-				System.out.println(Arrays.toString(varIplus));
-				System.out.println("Iminus " + bound + "  = ");
-				System.out.println(Arrays.toString(varIminus));
-				System.out.println("P = ");
-				System.out.println(Arrays.deepToString(varP));
 				
+				System.out.println("Solution value = " + cplex.getObjValue());
+				if (outputResults == true) {
+					System.out.println("Solution status = " + cplex.getStatus());
+					System.out.println("x = ");
+					System.out.println(Arrays.toString(varx));
+					System.out.println("I0 = ");
+					System.out.println(cplex.getValue(I0));
+					System.out.println("I = ");
+					System.out.println(Arrays.toString(varI));
+					String bound = boundCriteria == BoundCriteria.LOWBOUND ? "lower bound" : "upper bound";
+					System.out.println("Iplus " + bound + " = ");
+					System.out.println(Arrays.toString(varIplus));
+					System.out.println("Iminus " + bound + "  = ");
+					System.out.println(Arrays.toString(varIminus));
+					System.out.println("P = ");
+					System.out.println(Arrays.deepToString(varP));	
+				}
+				return cplex.getObjValue();
 			}
 			cplex.end();
 		} catch (IloException e) {
 			System.err.println("Concert exception '" + e + "' caught");
 		}
+		return 0;
 	}
 
+
+
 	public static void main(String[] args) {
-		double[] meanDemand = {2, 4, 7, 3, 10, 10, 3, 3};
-		double[] sigma = {0.2, 0.4, 0.7, 0.3, 1, 1, 0.3, 0.3};
+		double[] meanDemand = {20, 40, 60, 40};
+		double[] sigma = Arrays.stream(meanDemand).map(i -> 0.25*i).toArray();
 		double iniInventory = 0;	
-		double fixOrderCost = 20;
+		double fixOrderCost = 100;
 		double variCost = 0;
 		double holdingCost = 1;
-		double penaltyCost = 2;		
+		double penaltyCost = 10;		
 		int partionNum = 10;
-		BoundCriteria criteria = BoundCriteria.UPBOUND;
-		
-		MipRS mipRS = new MipRS(meanDemand, sigma, iniInventory, fixOrderCost, variCost, holdingCost, penaltyCost, partionNum, criteria);
+		BoundCriteria boundCriteria = BoundCriteria.LOWBOUND;
+		ComputeGyCx gyCx = ComputeGyCx.COMPUTG;
+		boolean outputResults = true;
+		MipRS mipRS = new MipRS(meanDemand, sigma, iniInventory, fixOrderCost, variCost, holdingCost, penaltyCost, partionNum, boundCriteria, gyCx, outputResults);
 		mipRS.solveCPlex();
+		
+		
+		/*******************************************************************
+		 * draw approximate picture for Gy 
+		 */
+//		int minInventorys = 0;
+//		int maxInventorys = 200; // for drawing pictures
+//		int xLength = maxInventorys - minInventorys + 1;
+//		double[][] yG = new double[xLength][2];
+//		int index = 0;
+//		for (int  i = minInventorys; i <= maxInventorys; i++) {
+//			iniInventory = i;
+//			mipRS = new MipRS(meanDemand, sigma, iniInventory, fixOrderCost, variCost, holdingCost, penaltyCost, partionNum, boundCriteria, ComputeGyCx.COMPUTG, false);
+//			yG[index][0] = i;
+//			yG[index][1] = mipRS.solveCPlex();
+//			index++;
+//		}
+//		Drawing.drawSimpleG(yG);
+		
 				
 
 	}

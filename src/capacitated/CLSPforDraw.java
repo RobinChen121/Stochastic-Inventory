@@ -14,6 +14,7 @@ import sdp.inventory.Recursion.OptDirection;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 /**
@@ -36,28 +37,28 @@ public class CLSPforDraw {
 		double minInventory = -500;
 		double maxInventory = 500;
 
-		double fixedOrderingCost = 22;
-		double variOrderingCost = 1;
+		double fixedOrderingCost = 100;
+		double variOrderingCost = 0;
 		double penaltyCost = 10;
-		double[] meanDemand = { 63, 35 };
+		double[] meanDemand = { 20, 40, 60, 40 };
 		double holdingCost = 1;
-		int maxOrderQuantity = 50;
+		int maxOrderQuantity = 150;
 		boolean isForDrawGy = true;
 
 		// get demand possibilities for each period
-//		int T = meanDemand.length;
-//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-//				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
-//				.toArray(PoissonDist[]::new);
-//		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
-		
-		int T = 7;
-		double[] values = {6, 7};
-		double[] probs = {0.95, 0.05};
+		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-		.mapToObj(i -> new DiscreteDistribution(values, probs, values.length)) // can be changed to other distributions
-		.toArray(DiscreteDistribution[]::new);	
+				.mapToObj(i -> new NormalDist(meanDemand[i], 0.25*meanDemand[i])) // can be changed to other distributions
+				.toArray(Distribution[]::new);
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
+		
+//		int T = 7;
+//		double[] values = {6, 7};
+//		double[] probs = {0.95, 0.05};
+//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+//		.mapToObj(i -> new DiscreteDistribution(values, probs, values.length)) // can be changed to other distributions
+//		.toArray(DiscreteDistribution[]::new);	
+//		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 		
 		// feasible actions
 		Function<State, double[]> getFeasibleAction = s -> {
@@ -116,8 +117,8 @@ public class CLSPforDraw {
 		/*******************************************************************
 		 * Drawing
 		 */
-		int minInventorys = -30;
-		int maxInventorys = 30; // for drawing pictures
+		int minInventorys = 0;
+		int maxInventorys = 200; // for drawing pictures
 		int xLength = maxInventorys - minInventorys + 1;
 		double[][] xQ = new double[xLength][2];
 		int index = 0;
@@ -128,7 +129,7 @@ public class CLSPforDraw {
 			xQ[index][1] = recursion.getAction(new State(period, initialInventory));
 			index++;
 		}
-		Drawing.drawXQ(xQ);
+		//Drawing.drawXQ(xQ);
 
 		// since comupteIfAbsent, we need initializing a new class to draw Gy; if not,
 		// java would not compute sdp again

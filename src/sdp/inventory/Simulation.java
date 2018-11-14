@@ -60,8 +60,9 @@ public class Simulation {
 			{
 				recursion.getExpectedValue(state);
 				double optQ = recursion.getAction(state);
-				sum += immediateValue.apply(state, optQ, samples[i][t]);
-				state = stateTransition.apply(state, optQ, samples[i][t]);
+				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
+				sum += immediateValue.apply(state, optQ, randomDemand);
+				state = stateTransition.apply(state, optQ, randomDemand);
 			}
 			simuValues[i] = sum;
 		}
@@ -85,8 +86,9 @@ public class Simulation {
 			{
 				recursion.getExpectedValue(state);
 				double optQ = recursion.getAction(state);
-				sum += immediateValue.apply(state, optQ, realizedDemand[t]);
-				state = stateTransition.apply(state, optQ, realizedDemand[t]);
+				double randomDemand = Math.round(realizedDemand[t]); // integer samples to test sdp
+				sum += immediateValue.apply(state, optQ, randomDemand);
+				state = stateTransition.apply(state, optQ, randomDemand);
 			}
 			costTally.add(sum);
 			if(i >= minRuns) 

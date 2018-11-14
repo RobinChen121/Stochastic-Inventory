@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import milp.MIPFitsS;
 import sdp.inventory.CheckKConvexity;
 import sdp.inventory.GetPmf;
 import sdp.inventory.Recursion;
@@ -11,7 +12,6 @@ import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.Recursion.OptDirection;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.milp.MIPFitsS;
 import sdp.write.WriteToCsv;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;

@@ -1,4 +1,4 @@
-package sdp.milp;
+package milp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,6 +75,7 @@ public class MIPFitsS {
 			}
 		try {
 			IloCplex cplex = new IloCplex();
+			cplex.setOut(null); // no cplex logging information
 			double ub = 10000;
 			IloNumVar x = cplex.numVar(lb, ub);
 			realS = tOptTable[lowIndex][1] + tOptTable[lowIndex][2];
