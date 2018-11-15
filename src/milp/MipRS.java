@@ -128,8 +128,8 @@ public class MipRS {
 			IloNumVar[] I = cplex.numVarArray(T, -Double.MAX_VALUE, Double.MAX_VALUE);
 			IloNumVar[] Iplus = cplex.numVarArray(T, 0.0, Double.MAX_VALUE); // positive inventory
 			IloNumVar[] Iminus = cplex.numVarArray(T, 0.0, Double.MAX_VALUE); // minus inventory
-			//double I0 = iniInventory;
-			IloNumVar I0 = cplex.numVar(-Double.MAX_VALUE, Double.MAX_VALUE);
+			double I0 = iniInventory;
+			//IloNumVar I0 = cplex.numVar(-Double.MAX_VALUE, Double.MAX_VALUE);
 			
 			// objective function
 			IloLinearNumExpr setupCosts = cplex.linearNumExpr();
@@ -150,7 +150,7 @@ public class MipRS {
 			// Q_t >= 0
 			for (int t = 0; t < T; t++) {
 				if (t == 0) {
-					cplex.addLe(cplex.sum(I[t], cplex.diff(meanDemand[t], I0)), cplex.prod(x[t], M));
+					cplex.addLe(cplex.sum(I[t], meanDemand[t] - I0), cplex.prod(x[t], M));
 					cplex.addGe(cplex.sum(I[t], meanDemand[t]), I0);
 				}
 				else {
@@ -253,8 +253,6 @@ public class MipRS {
 					System.out.println("Solution status = " + cplex.getStatus());
 					System.out.println("x = ");
 					System.out.println(Arrays.toString(varx));
-					System.out.println("I0 = ");
-					System.out.println(cplex.getValue(I0));
 					System.out.println("I = ");
 					System.out.println(Arrays.toString(varI));
 					String bound = boundCriteria == BoundCriteria.LOWBOUND ? "lower bound" : "upper bound";
@@ -277,16 +275,16 @@ public class MipRS {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 40, 60, 40};
+		double[] meanDemand = {40, 60, 40};
 		double[] sigma = Arrays.stream(meanDemand).map(i -> 0.25*i).toArray();
-		double iniInventory = 0;	
+		double iniInventory = 140;	
 		double fixOrderCost = 100;
 		double variCost = 0;
 		double holdingCost = 1;
 		double penaltyCost = 10;		
 		int partionNum = 10;
 		BoundCriteria boundCriteria = BoundCriteria.LOWBOUND;
-		ComputeGyCx gyCx = ComputeGyCx.COMPUTG;
+		ComputeGyCx gyCx = ComputeGyCx.NOTCOMPUT;
 		boolean outputResults = true;
 		MipRS mipRS = new MipRS(meanDemand, sigma, iniInventory, fixOrderCost, variCost, holdingCost, penaltyCost, partionNum, boundCriteria, gyCx, outputResults);
 		mipRS.solveCPlex();
@@ -295,19 +293,19 @@ public class MipRS {
 		/*******************************************************************
 		 * draw approximate picture for Gy 
 		 */
-//		int minInventorys = 0;
-//		int maxInventorys = 200; // for drawing pictures
-//		int xLength = maxInventorys - minInventorys + 1;
-//		double[][] yG = new double[xLength][2];
-//		int index = 0;
-//		for (int  i = minInventorys; i <= maxInventorys; i++) {
-//			iniInventory = i;
-//			mipRS = new MipRS(meanDemand, sigma, iniInventory, fixOrderCost, variCost, holdingCost, penaltyCost, partionNum, boundCriteria, ComputeGyCx.COMPUTG, false);
-//			yG[index][0] = i;
-//			yG[index][1] = mipRS.solveCPlex();
-//			index++;
-//		}
-//		Drawing.drawSimpleG(yG);
+		int minInventorys = 0;
+		int maxInventorys = 200; // for drawing pictures
+		int xLength = maxInventorys - minInventorys + 1;
+		double[][] yG = new double[xLength][2];
+		int index = 0;
+		for (int  i = minInventorys; i <= maxInventorys; i++) {
+			iniInventory = i;
+			mipRS = new MipRS(meanDemand, sigma, iniInventory, fixOrderCost, variCost, holdingCost, penaltyCost, partionNum, boundCriteria, ComputeGyCx.COMPUTG, false);
+			yG[index][0] = i;
+			yG[index][1] = mipRS.solveCPlex();
+			index++;
+		}
+		Drawing.drawSimpleG(yG);
 		
 				
 
