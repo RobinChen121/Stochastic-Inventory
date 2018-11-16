@@ -14,6 +14,7 @@ import sdp.write.WriteToCsv;
 * @Description:  testing the performance of binary MILP
 * 
 * my testing shows its average gap with sdp is 5%
+* after adding extra piecewise constraints, the average gap is 
 */
 
 public class BinaryMILPTesting {
@@ -42,7 +43,7 @@ public class BinaryMILPTesting {
 		double holdingCost = 1;
 		double iniInventory = 0;
 		
-		for (int idemand = 9; idemand < 10; idemand++)
+		for (int idemand = 3; idemand < 10; idemand++)
 			for (int iv = 0; iv < v.length; iv++) 
 				for (int ipai = 0; ipai < pai.length; ipai++) 
 					for (int iK = 0; iK < K.length; iK++) 

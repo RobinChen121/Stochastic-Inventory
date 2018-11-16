@@ -8,6 +8,7 @@ import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
+import milp.JointMILP.BoundCriteria;
 
 
 /**
@@ -71,8 +72,9 @@ public class BinaryMILP {
 			prob = new double[] {0.04206108420763477, 0.0836356495308449, 0.11074334596058821, 0.1276821455299152, 0.13587777477101692, 0.13587777477101692, 0.1276821455299152, 0.11074334596058821, 0.0836356495308449, 0.04206108420763477};
 			means = new double[] {-2.133986195498256, -1.3976822972668839, -0.918199946431143, -0.5265753462727588, -0.17199013069262026, 0.17199013069262026, 0.5265753462727588, 0.918199946431143, 1.3976822972668839, 2.133986195498256};
 			error = 0.005885974956458359;
+			break;
+			
 		default:
-			partionNum = 4;
 			prob = new double[] {0.187555, 0.312445, 0.312445, 0.187555};
 			means = new double[] {-1.43535, -0.415223, 0.415223, 1.43535};
 			error = 0.0339052;
@@ -164,12 +166,18 @@ public class BinaryMILP {
 			}
 			
 			// Pjt >= x_j - sum_{j+1}^{t}x_k
+			// sum_{1}{t}x_k == 0 => P[0][t] == 1, this constraints are important for the extra piecewise constraints
+			IloLinearNumExpr sumxjt2;
 			for (int t = 0; t < T; t++)
 				for (int j = 0; j <= t; j++) {
 					sumxjt = cplex.linearNumExpr();
 					for (int k = j + 1; k <= t; k++)
 						sumxjt.addTerm(x[k], 1);
 					cplex.addGe(P[j][t], cplex.diff(x[j], sumxjt));
+					sumxjt2 = cplex.linearNumExpr();
+					for (int k = 0; k <= t; k++)
+						sumxjt2.addTerm(x[k], 1);
+					cplex.addGe(cplex.prod(M, sumxjt2), cplex.prod(M, cplex.diff(1, P[0][t])));
 				}
 			
 			// for computing G(y)
@@ -225,11 +233,41 @@ public class BinaryMILP {
 				}
 			}
 			
-			if (cplex.solve()) {								
+			// add another piecewise constraints, make results more robust
+			IloNumExpr HMinusPiecewise;
+			IloNumExpr BMinusPiecewise;
+			for (int t = 0; t < T; t++)
+				for (int j = 0; j <= t; j++) {
+					// Iplus
+					double[] slopes = new double[partionNum + 1];
+					double[] breakPointXCoor = means;
+					slopes[0] = 0;
+					for (int k = 1; k <= partionNum; k++)
+						slopes[k] = slopes[k - 1] + prob[k - 1];
+					double fa = 0;
+					// require partionNum to be even, or else fa = 1/2 (prob[k]means[k] + prob[k+1]means[k+1]), k=(parNum-1)/2
+					for(int k = 0; k < partionNum/2; k++)
+						fa -= prob[k]*means[k];
+					if(boundCriteria == BoundCriteria.UPBOUND)
+						fa = error + fa;
+					HMinusPiecewise = cplex.diff(cplex.prod(Iplus[t], 1/conSigma[j][t]), cplex.piecewiseLinear(cplex.prod(I[t], 1/conSigma[j][t]), breakPointXCoor, slopes, 0, fa));
+					cplex.addLe(HMinusPiecewise, cplex.prod(M, cplex.diff(1, P[j][t])));
+					cplex.addGe(HMinusPiecewise, cplex.prod(-M, cplex.diff(1, P[j][t])));
+
+					// Iminus
+					slopes[0] = -1;
+					for (int k = 1; k <= partionNum; k++)
+						slopes[k] = slopes[k - 1] + prob[k - 1];
+					BMinusPiecewise = cplex.diff(cplex.prod(Iminus[t], 1/conSigma[j][t]), cplex.piecewiseLinear(cplex.prod(I[t], 1/conSigma[j][t]), breakPointXCoor, slopes, 0, fa));
+					cplex.addLe(BMinusPiecewise, cplex.prod(M, cplex.diff(1, P[j][t])));
+					cplex.addGe(BMinusPiecewise, cplex.prod(-M, cplex.diff(1, P[j][t])));
+				}
+						
+			if (cplex.solve()) {				
 				double[] result = {cplex.getValue(I0), cplex.getObjValue()};
+				cplex.end();
 				return result;
-			}
-			cplex.end();
+			}			
 		} catch (IloException e) {
 			System.err.println("Concert exception '" + e + "' caught");
 		}
@@ -269,13 +307,13 @@ public class BinaryMILP {
 
 	public static void main(String[] args) {
 		double[] meanDemand = {10,	10,	10,	10,	10,	10,	10,	10};
-		double coeValue = 0.1;
+		double coeValue = 0.25;
 		double[] sigma = Arrays.stream(meanDemand).map(i -> coeValue*i).toArray();
 		double iniInventory = 0;	
-		double fixOrderCost = 200;
+		double fixOrderCost = 100;
 		double variCost = 0;
 		double holdingCost = 1;
-		double penaltyCost = 5;	
+		double penaltyCost = 10;	
 		
 		int partionNum = 10;
 		BoundCriteria boundCriteria = BoundCriteria.LOWBOUND;
