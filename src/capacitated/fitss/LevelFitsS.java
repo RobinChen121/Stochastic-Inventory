@@ -37,7 +37,7 @@ public class LevelFitsS {
 		double fixedOrderingCost = 200;
 		double variOrderingCost = 0;
 		double penaltyCost = 5;
-		double[] meanDemand = { 10,	10,	10,	10,	10,	10,	10,	10 };
+		double[] meanDemand = { 10,	10,	10,	10 };
 		double holdingCost = 1;
 		int maxOrderQuantity = 300;
 		double coeValue = 0.1;

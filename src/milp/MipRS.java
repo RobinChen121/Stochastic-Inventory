@@ -83,6 +83,8 @@ public class MipRS {
 	 */
 	public double solveCPlex() {
 		// piecewise approximation values
+		// H \approx aS+b, a = \sum_{i=1}^w prob[i], b = \sum_{i=1}^w prob[i]*mean[i], multiply sigma[i][j] for general norm
+		// plus error for upper bound
 		double[] prob;
 		double[] means;
 		double error;
@@ -248,6 +250,7 @@ public class MipRS {
 			}
 			
 			// add another piecewise constraints, make results more robust
+			// P_{it} == 1 => H_t = piecewise; B_t = piecewise
 			IloNumExpr HMinusPiecewise;
 			IloNumExpr BMinusPiecewise;
 			for (int t = 0; t < T; t++)
@@ -315,19 +318,22 @@ public class MipRS {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 40, 60, 40};
+		double[] meanDemand = {20, 40, 60, 40, 20, 40, 60, 40};
 		double[] sigma = Arrays.stream(meanDemand).map(i -> 0.25*i).toArray();
-		double iniInventory = 24;	
+		double iniInventory = 0;	
 		double fixOrderCost = 100;
 		double variCost = 0;
 		double holdingCost = 1;
 		double penaltyCost = 10;		
 		int partionNum = 10;
-		BoundCriteria boundCriteria = BoundCriteria.UPBOUND;
+		BoundCriteria boundCriteria = BoundCriteria.LOWBOUND;
 		ComputeGyCx gyCx = ComputeGyCx.NOTCOMPUT;
 		boolean outputResults = true;
+		long currTime = System.currentTimeMillis();
 		MipRS mipRS = new MipRS(meanDemand, sigma, iniInventory, fixOrderCost, variCost, holdingCost, penaltyCost, partionNum, boundCriteria, gyCx, outputResults);
 		mipRS.solveCPlex();
+		double time = (System.currentTimeMillis() - currTime) / 1000;
+		System.out.println("running time is " + time + "s");
 		
 		
 		/*******************************************************************

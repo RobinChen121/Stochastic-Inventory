@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 
+import cern.colt.list.adapter.DoubleListAdapter;
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearNumExpr;
@@ -14,7 +15,9 @@ import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 import sdp.inventory.State;
+import umontreal.ssj.probdist.ContinuousDistribution;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 /** 
@@ -27,6 +30,8 @@ import umontreal.ssj.probdist.PoissonDist;
 *               stochastic lot sizing problem by solving the approximate deterministic 
 *               problem (a mixed integer programming model);
 *               tests show its performance is avg 1% gap.
+*               
+*               this class fits best for poisson distribution.
 *               
 *               
 * @note: this class need cplex.jar              
@@ -205,7 +210,14 @@ public class MipCashConstraint {
 				int orderLastTo = nextIndex(varx, t);
 				double demandSum = IntStream.range(t, orderLastTo + 1).mapToObj(i -> distributions[i].getMean())
 						.reduce(0.0, (x, y) -> x.doubleValue() + y.doubleValue());
-				Distribution distribution = new PoissonDist(demandSum);
+				double sigmaSqureSum = IntStream.range(t, orderLastTo + 1).mapToObj(i -> distributions[i].getStandardDeviation())
+						.reduce(0.0, (x, y) -> Math.pow(x.doubleValue(), 2) + Math.pow(y.doubleValue(), 2));
+				double sigmaSum = Math.sqrt(sigmaSqureSum);
+				Distribution distribution;
+				if (distributions[0] instanceof ContinuousDistribution) // normal distribution
+					distribution = new NormalDist(demandSum, sigmaSum);
+				else
+					distribution = new PoissonDist(demandSum);
 				S = distribution.inverseF((price - variCost) / (holdingCost  + price));
 
 				double maxQ = 0;
@@ -220,11 +232,13 @@ public class MipCashConstraint {
 
 				// ascertain s
 				for (int i = 0; i <= (int) S; i++) {
-					if (Ly(S, t, distribution) - Ly(i, t, distribution) < fixOrderCost) {
+					if (Ly(S, t, distribution) - Ly(i, t, distribution) < fixOrderCost + 0.1) {
 						s = i;
 						sCS[t][0] = s;	
 						break;
 					}
+					if (i == (int) S)
+						sCS[t][0] = S;
 				}
 //			}
 			

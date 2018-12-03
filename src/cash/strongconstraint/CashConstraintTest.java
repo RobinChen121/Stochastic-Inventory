@@ -12,54 +12,45 @@ import milp.MipCashConstraint;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashRecursion.OptDirection;
 import sdp.cash.CashSimulation;
-import sdp.inventory.CheckKConvexity;
 import sdp.inventory.GetPmf;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.cash.CashState;
-import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 /**
  * @author: Zhen Chen
  * @email: 15011074486@163.com
- * @date 2018, March 3th, 6:31:10 pm
- * @Description stochastic lot sizing problem with strong cash balance
- *              constraint, provide a (s, C, S) policy
+ * @date 2018, November 27th, 6:31:10 pm
+ * @Description: this is a class to test Xiuli Chao et al.'s paper (2008). In their numerical example,
+ *               demand variance is too big and can cause negative demand values. I am 
+ *               curious that how the authors deal with negative demand values.
+ *               
+ *               The mip heuristic seems performs worse when fixed ordering cost is lower
  *
- * a numerical case:
- * double[] meanDemand = {41.8, 6.6, 2, 21.8};
- * double iniCash = 15;
- * double iniInventory = 0;
- * double fixOrderCost = 10;
- * double variCost = 1;
- * double price = 8;
- * double salvageValue = 0.5;
- *
- * there are states: [3, 14, 16, 6], [3, 14, 23, 0]
  */
 
-public class CashConstraint {
+public class CashConstraintTest {
 
-	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
+	// d=[10, 10, 10, 10], coe = 10, iniCash=20, K=0; price=1.3, v=1; h = 0, salvageValue = 0.5, interestRate = 0.1 
 	public static void main(String[] args) {
-		double[] meanDemand = {15, 15, 15};
+		double[] meanDemand = {10, 10, 10, 10};
 		double iniInventory = 0;
-		double iniCash = 5;		
+		double iniCash = 50;		
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
-		double price = 8;
+		double price = 1.3;
 		double salvageValue = 0.5;
+		double interestRate = 0.1;
 		FindCCrieria criteria = FindCCrieria.XRELATE;			
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
-		int stepSize = 1;
+		double stepSize = 1; // ordering quantity stepsize
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
 		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
@@ -70,7 +61,7 @@ public class CashConstraint {
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				//.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
+				//.mapToObj(i -> new NormalDist(meanDemand[i], 0.1 * meanDemand[i])) // can be changed to other distributions
 				.mapToObj(i -> new PoissonDist(meanDemand[i]))
 				.toArray(Distribution[]::new);
 
@@ -103,7 +94,8 @@ public class CashConstraint {
 			double variableCost = variCost * action;
 			double inventoryLevel = state.getIniInventory() + action - randomDemand;
 			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
-			double cashIncrement = revenue - fixedCost - variableCost - holdCosts;
+			double interests = interestRate * (state.getIniCash() - action * variCost);
+			double cashIncrement = revenue - fixedCost - variableCost - holdCosts + interests;
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
 			cashIncrement += salValue;
 			return cashIncrement;
@@ -118,8 +110,9 @@ public class CashConstraint {
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
-			// cash is integer or not
-			nextCash = Math.round(nextCash * 1) / 1; 
+			// cash is integer or not, inventory is integer or not
+			nextCash = Math.round(nextCash * 0.1) / 0.1; 
+			nextInventory= Math.round(nextInventory * 0.1) / 0.1; 
 			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 		};
 
