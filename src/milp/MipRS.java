@@ -23,6 +23,7 @@ import sdp.inventory.Drawing;
 *                compared with original MILP, two sets of constraints are added to make results more robust
 *                
 * @note: this class need cplex.jar    
+*        12 periods will exceed cplex default size
 */
 
 public class MipRS {
@@ -280,6 +281,8 @@ public class MipRS {
 					cplex.addGe(BMinusPiecewise, cplex.prod(-M, cplex.diff(1, P[j][t])));
 				}
 			
+			//cplex.exportModel("MipRS.mps");
+			
 			if (cplex.solve()) {				
 				double[] varx = cplex.getValues(x);
 				double[] varI = cplex.getValues(I);
@@ -318,7 +321,7 @@ public class MipRS {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 40, 60, 40, 20, 40, 60, 40};
+		double[] meanDemand = {20, 40, 60, 40};
 		double[] sigma = Arrays.stream(meanDemand).map(i -> 0.25*i).toArray();
 		double iniInventory = 0;	
 		double fixOrderCost = 100;
