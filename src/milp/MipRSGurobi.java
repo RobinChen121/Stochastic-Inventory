@@ -14,8 +14,6 @@ import gurobi.GRBModel;
 import gurobi.GRBVar;
 
 
-
-
 /**
 * @author Zhen Chen
 * @date: 2018年12月3日 下午4:14:34  
@@ -25,7 +23,8 @@ import gurobi.GRBVar;
 * @Description:  this is class to implement the piecewise method of Roberto Rossi et al. (2015) in Gurobi of java
 * 
 *                Gurobi does not support very well for java. 
-*                There are much fewer classes and methods for java compared with that of cplex
+*                There are much fewer classes and methods for java compared with that of cplex.
+*                this class is not complete due to above reason. I decide to adopte Gurobi in python.
 */
 
 public class MipRSGurobi {

@@ -4,11 +4,15 @@ import java.util.Arrays;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
+import com.sun.org.apache.bcel.internal.generic.LASTORE;
+
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearNumExpr;
+import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
+
 
 /**
 * @author Zhen Chen
@@ -16,11 +20,13 @@ import ilog.cplex.IloCplex;
 * @email: 15011074486@163.com,
 * @licence: MIT licence. 
 *
-* @Description:  this is a class to implement the calling back method of Tunc et al. (2018) to solve 
+* @Description:  this is a class to implement the PM setting method of Tunc et al. (2018) to solve 
 *                single-item stochastic lot sizing problem.
+*                (1) without dynamic cut, cplex reach size limit even for 8 periods
+*                (2) the reason of using H[i][j][t] may lie on the convenience of adopting call back
 */
 
-public class MipCallBack {
+public class MipRSPM {
 	double[] meanDemand; 
 	double[] sigma;
 	double iniInventory;	
@@ -32,9 +38,11 @@ public class MipCallBack {
 	int partionNum;
 	int T;
 	int M;
+	boolean outputResults;
+	double[][] conSigma;
 	
-	public MipCallBack(double[] meanDemand, double[] sigma, double iniInventory, Double fixOrderCost, double variCost, double holdingCost,
-			double penaltyCost, int partionNum) {
+	public MipRSPM(double[] meanDemand, double[] sigma, double iniInventory, Double fixOrderCost, double variCost, double holdingCost,
+			double penaltyCost, int partionNum, boolean outputResults) {
 		this.meanDemand = meanDemand;
 		this.sigma = sigma;
 		this.iniInventory = iniInventory;
@@ -44,10 +52,21 @@ public class MipCallBack {
 		this.penaltyCost = penaltyCost;
 		this.T = meanDemand.length;
 		this.M = 100000;	
+		this.cumSumDemand = new double[T];
 		this.cumSumDemand[0] = meanDemand[0];
 		for (int t = 1; t < T; t++)
 			this.cumSumDemand[t] = meanDemand[t] + cumSumDemand[t - 1];
 		this.partionNum = partionNum;
+		this.outputResults = outputResults;
+		this.conSigma = new double[T][T];
+		for (int i = 0; i < T; i++)
+			for (int j = 0; j < T; j++) {
+				double sigmaPow = 0;
+				for (int k = i; k <= j; k++) {
+					sigmaPow += Math.pow(sigma[k], 2);
+				}
+				this.conSigma[i][j] = Math.sqrt(sigmaPow);
+			}
 	}
 	
 	public double solveCallBack() {
@@ -120,7 +139,7 @@ public class MipCallBack {
 			for (int i = 0; i < T; i++)
 				for (int j = 0; j < T; j++) {
 					setupCosts.addTerm(x[i][j], K[i]);					
-					for (int t = i; t < j; t++) {
+					for (int t = i; t <= j; t++) {
 						Dxij.addTerm(-cumSumDemand[t], x[i][j]);
 						holdCosts.addTerm(q[i][j], h[i]);
 						penaCosts.addTerm(h[i] + pai[i], H[i][j][t]);
@@ -147,8 +166,8 @@ public class MipCallBack {
 				sumXtj = cplex.linearNumExpr();
 				for (int i = 0; i <= t; i++)
 					sumXit.addTerm(1, x[i][t]);
-				for (int j = t; j < T - 1; j++)
-					sumXtj.addTerm(1, x[t][j]);
+				for (int j = t + 1; j < T; j++)
+					sumXtj.addTerm(1, x[t + 1][j]);
 				cplex.addEq(sumXit, sumXtj);
 			}
 			
@@ -159,22 +178,94 @@ public class MipCallBack {
 				for (int j = 0; j < T; j++) 
 					cplex.addLe(q[i][j], cplex.prod(M, x[i][j]));
 			
-			// sum_{i=0}^t q_{i, t} = sum_{j=t+1}^T q_{t, j}			
+			// sum_{i=0}^t q_{i, t} <= sum_{j=t+1}^T q_{t, j}			
 			for (int t = 0; t < T - 1; t++) {
 				sumqit = cplex.linearNumExpr();
 				sumqtj = cplex.linearNumExpr();
+				for (int i = 0; i <= t; i++)
+					sumqit.addTerm(1, q[i][t]); 
+				for (int j = t + 1; j < T; j++)
+					sumqtj.addTerm(1, q[t + 1][j]);
+				cplex.addLe(sumqit, sumqtj);
 			}
 			
 			// piecewise constraints
+			// something error here
+			IloNumExpr expectI;
 			for (int i = 0; i < T; i++)
-				for (int j = i; j < T; j++) {
+				for (int j = i; j < T; j++) {		
 					for (int t = i; t <= j; t++) {
-						                                                                                 
+						expectI = cplex.diff(q[i][j], cplex.prod(cumSumDemand[t], x[i][j]));						
+						for (int k = 0; k < partionNum; k++) {
+							double pik = Arrays.stream(prob).limit(k + 1).sum();							
+							double pmean = 0;
+							for (int m = 0; m <= k; m++)
+								pmean += prob[m] * means[m];
+							
+							cplex.addGe(cplex.sum(H[i][j][t], expectI), cplex.diff(cplex.prod(expectI, pik), cplex.prod(x[i][j], conSigma[i][t] * pmean)));
+						}
+					}											
+				}			
+			
+			if (cplex.solve()) {				
+				double[][][] varH = new double[T][T][T];
+				double[][] varQ = new double[T][T];
+				double[][] varX = new double[T][T];
+				for (int i = 0; i < T; i++)
+					for (int j = 0; j < T; j++) {
+						varX[i][j] = cplex.getValue(x[i][j]);
+						varQ[i][j] = cplex.getValue(q[i][j]);
+						for (int k = i; k <= j; k++)
+							varH[i][j][k] = cplex.getValue(H[i][j][k]);
 					}
-						
+				double[] z = new double[T];
+				double[] quantity = new double[T];
+				double[] I = new double[T];
+				for (int i = 0; i < T; i++)
+					for (int j = 0; j < T; j++) {
+						if (varX[i][j] == 1) {
+							z[i] = 1;	
+							double lastQ = 0;
+							if (i == 0) {
+								quantity[i] = varQ[i][j];
+								lastQ = varQ[i][j];
+							}
+							else
+								quantity[i] = varQ[i][j] - lastQ;
+						}
+					}
+				I[0] = quantity[0] + iniInventory - meanDemand[0];
+				for (int i = 1; i < T; i++)
+					I[i] = quantity[i] + I[i - 1] - meanDemand[i];
+				
+				System.out.println("Solution value = " + cplex.getObjValue());
+				if (outputResults == true) {
+					System.out.println("Solution status = " + cplex.getStatus());
+					System.out.println("number of constriants are:" + cplex.getNcols()); // it's not less than number of variables
+					System.out.println("z = ");
+					System.out.println(Arrays.toString(z));
+					System.out.println("Ordering quantities = ");
+					System.out.println(Arrays.toString(quantity));
+					System.out.println("I = ");
+					System.out.println(Arrays.toString(I));
+//					System.out.println("part of holding costs is :");
+//					System.out.println(cplex.getValue(holdCosts));
+//					System.out.println("Another part of holding costs is :");
+//					System.out.println(cplex.getValue(Dxij));
+//					System.out.println("merged penalty costs is :");
+//					System.out.println(cplex.getValue(penaCosts));
+					System.out.println("x = ");
+					System.out.println(Arrays.deepToString(varX));
+					System.out.println("q = ");
+					System.out.println(Arrays.deepToString(varQ));
+					System.out.println("H = ");
+					System.out.println(Arrays.deepToString(varH));
+	
 				}
-			
-			
+				double finalOptValue = cplex.getObjValue();
+				cplex.end();
+				return finalOptValue;
+			}
 			
 		} catch (IloException e) {
 			System.err.println("Concert exception '" + e + "' caught");
@@ -184,15 +275,19 @@ public class MipCallBack {
 	} 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 40, 60, 40};
+		double[] meanDemand = {20, 40, 60, 40, 20, 40, 60};
 		double[] sigma = Arrays.stream(meanDemand).map(i -> 0.25*i).toArray();
 		double iniInventory = 0;	
 		double fixOrderCost = 100;
 		double variCost = 0;
 		double holdingCost = 1;
 		double penaltyCost = 10;
+		int partionNum = 10;
+		boolean outputResults = true;
 		
-		
+		MipRSPM mipCallBack = new MipRSPM(meanDemand, sigma, iniInventory, fixOrderCost, variCost, holdingCost,
+				penaltyCost, partionNum, outputResults);
+		mipCallBack.solveCallBack();
 
 	}
 

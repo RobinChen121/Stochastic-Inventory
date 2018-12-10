@@ -175,19 +175,19 @@ public class MipRS {
 					cplex.addEq(P[j][t], 0);  // other Pjt = 0, or else cannot output values
 			}
 			
-			// Pjt >= x_j - sum_{j+1}^{t}x_k
-			// sum_{1}{t}x_k == 0 => P[0][t] == 1, this constraints are important for the extra piecewise constraints
-			for (int t = 0; t < T; t++)
+			// Pjt >= x_j - sum_{k = j+1}^{t}x_k
+			// sum_{j=1}{t}x_j == 0 => P[0][t] == 1, this constraints are important for the extra piecewise constraints
+			for (int t = 0; t < T; t++) {
+				sumxjt2 = cplex.linearNumExpr();
 				for (int j = 0; j <= t; j++) {
 					sumxjt = cplex.linearNumExpr();
 					for (int k = j + 1; k <= t; k++)
 						sumxjt.addTerm(x[k], 1);
 					cplex.addGe(P[j][t], cplex.diff(x[j], sumxjt));
-					sumxjt2 = cplex.linearNumExpr();
-					for (int k = 0; k <= t; k++)
-						sumxjt2.addTerm(x[k], 1);
-					cplex.addGe(cplex.prod(M, sumxjt2), cplex.prod(M, cplex.diff(1, P[0][t])));
+					sumxjt2.addTerm(x[j], 1);					
 				}
+				cplex.addGe(sumxjt2, cplex.diff(1, P[0][t]));
+			}
 			
 
 			
@@ -251,6 +251,7 @@ public class MipRS {
 			}
 			
 			// add another piecewise constraints, make results more robust
+			// use piecewise expression, equal to the above expressions
 			// P_{it} == 1 => H_t = piecewise; B_t = piecewise
 			IloNumExpr HMinusPiecewise;
 			IloNumExpr BMinusPiecewise;
@@ -296,6 +297,8 @@ public class MipRS {
 				System.out.println("Solution value = " + cplex.getObjValue());
 				if (outputResults == true) {
 					System.out.println("Solution status = " + cplex.getStatus());
+					System.out.println("number of constriants are:" + cplex.getNcols());
+					System.out.println("number of variables are:" + (T*T + 4 *T));
 					System.out.println("x = ");
 					System.out.println(Arrays.toString(varx));
 					System.out.println("I = ");
@@ -321,7 +324,7 @@ public class MipRS {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 40, 60, 40};
+		double[] meanDemand = {20, 40, 60, 40, 20, 40};
 		double[] sigma = Arrays.stream(meanDemand).map(i -> 0.25*i).toArray();
 		double iniInventory = 0;	
 		double fixOrderCost = 100;
