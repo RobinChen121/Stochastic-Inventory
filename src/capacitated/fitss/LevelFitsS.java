@@ -25,28 +25,31 @@ import umontreal.ssj.probdist.PoissonDist;
  *@description:  fit (s, S) levels for capacitated lot sizing problem
  *
  * may be not k-convex
+ * 
+ * computation time for 20 periods may be 4s
+ * 
  */
 
 public class LevelFitsS {
 	public static void main(String[] args) {
 		double truncationQuantile = 0.9999;
 		double stepSize = 1;
-		double minInventory = -500;
-		double maxInventory = 500;
+		double minInventory = -150;
+		double maxInventory = 400;
 
-		double fixedOrderingCost = 200;
+		double fixedOrderingCost = 100;
 		double variOrderingCost = 0;
-		double penaltyCost = 5;
-		double[] meanDemand = { 10,	10,	10,	10 };
+		double penaltyCost = 10;
+		double[] meanDemand = {20,40,60,40,20,40,60,40,20,40,60,40,20,40,60,40,20,40,60,40};
 		double holdingCost = 1;
-		int maxOrderQuantity = 300;
-		double coeValue = 0.1;
+		int maxOrderQuantity = 200;
+		double coeValue = 0.15;
 
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
-                .mapToObj(i -> new NormalDist(meanDemand[i], coeValue * meanDemand[i]))
+				.mapToObj(i -> new PoissonDist(meanDemand[i]))
+                //.mapToObj(i -> new NormalDist(meanDemand[i], coeValue * meanDemand[i]))
 				.toArray(Distribution[]::new);
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 		

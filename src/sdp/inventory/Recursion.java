@@ -1,14 +1,20 @@
 package sdp.inventory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
-import sdp.cash.CashState;
+
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 
@@ -16,7 +22,9 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 *@author: Zhen Chen
 *@email: 15011074486@163.com
 *@date: Jul 12, 2018---10:30:51 AM
-*@description:  a recursion class for stochastic dynamic programming
+*@description:  a recursion class for stochastic dynamic programming.
+*               Roberto's code generates complete state space and adopts parallel computing.
+*
 */
 
 public class Recursion {
@@ -74,21 +82,42 @@ public class Recursion {
 	public double getExpectedValue(State state) {
 		return this.cacheValues.computeIfAbsent(state, s -> {			
 //			double val = Arrays.stream(getFeasibleActions.apply(s))
-//					//.parallel() // whether using parallel computation, there is error now
+//					.parallel() // whether using parallel computation, there is error now
 //					.map(orderQty -> Arrays.stream(pmf[s.getPeriod() - 1])
 //					.mapToDouble(p -> p[1] * immediateValue.apply(s, orderQty, p[0])
 //							+ (s.getPeriod() < pmf.length ? p[1] * getExpectedValue(stateTransition.apply(s, orderQty, p[0])) : 0))
 //					.sum())
 //					.reduce((x, y) -> optDirection == OptDirection.MIN ? x > y ? y : x   // represent min max
 //							                                          : x > y ? x :y)
-//					.getAsDouble();
+//					.orElse(0);
 //			
 //			double bestOrderQty = Arrays.stream(getFeasibleActions.apply(s)).filter(orderQty -> Arrays
 //					.stream(pmf[s.getPeriod() - 1])
-//					//.parallel() // whether using parallel computation
+//					.parallel() // whether using parallel computation
 //					.mapToDouble(p -> p[1] * immediateValue.apply(s, orderQty, p[0])
 //							+ (s.getPeriod() < pmf.length ? p[1] * getExpectedValue(stateTransition.apply(s, orderQty, p[0])) : 0))
-//					.sum() == val).findAny().getAsDouble();			
+//					.sum() == val).findAny().orElse(0);		
+						
+			
+//			double[] arr = getFeasibleActions.apply(s);
+//			ArrayList<Double> actions = new ArrayList<>();
+//			for (double d : arr) actions.add(d);		
+//			double[][] dAndP = pmf[s.getPeriod() - 1]; // demandAndPossibility
+//			BestActionValue actionAndValue = new BestActionValue(optDirection);			
+//			actions.parallelStream()
+//			.forEach(orderQty -> {
+//				double thisQValue = 0;
+//				for (int j = 0; j < dAndP.length; j++) {
+//					thisQValue += dAndP[j][1] * immediateValue.apply(s, orderQty, dAndP[j][0]);
+//					if (s.getPeriod() < pmf.length) {
+//						State newState = stateTransition.apply(s, orderQty, dAndP[j][0]);
+//						thisQValue += dAndP[j][1] * getExpectedValue(newState);
+//					}
+//				}
+//				actionAndValue.update(orderQty, thisQValue);
+//			});
+//			double bestOrderQty = actionAndValue.getBestAction();
+//			double val = actionAndValue.getBestValue();
 			
 			double[] feasibleActions = getFeasibleActions.apply(state);
 			double[][] dAndP = pmf[s.getPeriod() - 1]; // demandAndPossibility
@@ -120,6 +149,7 @@ public class Recursion {
 					}
 				}
 			}
+			
 			this.cacheActions.putIfAbsent(s, bestOrderQty);
 			return val;
 		});
