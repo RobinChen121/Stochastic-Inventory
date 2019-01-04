@@ -6,12 +6,14 @@ import java.util.stream.IntStream;
 
 import com.sun.org.apache.bcel.internal.generic.LASTORE;
 
+import ilog.concert.IloConstraint;
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
+import umontreal.ssj.stochprocess.GeometricNormalInverseGaussianProcess;
 
 
 /**
@@ -97,6 +99,7 @@ public class MipRSPM {
 				
 		try {
 			IloCplex cplex = new IloCplex();
+			cplex.getVersion();
 			cplex.setOut(null); // no cplex logging information
 			
 			// parameter values in array
@@ -138,9 +141,12 @@ public class MipRSPM {
 			IloLinearNumExpr penaCosts = cplex.linearNumExpr();
 			for (int i = 0; i < T; i++)
 				for (int j = 0; j < T; j++) {
-					setupCosts.addTerm(x[i][j], K[i]);					
+					setupCosts.addTerm(x[i][j], K[i]);	
+					
 					for (int t = i; t <= j; t++) {
-						Dxij.addTerm(-cumSumDemand[t], x[i][j]);
+						//Dxij.addTerm(pai[i] * cumSumDemand[t], x[i][j]);
+						//holdCosts.addTerm(q[i][j], -pai[i]);
+						Dxij.addTerm(-h[i] * cumSumDemand[t], x[i][j]);
 						holdCosts.addTerm(q[i][j], h[i]);
 						penaCosts.addTerm(h[i] + pai[i], H[i][j][t]);
 					}
@@ -190,7 +196,6 @@ public class MipRSPM {
 			}
 			
 			// piecewise constraints
-			// something error here
 			IloNumExpr expectI;
 			for (int i = 0; i < T; i++)
 				for (int j = i; j < T; j++) {		
@@ -201,12 +206,12 @@ public class MipRSPM {
 							double pmean = 0;
 							for (int m = 0; m <= k; m++)
 								pmean += prob[m] * means[m];
-							
+							//cplex.addGe(H[i][j][t], cplex.diff(cplex.prod(expectI, pik), cplex.prod(x[i][j], conSigma[i][t] * pmean)));
 							cplex.addGe(cplex.sum(H[i][j][t], expectI), cplex.diff(cplex.prod(expectI, pik), cplex.prod(x[i][j], conSigma[i][t] * pmean)));
 						}
 					}											
 				}			
-			
+			 
 			if (cplex.solve()) {				
 				double[][][] varH = new double[T][T][T];
 				double[][] varQ = new double[T][T];
@@ -221,17 +226,19 @@ public class MipRSPM {
 				double[] z = new double[T];
 				double[] quantity = new double[T];
 				double[] I = new double[T];
+				double lastQ = 0;
 				for (int i = 0; i < T; i++)
 					for (int j = 0; j < T; j++) {
 						if (varX[i][j] == 1) {
-							z[i] = 1;	
-							double lastQ = 0;
+							z[i] = 1;								
 							if (i == 0) {
 								quantity[i] = varQ[i][j];
-								lastQ = varQ[i][j];
+								lastQ = quantity[i];
 							}
-							else
+							else {
 								quantity[i] = varQ[i][j] - lastQ;
+								lastQ = quantity[i];
+							}
 						}
 					}
 				I[0] = quantity[0] + iniInventory - meanDemand[0];
@@ -266,6 +273,9 @@ public class MipRSPM {
 				cplex.end();
 				return finalOptValue;
 			}
+			else {
+
+			}
 			
 		} catch (IloException e) {
 			System.err.println("Concert exception '" + e + "' caught");
@@ -275,7 +285,7 @@ public class MipRSPM {
 	} 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 40, 60, 40, 20, 40, 60};
+		double[] meanDemand = {50,50,50,50,50,50};
 		double[] sigma = Arrays.stream(meanDemand).map(i -> 0.25*i).toArray();
 		double iniInventory = 0;	
 		double fixOrderCost = 100;

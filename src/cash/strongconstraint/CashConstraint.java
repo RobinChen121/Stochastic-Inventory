@@ -46,13 +46,13 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {15, 15, 15};
+		double[] meanDemand = { 4.7, 8.1, 23.6, 39.4, 16.4, 28.7, 50.8, 39.1};
 		double iniInventory = 0;
-		double iniCash = 5;		
-		double fixOrderCost = 0;
+		double iniCash = 25;		
+		double fixOrderCost = 15;
 		double variCost = 1;
-		double holdingCost = 0;
-		double price = 8;
+		double holdingCost = 1;
+		double price = 4;
 		double salvageValue = 0.5;
 		FindCCrieria criteria = FindCCrieria.XRELATE;			
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand

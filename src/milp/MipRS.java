@@ -324,7 +324,7 @@ public class MipRS {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 40, 60, 40, 20, 40};
+		double[] meanDemand = {20, 40, 60, 40};
 		double[] sigma = Arrays.stream(meanDemand).map(i -> 0.25*i).toArray();
 		double iniInventory = 0;	
 		double fixOrderCost = 100;

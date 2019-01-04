@@ -115,7 +115,7 @@ public class MipRSCallback {
 	 */	
 	double computeExpectIminus(double S, int startPeriod, int endPeriod) {
 		double sigma = conSigma[startPeriod - 1][endPeriod - 1];
-		double mu = IntStream.range(startPeriod - 1, endPeriod).mapToDouble(i -> meanDemand[i]).average().getAsDouble();
+		double mu = IntStream.range(startPeriod - 1, endPeriod).mapToDouble(i -> meanDemand[i]).sum();
 		MathFunction func = new MathFunction() {
 			
 			@Override
@@ -124,7 +124,8 @@ public class MipRSCallback {
 			}
 		};
 
-		return sigma * MathFunctionUtil.integral(func, -50, (S - mu)/sigma) - S + mu;
+		return sigma * MathFunctionUtil.integral(func, -50, (S - mu)/sigma) - S + mu; // I^-
+		//return sigma * MathFunctionUtil.integral(func, -50, (S - mu)/sigma); // I^+
 	}
 	
 	
@@ -204,8 +205,10 @@ public class MipRSCallback {
 				for (int j = 0; j < T; j++) {
 					setupCosts.addTerm(x[i][j], K[i]);					
 					for (int t = i; t <= j; t++) {
-						Dxij.addTerm(-cumSumDemand[t], x[i][j]);
+						Dxij.addTerm(-h[i] * cumSumDemand[t], x[i][j]);						
 						holdCosts.addTerm(q[i][j], h[i]);
+						//Dxij.addTerm(pai[i] * cumSumDemand[t], x[i][j]);
+						//holdCosts.addTerm(q[i][j], -pai[i]);
 						penaCosts.addTerm(h[i] + pai[i], H[i][j][t]);
 					}
 				}
@@ -278,9 +281,55 @@ public class MipRSCallback {
 			cplex.setParam(IloCplex.Param.MIP.Strategy.Search, IloCplex.MIPSearch.Traditional);
 			int iniConNum = lp.getNrows();
 			System.out.println("number of constriants are:" + iniConNum);
+			// maybe the slope and intercept error
 			if (cplex.solve()) {	
 				System.out.println("Solution value = " + cplex.getObjValue());
-				double eps = 0.001;
+				double[][][] varH = new double[T][T][T];
+				double[][] varQ = new double[T][T];
+				double[][] varX = new double[T][T];
+				for (int i = 0; i < T; i++)
+					for (int j = 0; j < T; j++) {
+						varX[i][j] = cplex.getValue(x[i][j]);
+						varQ[i][j] = cplex.getValue(q[i][j]);
+						for (int k = i; k <= j; k++)
+							varH[i][j][k] = cplex.getValue(H[i][j][k]);
+					}
+				double[] z = new double[T];
+				double[] quantity = new double[T];
+				double[] I = new double[T];
+				double lastQ = 0;
+				for (int i = 0; i < T; i++)
+					for (int j = 0; j < T; j++) {
+						if (varX[i][j] == 1) {
+							z[i] = 1;								
+							if (i == 0) {
+								quantity[i] = varQ[i][j];
+								lastQ = quantity[i];
+							}
+							else {
+								quantity[i] = varQ[i][j] - lastQ;
+								lastQ = quantity[i];
+							}
+						}
+					}
+				I[0] = quantity[0] + iniInventory - meanDemand[0];
+				for (int i = 1; i < T; i++)
+					I[i] = quantity[i] + I[i - 1] - meanDemand[i];
+				
+				System.out.println("z = ");
+				System.out.println(Arrays.toString(z));
+				System.out.println("Ordering quantities = ");
+				System.out.println(Arrays.toString(quantity));
+				System.out.println("I = ");
+				System.out.println(Arrays.toString(I));
+				System.out.println("x = ");
+				System.out.println(Arrays.deepToString(varX));
+				System.out.println("q = ");
+				System.out.println(Arrays.deepToString(varQ));
+				System.out.println("H = ");
+				System.out.println(Arrays.deepToString(varH));
+				
+				double eps = 0.01;
 				boolean addLine = true;
 				ArrayList<IloRange> cuts = new ArrayList<>();
 				while (addLine) {
@@ -291,7 +340,10 @@ public class MipRSCallback {
 									double upToLevel = i > 0 ? cplex.getValue(q[i][j]) - cumSumDemand[i - 1] : cplex.getValue(q[i][j]);
 									double Iminus = computeExpectIminus(upToLevel, i + 1, j + 1);								
 									addLine = false;
-									if (Iminus - cplex.getValue(H[i][j][t]) > eps) {
+									System.out.println("Iminus is " + Iminus);
+									System.out.println("H[i][j][t] is " + cplex.getValue(H[i][j][t]));
+									double valueH = cplex.getValue(H[i][j][t]);
+									if (Iminus - valueH > eps) {
 										double mu = IntStream.range(i, t + 1).mapToDouble(m -> meanDemand[m]).sum();
 										double sigma = conSigma[i][t];
 										double slope = NormalDist.cdf(mu, sigma, upToLevel) - 1;
@@ -312,14 +364,14 @@ public class MipRSCallback {
 					System.out.println("Solution status = " + cplex.getStatus());
 					System.out.println("Solution value = " + cplex.getObjValue());
 					System.out.println("number of constriants are:" + lp.getNrows());
-					double[] z = new double[T];
-					double[] quantity = new double[T];
-					double[] I = new double[T];
+					z = new double[T];
+					quantity = new double[T];
+					I = new double[T];
+					lastQ = 0;
 					for (int i = 0; i < T; i++)
 						for (int j = 0; j < T; j++) {
 							if (cplex.getValue(x[i][j]) == 1) {
-								z[i] = 1;	
-								double lastQ = 0;
+								z[i] = 1;									
 								if (i == 0) {
 									quantity[i] = cplex.getValue(q[i][j]);
 									lastQ = cplex.getValue(q[i][j]);
@@ -356,6 +408,7 @@ public class MipRSCallback {
 				return finalOptValue;
 			
 			}
+			
 			
 		} catch (IloException e) {
 			System.err.println("Concert exception '" + e + "' caught");

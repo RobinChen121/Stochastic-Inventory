@@ -130,24 +130,25 @@ public class CLSP {
 		
 		  
 	      double initialInventory = 0; 
-	      double[] meanDemand = {20,40,60,40,20,40,60,40,20,40,60,40,20,40,60,40,20,40,60,40};
+	      double[] meanDemand = {50,50,50,50,50,50,50,50,50,50};
 	      
 	      double truncationQuantile = 0.9999;  // 置信度稍微改一下，泊松分布特殊
 	      double stepSize = 1; 
 	      double minState = -150;
-	      double maxState = 200;
+	      double maxState = 300;
 	      int T = meanDemand.length;
 
 	      double fixedOrderingCost = 100; 
 	      double proportionalOrderingCost = 0; 
-	      double penaltyCost = 10;
 	      double holdingCost = 1;
+	      double penaltyCost = 10;
+	      
 	      int maxOrderQuantity = 200;
 	      
 	      Distribution[] distributions = IntStream.iterate(0, i -> i + 1)
 	                                              .limit(T)
-	                                              .mapToObj(i -> new PoissonDist(meanDemand[i]))
-	                                              //.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i]))
+	                                              //.mapToObj(i -> new PoissonDist(meanDemand[i]))
+	                                              .mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i]))
 	                                              .toArray(Distribution[]::new); // replace for loop
 	      double[] supportLB = IntStream.iterate(0, i -> i + 1)
 	                                    .limit(T)

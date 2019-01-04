@@ -32,6 +32,8 @@ import umontreal.ssj.probdist.PoissonDist;
  * low initial cash order while high initial cash not ordering.
  * 
  * Check CK-convexity, not CK-convex
+ * 
+ * MIP model performs better when planning horizon length is longer
  */
 
 public class CashConstraintTesting {
@@ -72,15 +74,15 @@ public class CashConstraintTesting {
 		/*******************************************************************
 		 * set demands length, for testing 
 		 */
-		int newLength = 6;
+		int newLength = 8;
 		double[][] meanDemands = new double[iniMeanDemands.length][newLength];
 		for (int i = 0; i < iniMeanDemands.length; i++)
 			for (int j = 0; j < newLength; j++) {
 				meanDemands[i][j] = iniMeanDemands[i][j];
 			}
 
-		for (int idemand = 0; idemand < 10; idemand++)
-			for (int iK = 0; iK < K.length; iK++)
+		for (int idemand = 7; idemand < 8; idemand++)
+			for (int iK = 1; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
 						for (int ih = 0; ih < h.length; ih++)
@@ -96,8 +98,8 @@ public class CashConstraintTesting {
 								// get demand possibilities for each period
 								int T = meanDemand.length;
 								Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-										.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
-										//.mapToObj(i -> new PoissonDist(meanDemand[i]))
+										//.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
+										.mapToObj(i -> new PoissonDist(meanDemand[i]))
 										.toArray(Distribution[]::new);
 								double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 
