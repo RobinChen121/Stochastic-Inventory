@@ -46,15 +46,15 @@ public class CashConstraint {
 
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = { 4.7, 8.1, 23.6, 39.4, 16.4, 28.7, 50.8, 39.1};
+		double[] meanDemand = {4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7};
 		double iniInventory = 0;
-		double iniCash = 25;		
+		double iniCash = 21;		
 		double fixOrderCost = 15;
 		double variCost = 1;
 		double holdingCost = 1;
 		double price = 4;
-		double salvageValue = 0.5;
-		FindCCrieria criteria = FindCCrieria.XRELATE;			
+		double salvageValue = 0;
+		FindCCrieria criteria = FindCCrieria.AVG;			
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
@@ -133,7 +133,8 @@ public class CashConstraint {
 		long currTime = System.currentTimeMillis();
 		recursion.setTreeMapCacheAction();
 		double finalValue = iniCash + recursion.getExpectedValue(initialState);
-		System.out.println("final optimal cash is: " + finalValue);
+		double cashIncre = recursion.getExpectedValue(initialState);
+		System.out.println("final optimal cash increment is: " + cashIncre);
 		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");

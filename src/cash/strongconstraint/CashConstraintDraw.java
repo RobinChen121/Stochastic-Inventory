@@ -44,13 +44,13 @@ public class CashConstraintDraw {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = { 6.6, 2, 21.8};
+		double[] meanDemand = { 20,40,60};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 80;
+		double iniCash = 200;
 		double iniInventory = 0;
-		double fixOrderCost = 20;
+		double fixOrderCost = 100;
 		double variCost = 1;
-		double price = 4;
+		double price = 8;
 		double salvageValue = 0.5;
 		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double holdingCost = 1;	

@@ -53,14 +53,14 @@ public class CashConstraintTesting {
 				{ 4.7, 8.1, 23.6, 39.4, 16.4, 28.7, 50.8, 39.1 }, { 4.4, 11.6, 26.4, 14.4, 14.6, 19.8, 7.4, 18.3 },
 				{ 4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7 } };
 
-		double[] K = { 10, 20 };
-		double[] v = {1, 3};
-		double[] B0 = { 5, 10 }; // ini cash can order 5 or 10 items
-		double[] p = { 4, 8 };
-		double[] h = {1, 3};
-		double salvageValue = 0.5;	
+		double[] K = {10, 15, 20};
+		double[] v = {1};
+		double[] B0 = { 4, 6, 8}; // ini cash can order 5 or 10 items
+		double[] p = { 4, 6, 8};
+		double[] h = {0.5, 1, 1.5};
+		double salvageValue = 0;	
 		
-		FindCCrieria criteria = FindCCrieria.XRELATE;
+		FindCCrieria criteria = FindCCrieria.AVG;
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
@@ -68,7 +68,7 @@ public class CashConstraintTesting {
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
 		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
-		double maxCashState = 2000;
+		double maxCashState = 1500;
 		double discountFactor = 1; // generally 1 for the cash constrained problem
 
 		/*******************************************************************
@@ -81,8 +81,8 @@ public class CashConstraintTesting {
 				meanDemands[i][j] = iniMeanDemands[i][j];
 			}
 
-		for (int idemand = 7; idemand < 8; idemand++)
-			for (int iK = 1; iK < K.length; iK++)
+		for (int idemand = 7; idemand < meanDemands.length; idemand++)
+			for (int iK = 2; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
 						for (int ih = 0; ih < h.length; ih++)
@@ -176,12 +176,12 @@ public class CashConstraintTesting {
 								System.out.println("");
 								double[][] optTable = recursion.getOptTable();
 								FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-								double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
+								double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
 								Map<State, Double> cacheC1Values = new TreeMap<>();
 								Map<State, Double> cacheC2Values = new TreeMap<>();
 								cacheC1Values = findsCS.cacheC1Values;
 								cacheC2Values = findsCS.cacheC2Values;
-								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values,
+								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
 										minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 								double gap1 = (finalValue - simsCSFinalValue) / finalValue;
 								double gap2 = (simFinalValue - simsCSFinalValue) / simFinalValue;
