@@ -61,12 +61,12 @@ public class CashConstraintTesting {
 		double salvageValue = 0;	
 		
 		FindCCrieria criteria = FindCCrieria.AVG;
-		double truncationQuantile = 0.9999;
+		double truncationQuantile = 0.999;
 		int stepSize = 1;
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 150; // maximum ordering quantity when having enough cash
 		double minInventoryState = 0;
-		double maxInventoryState = 500;
+		double maxInventoryState = 200;
 		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
 		double maxCashState = 1500;
 		double discountFactor = 1; // generally 1 for the cash constrained problem
