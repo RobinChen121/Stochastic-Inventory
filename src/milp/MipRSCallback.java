@@ -6,9 +6,7 @@ import java.util.Iterator;
 import java.util.function.IntToDoubleFunction;
 import java.util.stream.IntStream;
 
-import org.apache.commons.math3.analysis.function.Abs;
 
-import cern.jet.random.Normal;
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
 import ilog.concert.IloLPMatrix;
@@ -19,7 +17,7 @@ import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.CplexStatus;
-import sun.awt.www.content.audio.x_aiff;
+
 import umontreal.ssj.functions.MathFunction;
 import umontreal.ssj.functions.MathFunctionUtil;
 import umontreal.ssj.probdist.NormalDist;

@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
-import com.sun.org.apache.bcel.internal.generic.LASTORE;
 
 import ilog.concert.IloConstraint;
 import ilog.concert.IloException;
@@ -33,9 +32,9 @@ public class MipRSPM {
 	double[] sigma;
 	double iniInventory;	
 	double fixOrderCost;
-	double variCost;
-	double holdingCost;
-	double penaltyCost;
+	private double variCost;
+	private double holdingCost;
+	private double penaltyCost;
 	double[] cumSumDemand;
 	int partionNum;
 	int T;

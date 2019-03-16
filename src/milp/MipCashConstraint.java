@@ -7,7 +7,7 @@ import java.util.TreeMap;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 
-import cern.colt.list.adapter.DoubleListAdapter;
+
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearNumExpr;
