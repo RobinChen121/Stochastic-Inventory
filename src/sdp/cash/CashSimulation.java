@@ -313,11 +313,12 @@ public class CashSimulation {
 		System.out.println("\nfinal simulated (s, S) policy expected value in " + df2.format(sampleNum) + " samples is: " + simFinalValue);
 		return simFinalValue;
 	}
-		
+
 	/**
 	 * compute L(y)
-	 * @param y : order-up-to level y,
+	 * @param  y: order-up-to level y,
 	 * @param t : period t + 1
+	 * @return value of Ly
 	 */
 	double Ly(double y, int t) {
 		Distribution distribution = distributions[t];

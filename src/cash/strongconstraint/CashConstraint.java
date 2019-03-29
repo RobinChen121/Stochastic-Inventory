@@ -43,18 +43,18 @@ import umontreal.ssj.probdist.PoissonDist;
  */
 
 public class CashConstraint {
-
+	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4, 3, 6};
+		double[] meanDemand = {4.9, 18.8, 6.4, 27.9};
 		double iniInventory = 0;
-		double iniCash = 15;		
-		double fixOrderCost = 10;
+		double iniCash = 30;
+		double fixOrderCost = 20;
 		double variCost = 1;
 		double holdingCost = 1;
-		double price = 5;
+		double price = 4;
 		double salvageValue = 0;
-		FindCCrieria criteria = FindCCrieria.AVG;			
+		FindCCrieria criteria = FindCCrieria.XRELATE; // criteria for finding C			
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
@@ -133,8 +133,7 @@ public class CashConstraint {
 		long currTime = System.currentTimeMillis();
 		recursion.setTreeMapCacheAction();
 		double finalValue = iniCash + recursion.getExpectedValue(initialState);
-		double cashIncre = recursion.getExpectedValue(initialState);
-		System.out.println("final optimal cash increment is: " + cashIncre);
+		System.out.println("final optimal cash  is " + finalValue);
 		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
@@ -152,22 +151,37 @@ public class CashConstraint {
 		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);
 		
 		/*******************************************************************
-		 * Find (s, C, S) by SDP and simulate
+		 * Find (s, C1, C2 S) by SDP and simulate
 		 */
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+		double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
 		Map<State, Double> cacheC1Values = new TreeMap<>();
-		//Map<State, Double> cacheC2Values = new TreeMap<>();
+		Map<State, Double> cacheC2Values = new TreeMap<>();
 		cacheC1Values = findsCS.cacheC1Values;
-		//cacheC2Values = findsCS.cacheC2Values;
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, 
+		cacheC2Values = findsCS.cacheC2Values;
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values,
 				minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
-		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	
+		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;
 		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
-		
+
+		/*******************************************************************
+		 * Find (s, C1, S) by SDP and simulate
+		 */
+//		System.out.println("");
+//		double[][] optTable = recursion.getOptTable();
+//		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
+//		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+//		Map<State, Double> cacheC1Values = new TreeMap<>();
+//		cacheC1Values = findsCS.cacheC1Values;
+//		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
+//				minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+//		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
+//		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;
+//		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
+
 		/*******************************************************************
 		 * Check (s, C, S) policy, 
 		 * sometimes not always hold, because in certain period 

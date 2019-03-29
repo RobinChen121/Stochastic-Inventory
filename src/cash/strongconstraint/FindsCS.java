@@ -172,14 +172,16 @@ public class FindsCS {
 					// C2
 					markInventory = M;
 					CHasRecoded = false;
-					for (int j = tOptTable.length - 1; j >= 0; j--) {
+					for (int j = tOptTable.length - 2; j >= 0; j--) {
 						if (tOptTable[j][1] < optimalsCS[t][0]) {							
-							if (tOptTable[j][3] > 0) {
-								if (tOptTable[j][1] < markInventory) {
+							if (tOptTable[j][3] > 0 && tOptTable[j + 1][3] == 0 &&
+									tOptTable[j][1] == tOptTable[j + 1][1]) {
+								if (tOptTable[j][1] < markInventory ) {
 									optimalsCS[t][2] = tOptTable[j][2] + 1;
 									markInventory = tOptTable[j][1];
 									CHasRecoded = true;
 								}
+								
 							}
 							cacheC2Values.put(new State(t + 1, tOptTable[j][1]), optimalsCS[t][2]);
 						}
@@ -187,10 +189,10 @@ public class FindsCS {
 					break;
 			}
 					
-					// find a most frequent S, sometimes when cash is not enough, S bound can also affect gaps much
-					//Comparator<Map.Entry<Double, Integer>> comparator = (o1, o2) -> o1.getValue() > o2.getValue() ? 1
-					//																: o1.getValue() == o2.getValue() ?
-					//																  o1.getKey() > o2.getKey() ? 1 : -1 : -1;
+			// find a most frequent S, sometimes when cash is not enough, S bound can also affect gaps much
+			//Comparator<Map.Entry<Double, Integer>> comparator = (o1, o2) -> o1.getValue() > o2.getValue() ? 1
+			//																: o1.getValue() == o2.getValue() ?
+			//																  o1.getKey() > o2.getKey() ? 1 : -1 : -1;
 			Map<Double, Integer> recordS = new HashMap<>();
 			double S = 0;
 			boolean lastOrderFullCapacity = false;
@@ -322,7 +324,7 @@ public class FindsCS {
 			optimalsCS[t][0] = 0;  // default value for s is 0
 			ArrayList<Double> recordCash = new ArrayList<>();									
 			
-			// backward, the first inventory level that starts ordering is s
+			// backward, the first inventory level that starts ordering is s - 1
 			boolean sHasRecorded = false; //backward, the first inventory level that starts ordering is s
 			for (int j = tOptTable.length - 1; j >= 0; j--) {
 				if (tOptTable[j][3] != 0) {
