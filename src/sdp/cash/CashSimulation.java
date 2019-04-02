@@ -197,7 +197,7 @@ public class CashSimulation {
 	/**
 	 * 
 	 * @param iniState
-	 * @return simulate (s, C, S) policy in strong cash constraint
+	 * @return simulate (s, C1, S) policy in strong cash constraint
 	 */
 	public double simulatesCS(CashState iniState, double[][] optsCS, Map<State, Double> cacheC1Values, 
 			double minCashRequired, Double maxQ, double fixOrderCost, double variCost) {
@@ -239,6 +239,47 @@ public class CashSimulation {
 		System.out.println("\nfinal simulated (s, C, S) policy expected value in " + df2.format(sampleNum) + " samples is: " + simFinalValue);
 		return simFinalValue;
 	}
+	
+	
+	/**
+	 * 
+	 * @param iniState
+	 * @return simulate (s, C, S) policy in strong cash constraint
+	 */
+	public double simulatesMeanCS(CashState iniState, double[][] optsCS, 
+			double minCashRequired, Double maxQ, double fixOrderCost, double variCost) {
+		Sampling.resetStartStream();
+		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		double[] simuValues = new double[samples.length];		
+		for (int i = 0; i < samples.length; i++) {
+			double sum = 0; CashState state = iniState;
+			for (int t = 0; t < samples[0].length; t++)
+			{
+				double optQ;
+				if ( t == 0) 
+					optQ = iniState.getIniInventory() < optsCS[t][0] ? optsCS[t][2] - iniState.getIniInventory() : 0;
+				else {
+					double maxOrderQuantity = Math.max(0, (state.iniCash - minCashRequired - fixOrderCost)/variCost);
+					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
+					
+					// not include equal
+					if (state.getIniInventory() < optsCS[t][0] && state.getIniCash() > optsCS[t][1])
+						optQ = Math.min(maxOrderQuantity, optsCS[t][2] - state.getIniInventory());
+					else
+						optQ = 0;
+				}
+				double randomDemand = samples[i][t];
+				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, optQ, randomDemand);
+				state = stateTransition.apply(state, optQ, randomDemand);
+			}
+			simuValues[i] = sum;
+		}
+		DecimalFormat df2 = new DecimalFormat("###,###");
+		double simFinalValue = Arrays.stream(simuValues).sum()/samples.length + iniState.iniCash;
+		System.out.println("\nfinal simulated (s, C, S) policy expected value in " + df2.format(sampleNum) + " samples is: " + simFinalValue);
+		return simFinalValue;
+	}
+	
 	
 	/**
 	 * 

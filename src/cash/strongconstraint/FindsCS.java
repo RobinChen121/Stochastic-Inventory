@@ -63,6 +63,8 @@ public class FindsCS {
 	 */
 	double[][] getsC12S(double[][] optimalTable, double minCashRequired, FindCCrieria criteria) {
 		int M = 10000;
+		cacheC1Values.clear();
+		cacheC2Values.clear();
 		double[][] optimalsCS = new double[T][4];
 		optimalsCS[0][0] = optimalTable[0][1] + 1;
 		optimalsCS[0][1] = optimalTable[0][2] ;
@@ -174,16 +176,17 @@ public class FindsCS {
 					CHasRecoded = false;
 					for (int j = tOptTable.length - 2; j >= 0; j--) {
 						if (tOptTable[j][1] < optimalsCS[t][0]) {							
-							if (tOptTable[j][3] > 0 && tOptTable[j + 1][3] == 0 &&
-									tOptTable[j][1] == tOptTable[j + 1][1]) {
+							if (tOptTable[j][3] > 0 && tOptTable[j + 1][3] == 0 && tOptTable[j][1] == tOptTable[j + 1][1]) 
+							{
 								if (tOptTable[j][1] < markInventory ) {
 									optimalsCS[t][2] = tOptTable[j][2] + 1;
 									markInventory = tOptTable[j][1];
 									CHasRecoded = true;
+									cacheC2Values.put(new State(t + 1, tOptTable[j][1]), optimalsCS[t][2]);
 								}
-								
+								//cacheC2Values.put(new State(t + 1, tOptTable[j][1]), optimalsCS[t][2]);
 							}
-							cacheC2Values.put(new State(t + 1, tOptTable[j][1]), optimalsCS[t][2]);
+							
 						}
 					}
 					break;
@@ -269,11 +272,13 @@ public class FindsCS {
 	
 	
 	/**
-	 * get s, C(x), S
+	 * get s, C1(x), S
 	 */
 	
 	double[][] getsCS(double[][] optimalTable, double minCashRequired, FindCCrieria criteria) {
 		int M = 10000;
+		cacheC1Values.clear();
+		cacheC2Values.clear();
 		double[][] optimalsCS = new double[T][4];
 		optimalsCS[0][0] = optimalTable[0][1] + 1;
 		optimalsCS[0][1] = optimalTable[0][2] ;
@@ -292,27 +297,26 @@ public class FindsCS {
 				optimalsCS[T - 1][3] = distribution.inverseF((price - variOrderCost) / (holdCost  + price - salvageValue));
 				optimalsCS[T - 1][2] = M;			
 				double S = optimalsCS[T - 1][3];
+				optimalsCS[T - 1][0] = 0; // s default value is 0
 				for (int j = (int) S; j >= 0; j--) {
 					if (Ly(j, t) < Ly(S, t) - fixOrderCost) {
 						optimalsCS[T - 1][0] = j + 1;
 						break;
 					}
 				}
-				optimalsCS[T - 1][1] = 0; // C default value is 0
+				optimalsCS[T - 1][1] = 0; // C default value is M
 				for (int j = (int) S; j >= 0; j--) {
 					int jj = 0;
 					for (jj = j + 1; jj <= (int) S; jj++) {
 						if (Ly(jj,  t) > fixOrderCost + Ly(j, t)) {
 							optimalsCS[t][1] = fixOrderCost + variOrderCost * (jj - 1 - j); // C for x = 0 at last period
 							cacheC1Values.put(new State(t + 1, j), optimalsCS[t][1]);
-							cacheC2Values.put(new State(t + 1, j), optimalsCS[t][2]);
 							break;
 						}
 					}
 					if (Ly(S, t) < fixOrderCost) { // choose a large value for C1, since expected profit is too small
 						optimalsCS[t][1] = M;
 						cacheC1Values.put(new State(t + 1, j), optimalsCS[t][1]);
-						cacheC2Values.put(new State(t + 1, j), optimalsCS[t][2]);
 					}
 				}
 				break; // when t = T - 1, no need to compute C and S below

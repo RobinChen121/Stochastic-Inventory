@@ -46,12 +46,12 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4.9, 18.8, 6.4, 27.9};
+		double[] meanDemand = {4.7, 8.1, 23.6, 39.4};
 		double iniInventory = 0;
-		double iniCash = 30;
-		double fixOrderCost = 20;
+		double iniCash = 23;
+		double fixOrderCost = 15;
 		double variCost = 1;
-		double holdingCost = 1;
+		double holdingCost = 1.5;
 		double price = 4;
 		double salvageValue = 0;
 		FindCCrieria criteria = FindCCrieria.XRELATE; // criteria for finding C			
@@ -156,45 +156,55 @@ public class CashConstraint {
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-		double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
+		double[][] optsC12S = findsCS.getsC12S(optTable, minCashRequired, criteria);
 		Map<State, Double> cacheC1Values = new TreeMap<>();
 		Map<State, Double> cacheC2Values = new TreeMap<>();
 		cacheC1Values = findsCS.cacheC1Values;
 		cacheC2Values = findsCS.cacheC2Values;
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values,
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsC12S, cacheC1Values, cacheC2Values,
 				minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
 		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;
-		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
+		System.out.printf("Optimality gap for (s, C1, C2 S) is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 
 		/*******************************************************************
 		 * Find (s, C1, S) by SDP and simulate
 		 */
-//		System.out.println("");
-//		double[][] optTable = recursion.getOptTable();
-//		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-//		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
-//		Map<State, Double> cacheC1Values = new TreeMap<>();
-//		cacheC1Values = findsCS.cacheC1Values;
-//		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
-//				minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
-//		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
-//		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;
-//		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
-
+		System.out.println("");
+		System.out.println("************************************************");
+		double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+		cacheC1Values = findsCS.cacheC1Values;
+		simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
+				minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		double gap21 = (finalValue -simsCSFinalValue)/finalValue;
+		double gap22 = (simFinalValue -simsCSFinalValue)/simFinalValue;
+		System.out.printf("Optimality gap for (s, C1, S) is: %.2f%% or %.2f%%\n", gap21 * 100, gap22 * 100);
+		
 		/*******************************************************************
-		 * Check (s, C, S) policy, 
-		 * sometimes not always hold, because in certain period 
-		 * for some state C is 12, and 13 in other state, 
-		 * we use heuristic step by choosing maximum one
-		 */		
- 		findsCS.checksCS(optsCS, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
- 		System.out.printf(
-				"\n*******************************************************************\n");
+		 * Find (s, meanC, S) by SDP and simulate
+		 */
+		System.out.println("");
+		System.out.println("************************************************");
+		optsCS = findsCS.getsCS(optTable, minCashRequired, FindCCrieria.AVG);
+		simsCSFinalValue = simuation.simulatesMeanCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		double gap31 = (finalValue -simsCSFinalValue)/finalValue;
+		double gap32 = (simFinalValue -simsCSFinalValue)/simFinalValue;
+		System.out.printf("Optimality gap for (s, meanC, S) is: %.2f%% or %.2f%%\n", gap31 * 100, gap32 * 100);
+
+//		/*******************************************************************
+//		 * Check (s, C1, C2, S) policy, 
+//		 * sometimes not always hold, because in certain period 
+//		 * for some state C is 12, and 13 in other state, 
+//		 * we use heuristic step by choosing maximum one
+//		 */		
+// 		findsCS.checksC12S(optsC12S, optTable, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+// 		System.out.printf(
+//				"\n*******************************************************************\n");
  		
  		/*******************************************************************
 		 * Find (s, C, S) by MIP and simulate
 		 */
+		System.out.println("************************************************");
  		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions);
  		double[][] sCS = mipHeuristic.findsCS(); 
  		cacheC1Values = mipHeuristic.cacheC1Values;

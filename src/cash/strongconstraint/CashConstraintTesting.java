@@ -41,8 +41,10 @@ public class CashConstraintTesting {
 	// average computation time for 10 periods is 500s, 9 periods is 150s, or 305s,
 	// or 400s
 	public static void main(String[] args) {
-		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsCSValue, "
-				+ "nonOptStatesCount, gap1, gap2, totalStates, "
+		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsC1C2SValue, "
+				+ "gap1, gap2, totalStates, "
+				+ "simsC1SValue, gap1, gap2, "
+				+ "simsMeanCSValue, gap1, gap2, "
 				+ "firstQ, CKConvexity, mipValue, gap11, gap22, time2";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
@@ -56,11 +58,11 @@ public class CashConstraintTesting {
 		double[] K = {10, 15, 20};
 		double[] v = {1};
 		double[] B0 = { 4, 6, 8}; // ini cash can order 5 or 10 items
-		double[] p = { 4, 6, 8};
+		double[] p = { 4, 6, 8};  // margin is 3, 5, 7
 		double[] h = {0.5, 1, 1.5};
 		double salvageValue = 0;	
 		
-		FindCCrieria criteria = FindCCrieria.AVG;
+		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double truncationQuantile = 0.999;
 		int stepSize = 1;
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
@@ -81,8 +83,8 @@ public class CashConstraintTesting {
 				meanDemands[i][j] = iniMeanDemands[i][j];
 			}
 
-		for (int idemand = 7; idemand < meanDemands.length; idemand++)
-			for (int iK = 2; iK < K.length; iK++)
+		for (int idemand = 8; idemand < 10; idemand++)
+			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
 						for (int ih = 0; ih < h.length; ih++)
@@ -95,6 +97,7 @@ public class CashConstraintTesting {
 								double holdingCost = h[ih];
 								double iniInventory = 0;
 
+								
 								// get demand possibilities for each period
 								int T = meanDemand.length;
 								Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
@@ -169,29 +172,56 @@ public class CashConstraintTesting {
 								CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion,
 										discountFactor, fixOrderCost, price, variCost, holdingCost, salvageValue);
 								double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
-
+								
 								/*******************************************************************
-								 * Find (s, C, S) and simulate
+								 * Find (s, C1, C2, S) and simulate
 								 */
 								System.out.println("");
+								System.out.println("************************************************");
 								double[][] optTable = recursion.getOptTable();
 								FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-								double[][] optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+								double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
 								Map<State, Double> cacheC1Values = new TreeMap<>();
 								Map<State, Double> cacheC2Values = new TreeMap<>();
 								cacheC1Values = findsCS.cacheC1Values;
 								cacheC2Values = findsCS.cacheC2Values;
-								double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
+								double simsC1C2SFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values,
 										minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
-								double gap1 = (finalValue - simsCSFinalValue) / finalValue;
-								double gap2 = (simFinalValue - simsCSFinalValue) / simFinalValue;
-								System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
-
+								double gapsC1C2S1 = (finalValue - simsC1C2SFinalValue) / finalValue;
+								double gapsC1C2S2 = (simFinalValue - simsC1C2SFinalValue) / simFinalValue;
+								System.out.printf("Optimality gap for (s, C1, C2, S) is: %.2f%% or %.2f%%\n", gapsC1C2S1 * 100, gapsC1C2S2 * 100);
+																
+								
 								/*******************************************************************
-								 * Check (s, C, S) policy, sometimes not always hold
+								 * Find (s, C1, S) and simulate
 								 */
-								int nonOptCount = findsCS.checksCS(optsCS, optTable, minCashRequired, maxOrderQuantity,
-										fixOrderCost, variCost);
+								System.out.println("");
+								System.out.println("************************************************");
+								optsCS = findsCS.getsCS(optTable, minCashRequired, criteria);
+								cacheC1Values = findsCS.cacheC1Values;
+								double simsC1SFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
+										minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+								double gapsC1S1 = (finalValue - simsC1SFinalValue) / finalValue;
+								double gapsC1S2 = (simFinalValue - simsC1SFinalValue) / simFinalValue;
+								System.out.printf("Optimality gap for (s, C1, S) is: %.2f%% or %.2f%%\n", gapsC1S1 * 100, gapsC1S2 * 100);
+								
+								/*******************************************************************
+								 * Find (s, meanC, S) by SDP and simulate
+								 */
+								System.out.println("");
+								System.out.println("************************************************");							
+								optsCS = findsCS.getsCS(optTable, minCashRequired, FindCCrieria.AVG);
+								double simsMeanCSFinalValue = simuation.simulatesMeanCS(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+								double gapsMeanCS1 = (finalValue - simsMeanCSFinalValue)/finalValue;
+								double gapsMeanCS2 = (simFinalValue - simsMeanCSFinalValue)/simFinalValue;
+								System.out.printf("Optimality gap for (s, meanC, S) is: %.2f%% or %.2f%%\n", gapsMeanCS1 * 100, gapsMeanCS2 * 100);
+								
+
+//								/*******************************************************************
+//								 * Check (s, C, S) policy, sometimes not always hold
+//								 */
+//								int nonOptCount = findsCS.checksCS(optsCS, optTable, minCashRequired, maxOrderQuantity,
+//										fixOrderCost, variCost);
 								
 						 		/*******************************************************************
 								 * Find (s, C, S) by MIP and simulate
@@ -233,8 +263,10 @@ public class CashConstraintTesting {
 								long totalStates = optTable.length;
 								String out = fixOrderCost + ",\t" + variCost + ",\t" + holdingCost + ",\t"
 										+ iniInventory + ",\t" + price + ",\t" + salvageValue + ",\t" + iniCash + ",\t" + (idemand + 1) + ",\t"
-										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t" + simsCSFinalValue
-										+ ",\t" + nonOptCount + ",\t" + gap1 + ",\t" + gap2 + ",\t" + totalStates + ",\t"
+										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t"
+										+ simsC1C2SFinalValue +",\t" + gapsC1C2S1 + ",\t" + gapsC1C2S2 + ",\t" + totalStates + ",\t"
+										+ simsC1SFinalValue +",\t" + gapsC1S1 + ",\t" + gapsC1S2 + ",\t" 
+										+ simsMeanCSFinalValue +",\t" + gapsMeanCS1 + ",\t" + gapsMeanCS2 + ",\t" 
 										+ firstQ + ",\t" + convexity + ",\t"+ 
 										simsCSMIPValue + ",\t" + gap11 + ",\t" + gap22+ ",\t" + time2;
 
