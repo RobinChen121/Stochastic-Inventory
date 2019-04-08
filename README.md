@@ -5,7 +5,7 @@ Coded by Zhen Chen, 15011074486@163.com.
 
 MIT licence.
 
-<font size= 10, color = red>
+<font color = red>
 Attention:
   
 Cplex.jar is needed for some classed in this project to solve some linear programming. 
