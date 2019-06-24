@@ -6,7 +6,7 @@ import sdp.inventory.State;
 *@author: Zhen Chen
 *@email: 15011074486@163.com
 *@date: Jul 13, 2018---3:35:49 PM
-*@description:  State class for cash flow problem, cash can be integers
+*@description:  State class for cash flow problem, cash can be integers(seems not influence much to the computation time)
 */
 
 public class CashState extends State{

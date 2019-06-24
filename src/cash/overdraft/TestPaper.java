@@ -47,7 +47,7 @@ public class TestPaper {
 		double truncationQuantile = 1; 
 		int stepSize = 1;
 		
-		int N = 12; // length of time horizon
+		int N = 6; // length of time horizon
 		
 		double maxOrderQuantity = 100; // maximum ordering quantity in stochastic dynamic programming
 		double minInventoryState = 0;

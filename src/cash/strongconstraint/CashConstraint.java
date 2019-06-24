@@ -46,9 +46,9 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4.7, 8.1, 23.6, 39.4};
+		double[] meanDemand = {15, 15, 15, 15, 15, 15, 15, 15};
 		double iniInventory = 0;
-		double iniCash = 23;
+		int iniCash = 50; // integer or not does not affect too much
 		double fixOrderCost = 15;
 		double variCost = 1;
 		double holdingCost = 1.5;
