@@ -28,11 +28,11 @@ public class CashStateMulti {
 		return this.period;
 	}
 	
-	public double getIniInventory1() {
+	public int getIniInventory1() {
 		return this.iniInventory1;
 	}
 	
-	public double getIniInventory2() {
+	public int getIniInventory2() {
 		return this.iniInventory2;
 	}
 	
