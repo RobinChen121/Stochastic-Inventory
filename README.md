@@ -8,6 +8,6 @@ MIT licence.
 
 ### Attention:
   
-### Cplex.jar is needed for some classed in this project to solve some linear programming. 
+### Cplex.jar is needed for some classes in this project to solve some linear programming. 
 
 ### Download Cplex from IBM official website: https://www.ibm.com/products/ilog-cplex-optimization-studio
