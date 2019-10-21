@@ -49,20 +49,20 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {9, 13, 20, 16,};
+		double[] meanDemand = {24, 13, 5, 16,};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
 		double iniCash = 250;
 		ArrayList<double[]> recordQ = new ArrayList<double[]>();
 		for (iniInventory = 0; iniInventory <= 7; iniInventory++) {
-		for (iniCash = 51; iniCash <= 51; iniCash = iniCash + 2) {
+		for (iniCash = 21; iniCash <= 51; iniCash = iniCash + 2) {
 		double fixOrderCost = 20;
 		double variCost = 1;
 		double price = 5;
 		double salvageValue = 0;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
-		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
+		double overheadCost = 2; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
