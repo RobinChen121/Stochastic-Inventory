@@ -88,6 +88,36 @@ public class Drawing {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
+	/**
+	 * 
+	 * drawing a simple picture for G(), with initial cash and a String input
+	 */
+	public void drawSimpleG(double[][] yG, double iniCash, String str) {
+		XYSeries seriesG = new XYSeries("yQSeries");
+		int N = yG.length;
+		for (int i = 0; i < N; i++) {
+			seriesG.add(yG[i][0], yG[i][1]);
+		}
+
+		XYSeriesCollection seriesCollection = new XYSeriesCollection();
+		seriesCollection.addSeries(seriesG);
+		String cashString = String.valueOf(iniCash);
+		String title = str + "(y) with different y, B0 = " + cashString;
+
+		JFreeChart chart = ChartFactory.createXYLineChart(title, // chart title
+				"y", // x axis label
+				"G(y)", // y axis label
+				seriesCollection, // data
+				PlotOrientation.VERTICAL, false, // include legend
+				true, // tooltips
+				false // urls
+				);
+
+		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
 
 	/**
 	 * 

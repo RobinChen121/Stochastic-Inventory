@@ -16,13 +16,14 @@ package multiItem;
 import java.util.ArrayList;
 import java.util.function.Function;
 
-
+import sdp.cash.CashSimulation;
 import sdp.cash.multiItem.Actions;
 import sdp.cash.multiItem.CashRecursionMulti;
+import sdp.cash.multiItem.CashSimulationMulti;
 import sdp.cash.multiItem.CashStateMulti;
 import sdp.cash.multiItem.Demands;
 import sdp.cash.multiItem.GetPmfMulti;
-
+import sdp.write.WriteToCsv;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 
 
@@ -33,15 +34,14 @@ public class MultiItemCash {
 		double[] price = {10, 5};
 		double[] variCost = {4, 2};
 		
-		double iniCash = 30;
+		double iniCash = 37;
 		int iniInventory1 = 0;
 		int iniInventory2 = 0;
 		
-		double[][] demand = {{8, 8, 8, 8}, {5, 5, 5, 5, 5}};		
+		double[][] demand = {{8, 6, 4, 8}, {5, 3, 6, 4}};		
 		double coe = 0.25;
 		
 		int T = demand[0].length; // horizon length
-		int N = demand.length; // item number
 		
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -114,9 +114,35 @@ public class MultiItemCash {
 		long currTime = System.currentTimeMillis();
 		double finalValue = iniCash + recursion.getExpectedValue(iniState);
 		System.out.println("final optimal cash  is " + finalValue);
-		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(iniState));
+		System.out.println("optimal order quantity in the first priod is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
+				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
+		
+		
+		
+		/*******************************************************************
+		 * Simulating sdp results
+		 * 
+		 * simulating results a little lower than SDP
+		 */
+		int sampleNum = 10000;		
+		CashSimulationMulti simuation = new CashSimulationMulti(sampleNum, distributions, discountFactor, 
+				 recursion, stateTransition, immediateValue);
+		double simFinalValue = simuation.simulateSDPGivenSamplNum(iniState);
+		System.out.println(simFinalValue);
+		
+		
+		/*******************************************************************
+		 * try to find some ordering patters from optTable
+		 * 
+		 * output results to excel
+		 */
+		System.out.println("");
+		double[][] optTable = recursion.getOptTable();
+		WriteToCsv writeToCsv = new WriteToCsv();
+		String fileName = "optTable.xls";
+		writeToCsv.writeArrayExcel(optTable, fileName);
 	}
 
 }

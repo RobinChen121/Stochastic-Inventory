@@ -27,34 +27,36 @@ import umontreal.ssj.probdist.PoissonDist;
  * @version 2018, April 15th, 10:32:46 am
  * @Description: drawing pictures, see K convexity;
  * an example of two local minimums:
- * double[] meanDemand = {20,40,60}; 
-	double iniCash = 200;
-		double fixOrderCost = 100;
+ * 
+double[] meanDemand = { 6.6, 2, 21.8};
+		double iniCash = 33;
+		double iniInventory = 0;
+		double fixOrderCost = 20;
 		double variCost = 1;
-		double price = 8;
+		double price = 4;
+		double salvageValue = 0;
+		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double holdingCost = 1;	
-		double minCashRequired = 0; 
-		double maxOrderQuantity = 250;
+ *  
  * 
- * 
- * 
- * 
+ *  whether order or not can be found by the relation of GA(0) and GB(y*)- K
+ *  
  */
 public class CashConstraintDraw {
 
 
 	public static void main(String[] args) {
-		double[] meanDemand = { 20,40,60};
+		double[] meanDemand = { 9, 13, 20, 16};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 200;
+		double iniCash = 18;
 		double iniInventory = 0;
-		double fixOrderCost = 100;
+		double fixOrderCost = 15;
 		double variCost = 1;
-		double price = 8;
-		double salvageValue = 0.5;
-		FindCCrieria criteria = FindCCrieria.XRELATE;
-		double holdingCost = 1;	
-		double minCashRequired = 0; // minimum cash balance the retailer can withstand
+		double price = 6;
+		double salvageValue = 0;
+		double holdingCost = 0;	
+		FindCCrieria criteria = FindCCrieria.XRELATE;		
+		double overheadCost = 0; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 		
 
@@ -83,7 +85,7 @@ public class CashConstraintDraw {
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
 			double maxQ = (int) Math.min(maxOrderQuantity,
-					Math.max(0, (s.getIniCash() - minCashRequired - fixOrderCost) / variCost));
+					Math.max(0, (s.getIniCash() - overheadCost - fixOrderCost) / variCost));
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -149,12 +151,12 @@ public class CashConstraintDraw {
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-		double[][] optsCS = findsCS.getsC12S(optTable, minCashRequired, criteria);
+		double[][] optsCS = findsCS.getsC12S(optTable, overheadCost, criteria);
 		Map<State, Double> cacheC1Values = new TreeMap<>();
 		Map<State, Double> cacheC2Values = new TreeMap<>();
 		cacheC1Values = findsCS.cacheC1Values;
 		cacheC2Values = findsCS.cacheC2Values;
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
 		double gap1 = (finalCash -simsCSFinalValue)/finalCash;
 		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;	
 		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
@@ -200,7 +202,7 @@ public class CashConstraintDraw {
 				inventoryLevel = state.getIniInventory() + action - randomDemand;
 			}
 			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
-			double cashIncrement = revenue - fixedCost - variableCost - holdCosts;
+			double cashIncrement = revenue - fixedCost - variableCost - holdCosts - overheadCost;
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
 			cashIncrement += salValue;
 			return cashIncrement;
@@ -232,11 +234,11 @@ public class CashConstraintDraw {
 			index++;
 		}
 		//CheckKConvexity.check(yG2, fixOrderCost);
-		drawing.drawSimpleG(yG2, iniCash);
+		drawing.drawSimpleG(yG2, iniCash, "K transfered in cash GB"); // GB
 		
 		/*******************************************************************
-		 * Drawing another G() that not has fixed ordering cost transition in the 
-		 * first period,
+		 * Drawing another G() that has no fixed ordering cost transition in the 
+		 * first period, GA
 		 * the difference lies in state transition function
 		 */
 		
@@ -262,7 +264,7 @@ public class CashConstraintDraw {
 			yG3[index][1] = recursion3.getExpectedValue(new CashState(period, initialInventory, iniCash));
 			index++;
 		}
-		drawing.drawSimpleG(yG3, iniCash);
+		drawing.drawSimpleG(yG3, iniCash, "K not transfered in cash GA");
 		drawing.drawTwoG(yG3, yG2, iniCash);
 	}
 }

@@ -56,8 +56,14 @@ public class CashRecursionMulti {
 	public double getExpectedValue(CashStateMulti initialState) {
 		return this.cacheValues.computeIfAbsent(initialState, s -> {
 			ArrayList<Actions> actions = buildActionList.apply(s);
-			double[][] dAndP = Pmf.getPmf(s.getPeriod());
+			double[][] dAndP = Pmf.getPmf(s.getPeriod() - 1);
 			double val = -Double.MAX_VALUE;
+			
+//			double pSum = 0;
+//			for (int i = 0; i < dAndP.length; i++) {
+//				pSum += dAndP[i][2];
+//			}
+//			System.out.println(pSum);
 			
 			double[] actionValues = new double[actions.size()];
 			Actions bestActions = new Actions(0, 0);
@@ -73,7 +79,7 @@ public class CashRecursionMulti {
 					}
 				}
 				actionValues[i] = thisActionsValue;
-				if (actionValues[i] > val) {
+				if (actionValues[i] > val + 0.1) {
 					val = actionValues[i];
 					bestActions = new Actions(thisActions.getFirstAction(), thisActions.getSecondAction());
 				}

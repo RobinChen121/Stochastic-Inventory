@@ -3,7 +3,9 @@ package sdp.sampling;
 import java.util.Arrays;
 
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
+import umontreal.ssj.probdistmulti.BiNormalDist;
 import umontreal.ssj.randvar.UniformGen;
 import umontreal.ssj.randvar.UniformIntGen;
 import umontreal.ssj.rng.MRG32k3aL;
@@ -89,6 +91,54 @@ public class Sampling {
 		return samples;
 	}
 	
+	/** latin hypercube sampling for binormal distribution.
+	 * 
+	 * Since two independent variable, generate two variable independently, and merge the two samples into one
+	 * @param distributions
+	 * @param sampleNum
+	 * @return a 2D random samples
+	 */
+	public static double[][] generateLHSamples(BiNormalDist[] distributions, int sampleNum){
+		int periodNum = distributions.length;		
+		double[][] samples = new double[sampleNum][periodNum * 2]; 
+		
+		double[][] samples1 = new double[sampleNum][periodNum];
+		double[][] samples2 = new double[sampleNum][periodNum];
+		
+		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
+		for (int i = 0; i < periodNum; i++) {
+			NormalDist distribution1 = new NormalDist(distributions[i].getMu1(), distributions[i].getSigma1());
+			for (int j = 0; j < sampleNum; j++) {
+				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double lowBound = (double) j/ (double) sampleNum;
+				samples1[j][i] = lowBound + randomNum;
+				samples1[j][i] = distribution1.inverseF(samples1[j][i]);
+			}		
+			shuffle(samples1); // 打乱数组		
+		}
+		for (int i = 0; i < periodNum; i++) {
+			NormalDist distribution2 = new NormalDist(distributions[i].getMu2(), distributions[i].getSigma2());
+			for (int j = 0; j < sampleNum; j++) {
+				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double lowBound = (double) j/ (double) sampleNum;
+				samples2[j][i] = lowBound + randomNum;
+				samples2[j][i] = distribution2.inverseF(samples2[j][i]);
+			}		
+			shuffle(samples2); // 打乱数组		
+		}
+		
+		for (int i = 0; i < sampleNum; i++) {
+			for (int j = 0; j < periodNum; j++) {
+				samples[i][j] = samples1[i][j];
+				samples[i][j + periodNum] = samples2[i][j];
+			}			
+		}
+		
+		return samples;
+	}
+	
+	
+	
 	/** latin hypercube sampling with truncationQuantile 
 	 * @param distributions
 	 * @param sampleNum
@@ -126,23 +176,23 @@ public class Sampling {
 	}
 	
 	
-	public static void main(String[] args) {
-		int sampleNum = 1000;
-		double[] meanDemand = {20, 5};	
-		
-		PoissonDist[] distributions = new PoissonDist[meanDemand.length];
-		for (int i = 0; i < meanDemand.length; i++)
-			distributions[i] = new PoissonDist(meanDemand[i]);
-		
-		double[][] samples = Sampling.generateRanSamples(distributions, sampleNum);
-		System.out.println(Arrays.deepToString(samples));
-		
-		for (int i = 0; i < meanDemand.length; i++) {
-			double sum = 0; 
-			for (int j = 0; j < sampleNum; j++) {
-				sum += samples[j][i];
-			}
-			System.out.println(sum/sampleNum);
-		}	
-	}
+//	public static void main(String[] args) {
+//		int sampleNum = 1000;
+//		double[] meanDemand = {20, 5};	
+//		
+//		PoissonDist[] distributions = new PoissonDist[meanDemand.length];
+//		for (int i = 0; i < meanDemand.length; i++)
+//			distributions[i] = new PoissonDist(meanDemand[i]);
+//		
+//		double[][] samples = Sampling.generateRanSamples(distributions, sampleNum);
+//		System.out.println(Arrays.deepToString(samples));
+//		
+//		for (int i = 0; i < meanDemand.length; i++) {
+//			double sum = 0; 
+//			for (int j = 0; j < sampleNum; j++) {
+//				sum += samples[j][i];
+//			}
+//			System.out.println(sum/sampleNum);
+//		}	
+//	}
 }

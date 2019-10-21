@@ -99,9 +99,15 @@ public class CashRecursion {
 			double[] QValues = new double[feasibleActions.length];
 			double val = optDirection == OptDirection.MIN ? Double.MAX_VALUE
 														  : -Double.MAX_VALUE;
+		
 			double bestOrderQty = 0;
 			for (int i = 0; i < feasibleActions.length; i++) {
 				double orderQty = feasibleActions[i];
+				
+//				if (s.getPeriod() == 1) { // for debugging
+//					orderQty = 110;
+//				}
+				
 				double thisQValue = 0;								
 				for (int j = 0; j < dAndP.length; j++) {
 					thisQValue += dAndP[j][1] * immediateValue.apply(s, orderQty, dAndP[j][0]);

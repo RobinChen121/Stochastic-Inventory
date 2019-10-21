@@ -87,8 +87,8 @@ public class CashSimulation {
 	 */
 	public double simulateSDPGivenSamplNum(CashState iniState) {
 		Sampling.resetStartStream();
-
 		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; CashState state = iniState;

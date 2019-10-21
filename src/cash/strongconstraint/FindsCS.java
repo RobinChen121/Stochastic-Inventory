@@ -61,7 +61,7 @@ public class FindsCS {
 	/**
 	 * get s, C1(x), C2(x), S
 	 */
-	double[][] getsC12S(double[][] optimalTable, double minCashRequired, FindCCrieria criteria) {
+	double[][] getsC12S(double[][] optimalTable, double overheadCost, FindCCrieria criteria) {
 		int M = 10000;
 		cacheC1Values.clear();
 		cacheC2Values.clear();
@@ -111,7 +111,7 @@ public class FindsCS {
 			
 			optimalsCS[t][3] = 0;  // default value for S is 0
 			optimalsCS[t][2] = M; // default value for C2 is M
-			optimalsCS[t][1] = fixOrderCost; // default value for C1 is K
+			optimalsCS[t][1] = fixOrderCost + overheadCost; // default value for C1 is K plus overhead cost
 			optimalsCS[t][0] = 0;  // default value for s is 0
 			ArrayList<Double> recordCash = new ArrayList<>();									
 			
@@ -141,13 +141,13 @@ public class FindsCS {
 			// or related with x (initial inventory)			
 			switch (criteria) {
 				case MAX:
-					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).max().isPresent() ? recordCash.stream().mapToDouble(p -> p).max().getAsDouble() : minCashRequired;
+					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).max().isPresent() ? recordCash.stream().mapToDouble(p -> p).max().getAsDouble() : overheadCost;
 					break;
 				case MIN:
-					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).min().isPresent() ? recordCash.stream().mapToDouble(p -> p).min().getAsDouble() : minCashRequired;
+					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).min().isPresent() ? recordCash.stream().mapToDouble(p -> p).min().getAsDouble() : overheadCost;
 					break;
 				case AVG:
-					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).average().isPresent() ? recordCash.stream().mapToDouble(p -> p).average().getAsDouble() : minCashRequired;
+					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).average().isPresent() ? recordCash.stream().mapToDouble(p -> p).average().getAsDouble() : overheadCost;
 					break;
 				case XRELATE:
 					// C1
@@ -201,8 +201,8 @@ public class FindsCS {
 			boolean lastOrderFullCapacity = false;
 			for (int j = tOptTable.length - 1; j >= 0; j--) {
 				if (tOptTable[j][1] < optimalsCS[t][0] && tOptTable[j][3] > 0) {
-					int maxQ = (int) Math.max(0, (tOptTable[j][2] - minCashRequired - fixOrderCost) / variOrderCost);
-					if (tOptTable[j][2] >= fixOrderCost + variOrderCost * tOptTable[j][3]) {														
+					int maxQ = (int) Math.max(0, (tOptTable[j][2] - overheadCost - fixOrderCost) / variOrderCost);
+					if (tOptTable[j][2] >= fixOrderCost + variOrderCost * tOptTable[j][3] + overheadCost) {														
 							if (recordS.size() != 0) {
 								S = (double) recordS.keySet().toArray()[recordS.size() - 1];
 								if (tOptTable[j][1] + tOptTable[j][3] > S + 0.1) { // order at full capacity, real S may not be increasing
@@ -213,9 +213,16 @@ public class FindsCS {
 										recordS.putIfAbsent(S, num);
 									}
 									else {
-										S = tOptTable[j][1] + tOptTable[j][3];									
-										recordS.putIfAbsent(S, 1);
-										lastOrderFullCapacity = tOptTable[j][3] > maxQ - 0.1 ? true : false;										
+//										S = tOptTable[j][1] + tOptTable[j][3];									
+//										recordS.putIfAbsent(S, 1);
+//										lastOrderFullCapacity = tOptTable[j][3] > maxQ - 0.1 ? true : false;
+										int num = recordS.get(S) + 1; 
+										recordS.remove(S);
+										S = tOptTable[j][1] + tOptTable[j][3];	// change 1  to num
+										recordS.putIfAbsent(S, num);
+										lastOrderFullCapacity = tOptTable[j][3] > maxQ - 0.1 ? true : false;
+										
+										
 									}									
 								}
 								else {
@@ -275,7 +282,7 @@ public class FindsCS {
 	 * get s, C1(x), S
 	 */
 	
-	double[][] getsCS(double[][] optimalTable, double minCashRequired, FindCCrieria criteria) {
+	double[][] getsCS(double[][] optimalTable, double overheadCost, FindCCrieria criteria) {
 		int M = 10000;
 		cacheC1Values.clear();
 		cacheC2Values.clear();
@@ -324,7 +331,7 @@ public class FindsCS {
 			
 			optimalsCS[t][3] = 0;  // default value for S is 0
 			optimalsCS[t][2] = M; // default value for C2 is M
-			optimalsCS[t][1] = fixOrderCost; // default value for C1 is K
+			optimalsCS[t][1] = fixOrderCost + overheadCost; // default value for C1 is K
 			optimalsCS[t][0] = 0;  // default value for s is 0
 			ArrayList<Double> recordCash = new ArrayList<>();									
 			
@@ -354,19 +361,19 @@ public class FindsCS {
 			// or related with x (initial inventory)			
 			switch (criteria) {
 				case MAX:
-					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).max().isPresent() ? recordCash.stream().mapToDouble(p -> p).max().getAsDouble() : minCashRequired;
+					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).max().isPresent() ? recordCash.stream().mapToDouble(p -> p).max().getAsDouble() : overheadCost;
 					break;
 				case MIN:
-					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).min().isPresent() ? recordCash.stream().mapToDouble(p -> p).min().getAsDouble() : minCashRequired;
+					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).min().isPresent() ? recordCash.stream().mapToDouble(p -> p).min().getAsDouble() : overheadCost;
 					break;
 				case AVG:
-					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).average().isPresent() ? recordCash.stream().mapToDouble(p -> p).average().getAsDouble() : minCashRequired;
+					optimalsCS[t][1] = recordCash.stream().mapToDouble(p -> p).average().isPresent() ? recordCash.stream().mapToDouble(p -> p).average().getAsDouble() : overheadCost;
 					break;
 				case XRELATE:
 					// C1
 					double markInventory = -0.5;
 					boolean CHasRecoded = false;
-					for (int j = 0; j < tOptTable.length - 1; j++) {
+					for (int j = 0; j < tOptTable.length; j++) { // the length of j
 						if (tOptTable[j][1] < optimalsCS[t][0]) {							
 							if (tOptTable[j][3] > 0) {
 								if (tOptTable[j][1] > markInventory) {
@@ -395,8 +402,8 @@ public class FindsCS {
 					boolean lastOrderFullCapacity = false;
 					for (int j = tOptTable.length - 1; j >= 0; j--) {
 						if (tOptTable[j][1] < optimalsCS[t][0] && tOptTable[j][3] > 0) {
-							int maxQ = (int) Math.max(0, (tOptTable[j][2] - minCashRequired - fixOrderCost) / variOrderCost);
-							if (tOptTable[j][2] >= fixOrderCost + variOrderCost * tOptTable[j][3]) {														
+							int maxQ = (int) Math.max(0, (tOptTable[j][2] - overheadCost - fixOrderCost) / variOrderCost);
+							if (tOptTable[j][2] >= fixOrderCost + variOrderCost * tOptTable[j][3] + overheadCost) {														
 									if (recordS.size() != 0) {
 										S = (double) recordS.keySet().toArray()[recordS.size() - 1];
 										if (tOptTable[j][1] + tOptTable[j][3] >= S) { // order at full capacity, real S may not be increasing
@@ -407,8 +414,10 @@ public class FindsCS {
 												recordS.putIfAbsent(S, num);
 											}
 											else {
-												S = tOptTable[j][1] + tOptTable[j][3];									
-												recordS.putIfAbsent(S, 1);
+												int num = recordS.get(S) + 1; 
+												recordS.remove(S);
+												S = tOptTable[j][1] + tOptTable[j][3];	// change 1  to num
+												recordS.putIfAbsent(S, num);
 												lastOrderFullCapacity = tOptTable[j][3] > maxQ - 0.1 ? true : false;										
 											}									
 										}
@@ -496,7 +505,7 @@ public class FindsCS {
 	 * @param fixOrderCost
 	 * @param variCost
 	 */
-	public int checksCS(double[][] sCS, double[][] optTable, Double minCashRequired, double maxOrderQ, double fixOrderCost, double variCost) {
+	public int checksCS(double[][] sCS, double[][] optTable, Double overheadCost, double maxOrderQ, double fixOrderCost, double variCost) {
 		int nonOptCount = 0;
 		for (int t = 1; t < T; t++) {
 			final int i = t + 1;			
@@ -513,7 +522,7 @@ public class FindsCS {
 					nonOptCount++;
 				if (tOptTable[j][2] <= sCS[t][1] && tOptTable[j][3] != 0)
 					nonOptCount++;
-				double maxQ = (int) Math.min(sCS[t][2] - tOptTable[j][1], (tOptTable[j][2] - minCashRequired - fixOrderCost) / variCost);
+				double maxQ = (int) Math.min(sCS[t][2] - tOptTable[j][1], (tOptTable[j][2] - overheadCost - fixOrderCost) / variCost);
 				maxQ = Math.min(maxQ, maxOrderQ);	
 				if (tOptTable[j][1] < sCS[t][0] && tOptTable[j][2] > sCS[t][1] && tOptTable[j][3] != maxQ)
 					nonOptCount++;
@@ -532,7 +541,7 @@ public class FindsCS {
 	 * @param fixOrderCost
 	 * @param variCost
 	 */
-	public int checksC12S(double[][] sCS, double[][] optTable, Double minCashRequired, double maxOrderQ, double fixOrderCost, double variCost) {
+	public int checksC12S(double[][] sCS, double[][] optTable, Double overheadCost, double maxOrderQ, double fixOrderCost, double variCost) {
 		int nonOptCount = 0;
 		for (int t = 1; t < T; t++) {
 			final int i = t + 1;			
@@ -555,7 +564,7 @@ public class FindsCS {
 					nonOptCount++;
 				if (tOptTable[j][2] >= sCS[t][2] && tOptTable[j][3] != 0)
 					nonOptCount++;
-				double maxQ = (int) Math.min(sCS[t][3] - tOptTable[j][1], (tOptTable[j][2] - minCashRequired - fixOrderCost) / variCost);
+				double maxQ = (int) Math.min(sCS[t][3] - tOptTable[j][1], (tOptTable[j][2] - overheadCost - fixOrderCost) / variCost);
 				maxQ = Math.min(maxQ, maxOrderQ);	
 				
 				if (tOptTable[j][1] < sCS[t][0] && tOptTable[j][2] > sCS[t][1] && tOptTable[j][2] < sCS[t][2] && tOptTable[j][3] != maxQ)
