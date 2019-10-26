@@ -32,18 +32,20 @@ public class MultiItemCash {
 
 	public static void main(String[] args) {
 		double[] price = {10, 5};
-		double[] variCost = {4, 2};
+		double[] variCost = {4, 2};  // higher margin vs lower margin
 		
-		double iniCash = 37;
-		int iniInventory1 = 0;
+		double iniCash = 30;  // initial cash
+		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 		
-		double[][] demand = {{8, 6, 4, 8}, {5, 3, 6, 4}};		
-		double coe = 0.25;
+		double[][] demand = {{6, 6, 6, 6, 6}, {15, 15, 15, 15, 15}}; // higher average demand vs lower averaage demand
+		double[] coe = {0.5, 0.25}; // higher variance vs lower variance
+		
+		double[] salPrice = {2, 1};
 		
 		int T = demand[0].length; // horizon length
 		
-		double truncationQuantile = 0.9999;
+		double truncationQuantile = 0.999;
 		int stepSize = 1;
 		double minCashState = 0;
 		double maxCashState = 10000;
@@ -55,7 +57,7 @@ public class MultiItemCash {
 		// get demand possibilities for each period
 		BiNormalDist[] distributions =  new BiNormalDist[T];
 		for (int t = 0; t < T; t++)
-			distributions[t] = new BiNormalDist(demand[0][t], coe * demand[0][t], demand[1][t], coe * demand[1][t], 0);
+			distributions[t] = new BiNormalDist(demand[0][t], coe[0] * demand[0][t], demand[1][t], coe[1] * demand[1][t], 0);
 		
 
 		
@@ -84,7 +86,11 @@ public class MultiItemCash {
 			double revenue = price[0] * (IniState.getIniInventory1() + action1 - endInventory1)
 					+ price[1] * (IniState.getIniInventory2() + action2 - endInventory2);
 			double orderingCosts = variCost[0] * action1 + variCost[1] * action2;
-			return revenue - orderingCosts;
+			double salValue = 0;
+			if (IniState.getPeriod() == T - 1) {
+				salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
+			}
+			return revenue - orderingCosts + salValue;
 		};
 	    	
 		// State Transition Function
@@ -99,6 +105,9 @@ public class MultiItemCash {
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			endInventory1 = endInventory1 > maxInventoryState ? maxInventoryState : endInventory1;
 			endInventory2 = endInventory2 < minInventoryState ? minInventoryState : endInventory2;
+			nextCash = (int) nextCash;  // rounding states to save computing time
+			endInventory1 = (int) endInventory1;
+			endInventory2 = (int) endInventory2;
 			return new CashStateMulti(IniState.getPeriod() + 1, endInventory1, endInventory2, nextCash);
 		};
 		

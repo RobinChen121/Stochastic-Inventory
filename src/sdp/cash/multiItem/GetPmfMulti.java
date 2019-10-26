@@ -33,6 +33,12 @@ public class GetPmfMulti {
 		BiNormalDist tDistributions = distributions[t];
 
 		
+		if (t > 2)
+			stepSize = 2;
+		if (t > 4)
+			stepSize = 4;
+		
+		
 		NormalDist distribution1 = new NormalDist(tDistributions.getMu1(), tDistributions.getSigma2());
 		NormalDist distribution2 = new NormalDist(tDistributions.getMu2(), tDistributions.getSigma2());
 		
