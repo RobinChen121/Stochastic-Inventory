@@ -288,7 +288,7 @@ public class FindsCS {
 		cacheC2Values.clear();
 		double[][] optimalsCS = new double[T][4];
 		optimalsCS[0][0] = optimalTable[0][1] + 1;
-		optimalsCS[0][1] = optimalTable[0][2] ;
+		optimalsCS[0][1] = 0; // optimalTable[0][2] ;
 		optimalsCS[0][2] = M; 
 		optimalsCS[0][3] = optimalTable[0][1] + optimalTable[0][3];	
 		cacheC1Values.put(new State(1, optimalTable[0][0]), optimalTable[0][1]);

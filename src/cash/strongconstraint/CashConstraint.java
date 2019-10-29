@@ -49,14 +49,11 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {24, 13, 5, 16,};
+		double[] meanDemand = {20, 7, 2, 14};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 250;
-		ArrayList<double[]> recordQ = new ArrayList<double[]>();
-		for (iniInventory = 0; iniInventory <= 7; iniInventory++) {
-		for (iniCash = 21; iniCash <= 51; iniCash = iniCash + 2) {
-		double fixOrderCost = 20;
+		double iniCash = 33;
+		double fixOrderCost = 24;
 		double variCost = 1;
 		double price = 5;
 		double salvageValue = 0;
@@ -77,22 +74,22 @@ public class CashConstraint {
 
 		// get demand possibilities for each period
 		int T = meanDemand.length;
-//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-//				//.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
-//				.mapToObj(i -> new PoissonDist(meanDemand[i]))
-//				.toArray(Distribution[]::new);
+		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+				//.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
+				.mapToObj(i -> new PoissonDist(meanDemand[i]))
+				.toArray(Distribution[]::new);
 
-		double[] values1 = {6, 7};
-		double[] probs1 = {0.95, 0.05};
-		double[] values2 = {6, 7};
-		double[] probs2 = {0.95, 0.05};
-		DiscreteDistribution[] distributions = new DiscreteDistribution[T];
-		for (int i = 0; i < T; i++) {
-			if (i % 2 == 0) 
-				distributions[i] = new DiscreteDistribution(values1, probs1, values1.length);
-			else
-				distributions[i] = new DiscreteDistribution(values2, probs2, values2.length);			
-		}	
+//		double[] values1 = {6, 7};
+//		double[] probs1 = {0.95, 0.05};
+//		double[] values2 = {6, 7};
+//		double[] probs2 = {0.95, 0.05};
+//		DiscreteDistribution[] distributions = new DiscreteDistribution[T];
+//		for (int i = 0; i < T; i++) {
+//			if (i % 2 == 0) 
+//				distributions[i] = new DiscreteDistribution(values1, probs1, values1.length);
+//			else
+//				distributions[i] = new DiscreteDistribution(values2, probs2, values2.length);			
+//		}	
 		
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 			
@@ -145,40 +142,31 @@ public class CashConstraint {
 		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
-		
-		double recordxRQ[] = new double[3];
-		recordxRQ[0] = iniInventory; recordxRQ[1] = iniCash; recordxRQ[2] = recursion.getAction(initialState);
-		recordQ.add(recordxRQ);
-		}
-		}
-		System.out.println("");
-		WriteToCsv writeToCsv = new WriteToCsv();
-		String fileName = "recordQ.xls";
-		writeToCsv.writeArrayExcel(recordQ, fileName);
+
 		
 		/*******************************************************************
 		 * Simulating sdp results
 		 */
 		int sampleNum = 10000;
 		
-//		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
-//				fixOrderCost, price, variCost, holdingCost, salvageValue);
-//		double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
-//		double error = 0.0001; 
-//		double confidence = 0.95;
-//		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);
+		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
+				fixOrderCost, price, variCost, holdingCost, salvageValue); // no need to add overheadCost in this class
+		double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
+		double error = 0.0001; 
+		double confidence = 0.95;
+		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);
 		
 		/*******************************************************************
 		 * Find (s, C1, C2 S) by SDP and simulate
 		 */
-//		System.out.println("");
-//		double[][] optTable = recursion.getOptTable();
-//		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-//		double[][] optsC12S = findsCS.getsC12S(optTable, overheadCost, criteria);
-//		Map<State, Double> cacheC1Values = new TreeMap<>();
+		System.out.println("");
+		double[][] optTable = recursion.getOptTable();
+		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
+		//double[][] optsC12S = findsCS.getsC12S(optTable, overheadCost, criteria);
+		Map<State, Double> cacheC1Values = new TreeMap<>();
 //		Map<State, Double> cacheC2Values = new TreeMap<>();
-//		cacheC1Values = findsCS.cacheC1Values;
-//		cacheC2Values = findsCS.cacheC2Values;
+ 		
+		
 //		double simsCSFinalValue = simuation.simulatesCS(initialState, optsC12S, cacheC1Values, cacheC2Values,
 //				overheadCost, maxOrderQuantity, fixOrderCost, variCost);
 //		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
@@ -188,26 +176,26 @@ public class CashConstraint {
 		/*******************************************************************
 		 * Find (s, C1, S) by SDP and simulate
 		 */
-//		System.out.println("");
-//		System.out.println("************************************************");
-//		double[][] optsCS = findsCS.getsCS(optTable, overheadCost, criteria);
-//		cacheC1Values = findsCS.cacheC1Values;
-//		simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
-//				overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//		double gap21 = (finalValue -simsCSFinalValue)/finalValue;
-//		double gap22 = (simFinalValue -simsCSFinalValue)/simFinalValue;
-//		System.out.printf("Optimality gap for (s, C1, S) is: %.2f%% or %.2f%%\n", gap21 * 100, gap22 * 100);
-//		
-//		/*******************************************************************
-//		 * Find (s, meanC, S) by SDP and simulate
-//		 */
-//		System.out.println("");
-//		System.out.println("************************************************");
-//		optsCS = findsCS.getsCS(optTable, overheadCost, FindCCrieria.AVG);
-//		simsCSFinalValue = simuation.simulatesMeanCS(initialState, optsCS, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//		double gap31 = (finalValue -simsCSFinalValue)/finalValue;
-//		double gap32 = (simFinalValue -simsCSFinalValue)/simFinalValue;
-//		System.out.printf("Optimality gap for (s, meanC, S) is: %.2f%% or %.2f%%\n", gap31 * 100, gap32 * 100);
+		System.out.println("");
+		System.out.println("************************************************");
+		double[][] optsCS = findsCS.getsCS(optTable, overheadCost, criteria);
+		cacheC1Values = findsCS.cacheC1Values;
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
+				overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+		double gap21 = (finalValue -simsCSFinalValue)/finalValue;
+		double gap22 = (simFinalValue -simsCSFinalValue)/simFinalValue;
+		System.out.printf("Optimality gap for (s, C1, S) is: %.2f%% or %.2f%%\n", gap21 * 100, gap22 * 100);
+		
+		/*******************************************************************
+		 * Find (s, meanC, S) by SDP and simulate
+		 */
+		System.out.println("");
+		System.out.println("************************************************");
+		optsCS = findsCS.getsCS(optTable, overheadCost, FindCCrieria.AVG);
+		simsCSFinalValue = simuation.simulatesMeanCS(initialState, optsCS, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+		double gap31 = (finalValue -simsCSFinalValue)/finalValue;
+		double gap32 = (simFinalValue -simsCSFinalValue)/simFinalValue;
+		System.out.printf("Optimality gap for (s, meanC, S) is: %.2f%% or %.2f%%\n", gap31 * 100, gap32 * 100);
 
 //		/*******************************************************************
 //		 * Check (s, C1, C2, S) policy, 
@@ -222,14 +210,14 @@ public class CashConstraint {
  		/*******************************************************************
 		 * Find (s, C, S) by MIP and simulate
 		 */
-//		System.out.println("************************************************");
-// 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions);
-// 		double[][] sCS = mipHeuristic.findsCS(); 
-// 		cacheC1Values = mipHeuristic.cacheC1Values;
-// 		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//		gap1 = (finalValue - simsCSMIPValue)/finalValue;
-//		gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
-//		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
+		System.out.println("************************************************");
+ 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
+ 		double[][] sCS = mipHeuristic.findsCS(); 
+ 		cacheC1Values = mipHeuristic.cacheC1Values;
+ 		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+		double gap1 = (finalValue - simsCSMIPValue)/finalValue;
+		double gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
+		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 		
  		
 // 		/*******************************************************************
@@ -323,7 +311,6 @@ public class CashConstraint {
 //		drawing.drawSimpleG(yG3, iniCash, "K not transfered in cash GA"); // GA
 //		System.out.println("CK convex of GA:");
 // 		CheckKConvexity.checkCK(yG3, fixOrderCost, capacity); // check the CK convex of GA
-	}
-	
-	
+		
+	}			
 }

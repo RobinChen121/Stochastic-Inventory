@@ -33,6 +33,7 @@ public class CashSimulation {
 	double variOrderCost;
 	double holdCost;
 	double salvageValue;
+	double overheadCost;
 	
 	Map<State, Double> cacheC1Values = new TreeMap<>();
 	Map<State, Double> cacheC2Values = new TreeMap<>();
@@ -58,6 +59,7 @@ public class CashSimulation {
 		this.holdCost = holdCost;
 		this.salvageValue = salvageValue;
 	}
+	
 	
 	public CashSimulation(Distribution[] distributions, int sampleNum, ImmediateValueFunction<CashState, Double, Double, Double> immediateValue,
 			StateTransitionFunction<CashState, Double, Double, CashState> stateTransition,
@@ -200,7 +202,7 @@ public class CashSimulation {
 	 * @return simulate (s, C1, S) policy in strong cash constraint
 	 */
 	public double simulatesCS(CashState iniState, double[][] optsCS, Map<State, Double> cacheC1Values, 
-			double minCashRequired, Double maxQ, double fixOrderCost, double variCost) {
+			double overheadCost, Double maxQ, double fixOrderCost, double variCost) {
 		Sampling.resetStartStream();
 		this.cacheC1Values = cacheC1Values;
 		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
@@ -211,10 +213,13 @@ public class CashSimulation {
 			for (int t = 0; t < samples[0].length; t++)
 			{
 				double optQ;
-				if ( t == 0) 
+				if ( t == 0) {
 					optQ = iniState.getIniInventory() < optsCS[t][0] ? optsCS[t][2] - iniState.getIniInventory() : 0;
+					double maxOrderQuantity = Math.max(0, (state.iniCash - overheadCost - fixOrderCost)/variCost);
+					optQ = Math.min(optQ, maxOrderQuantity);
+				}
 				else {
-					double maxOrderQuantity = Math.max(0, (state.iniCash - minCashRequired - fixOrderCost)/variCost);
+					double maxOrderQuantity = Math.max(0, (state.iniCash - overheadCost - fixOrderCost)/variCost);
 					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
 					if (state.getIniInventory() < optsCS[t][0]) {
 						if (cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory())) == null)

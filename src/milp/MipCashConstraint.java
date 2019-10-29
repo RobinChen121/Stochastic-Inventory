@@ -46,9 +46,27 @@ public class MipCashConstraint {
 	double holdingCost;
 	double price;
 	double salvageValue;
+	double overheadCost;
 	Distribution[] distributions;
 	public Map<State, Double> cacheC1Values = new TreeMap<>(); // record C1 values for different initial inventory x
 
+	
+	public MipCashConstraint(double iniInventory, double iniCash, double fixOrderCost, double variCost, double holdingCost, 
+			double price, double salvageValue, Distribution[] distributions, double overheadCost) {
+		this.iniInventory = iniInventory;
+		this.iniCash = iniCash;
+		this.fixOrderCost = fixOrderCost;
+		this.variCost = variCost;
+		this.holdingCost = holdingCost;
+		this.price = price;
+		this.salvageValue = salvageValue;
+		this.distributions = distributions;
+		this.overheadCost = overheadCost;
+		Comparator<State> keyComparator = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
+			o1.getPeriod() == o2.getPeriod() ? o1.getIniInventory() > o2.getIniInventory() ? 1 : 
+				o1.getIniInventory() == o2.getIniInventory() ? 0 : -1 : -1;
+		this.cacheC1Values = new TreeMap<>(keyComparator);
+	}
 	
 	public MipCashConstraint(double iniInventory, double iniCash, double fixOrderCost, double variCost, double holdingCost, 
 			double price, double salvageValue, Distribution[] distributions) {
@@ -330,20 +348,20 @@ public class MipCashConstraint {
 				if (i == 0) {
 					tPurchaseCost = cplex.prod(v[i], cplex.diff(s[i], iniInventory));
 					tTotalOrderCost = cplex.sum(tPurchaseCost, tFixCost);
-					tTotalCost = cplex.sum(tHoldCost, tTotalOrderCost);
+					tTotalCost = cplex.sum(tHoldCost, cplex.sum(tTotalOrderCost, overheadCost));
 					cplex.addLe(iniInventory, s[i]);
 					cplex.addEq(cplex.diff(B[i], iniCash), cplex.diff(tRevenue, tTotalCost));
-					cplex.addLe(tTotalOrderCost, iniCash);
+					cplex.addLe(cplex.sum(overheadCost, tTotalOrderCost), iniCash);
 					cplex.addGe(distributions[i].getMean(), cplex.diff(s[i], I[i]));
 					cplex.addLe(cplex.diff(s[i], iniInventory), cplex.prod(x[i], 10000));
 				}
 				else {
 					tPurchaseCost = cplex.prod(v[i], cplex.diff(s[i], I[i - 1]));
 					tTotalOrderCost = cplex.sum(tPurchaseCost, tFixCost);
-					tTotalCost = cplex.sum(tHoldCost, tTotalOrderCost);
+					tTotalCost = cplex.sum(tHoldCost, cplex.sum(tTotalOrderCost, overheadCost));
 					cplex.addLe(I[i - 1], s[i]);
 					cplex.addEq(cplex.diff(B[i], B[i - 1]), cplex.diff(tRevenue, tTotalCost));
-					cplex.addLe(tTotalOrderCost, B[i - 1]);
+					cplex.addLe(cplex.sum(overheadCost, tTotalOrderCost), B[i - 1]);
 					cplex.addGe(distributions[i].getMean(), cplex.diff(s[i], I[i]));
 					cplex.addLe(cplex.diff(s[i], I[i-1]), cplex.prod(x[i], 10000));
 				}				

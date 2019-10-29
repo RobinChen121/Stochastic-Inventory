@@ -49,6 +49,7 @@ public class MIPTesting {
 		double maxInventoryState = 500;
 		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
 		double maxCashState = 2000;
+		double overheadCost = 0;
 		
 		/*******************************************************************
 		 * set demands length, for testing 
@@ -121,7 +122,7 @@ public class MIPTesting {
 								 */
 								Map<State, Double> cacheC1Values = new TreeMap<>();
 								long currTime = System.currentTimeMillis();
-						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions);
+						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
 						 		int period = 1;
 						 		int sampleNum = 10000;
 						 		CashState initialState = new CashState(period, iniInventory, iniCash);
