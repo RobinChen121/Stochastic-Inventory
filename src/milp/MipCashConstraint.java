@@ -88,7 +88,7 @@ public class MipCashConstraint {
 	 *  this mip model take lost sale as a decision variable
 	 * @return s, C, S
 	 */
-	public double[][] findsCS1() {		
+	public double[][] findsCSLostSale() {		
 		double[] varx = null;
 		double[] vary;
 		double[] varw;
@@ -262,7 +262,10 @@ public class MipCashConstraint {
 					if (i == (int) S)
 						sCS[t][0] = S;
 				}
-//			}
+				
+				if (sCS[0][0] == 0 && iniInventory == 0 ) {
+					sCS[0][0] = 1;	
+				}
 			
 			// ascertain C
 			for (int j = 0; j < (int) s; j++) {
@@ -469,7 +472,9 @@ public class MipCashConstraint {
 					if (i == (int) S)
 						sCS[t][0] = S;
 				}
-//			}
+				if (sCS[0][0] == 0 && iniInventory == 0 ) {
+					sCS[0][0] = 1;	
+				}
 			
 			// ascertain C
 			for (int j = 0; j < (int) s; j++) {

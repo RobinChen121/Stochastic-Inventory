@@ -11,7 +11,7 @@ import java.io.IOException;
 *@Description:  read an array to txt or excel files
 */
 
-public class WriteArray {
+public class WriteToExcel {
 	
 	public void writeArrayToTxt(double[][] data, String string) {
 		int rowNum = data.length;
@@ -49,6 +49,30 @@ public class WriteArray {
 		
 	}
 	
+	public void writeArrayToExcel(double[][] data, String string, String head) {
+		int rowNum = data.length + 1;
+		int columnNum = data[0].length;
+		try {
+			FileWriter fw = new FileWriter(string);
+			for (int i = 0; i < rowNum; i++) {
+				if (i == 0) {
+					fw.write(head);
+					fw.write("\n");
+				}
+				else {
+					for (int j = 0; j < columnNum; j++)
+						fw.write(data[i - 1][j] + "\t");
+					fw.write("\n");
+				}
+			}
+			fw.close();
+		}
+		catch (IOException e){
+			e.printStackTrace();
+		}
+		
+	}
+	
 	
 	public static void main(String[] args) {
 
@@ -64,8 +88,9 @@ public class WriteArray {
                  {3,1,5,8,4,4}
                  };
 		 
-		 WriteArray wa = new WriteArray();
-		 wa.writeArrayToTxt(demands, "mytxt.txt");
-		 wa.writeArrayToTxt(demands, "mytxt.xls");
+		 WriteToExcel wa = new WriteToExcel();
+		 String headStrings = "c1" + "\t" + "c2" + "\t" + "c3" + "\t" + "c4" + "\t" + "c5" + "\t" + "c6";
+		 //wa.writeArrayToTxt(demands, "mytxt.txt");
+		 wa.writeArrayToExcel(demands, "mytxt.xls", headStrings);
 	}
 }

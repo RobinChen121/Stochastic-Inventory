@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Function;
 
-import multiItem.ImmediateValueFunction;
-import multiItem.StateTransitionFunction;
+import cash.multiItem.ImmediateValueFunction;
+import cash.multiItem.StateTransitionFunction;
 import sdp.sampling.Sampling;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 

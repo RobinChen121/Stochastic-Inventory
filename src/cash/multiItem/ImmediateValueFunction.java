@@ -7,7 +7,7 @@
  *
  * 
  */
-package multiItem;
+package cash.multiItem;
 
 /**
  * The immediate value function

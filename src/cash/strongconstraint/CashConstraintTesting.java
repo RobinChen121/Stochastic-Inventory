@@ -42,24 +42,24 @@ public class CashConstraintTesting {
 	// average computation time for 10 periods is 500s, 9 periods is 150s, or 305s,
 	// or 400s
 	public static void main(String[] args) {
-		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, simsC1C2SValue, "
-				+ "gap1, gap2, totalStates, "
+		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, "
+				+ "totalStates, "
 				+ "simsC1SValue, gap1, gap2, "
 				+ "simsMeanCSValue, gap1, gap2, "
 				+ "firstQ, CKConvexity, mipValue, gap11, gap22, time2";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
-		double[][] iniMeanDemands = { { 15, 15, 15, 15, 15, 15, 15, 15 },
-				{ 21.15, 18.9, 17.7, 16.5, 15.15, 13.95, 12.75, 11.55 }, { 6.6, 9.3, 11.1, 12.9, 16.8, 21.6, 24, 26.4 },
-				{ 9, 13, 20, 16, 10, 16, 22, 15 }, { 22, 18, 11, 16, 22, 12, 14, 21 },
-				{ 41.8, 6.6, 2, 21.8, 44.8, 9.6, 2.6, 17 }, { 4.08, 12.16, 37.36, 21.44, 39.12, 35.68, 19.84, 22.48 },
-				{ 4.7, 8.1, 23.6, 39.4, 16.4, 28.7, 50.8, 39.1 }, { 4.4, 11.6, 26.4, 14.4, 14.6, 19.8, 7.4, 18.3 },
-				{ 4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7 } };
+		double[][] iniMeanDemands = { { 15, 15, 15, 15, 15, 15, 15, 15, 15, 15 },
+				{ 21.15, 18.9, 17.7, 16.5, 15.15, 13.95, 12.75, 11.55, 10.35, 9.15}, { 6.6, 9.3, 11.1, 12.9, 16.8, 21.6, 24, 26.4, 31.5, 33.9 },
+				{ 12.1,10,7.9,7,7.9,10,12.1,13,12.1,10 }, {15.7,10,4.3,2,4.3,10,15.7,18,15.7,10 },
+				{ 41.8, 6.6, 2, 21.8, 44.8, 9.6, 2.6, 17, 30, 35.4 }, { 4.08, 12.16, 37.36, 21.44, 39.12, 35.68, 19.84, 22.48, 29.04, 12.4 },
+				{ 4.7, 8.1, 23.6, 39.4, 16.4, 28.7, 50.8, 39.1, 75.4, 69.4 }, { 4.4, 11.6, 26.4, 14.4, 14.6, 19.8, 7.4, 18.3, 20.4, 11.4 },
+				{ 4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7, 29.1, 54.7 } };
 
 		double[] K = {10, 15, 20};
 		double[] v = {1};
-		double[] B0 = { 4, 6, 8}; // ini cash can order 5 or 10 items
-		double[] p = { 4, 6, 8};  // margin is 3, 5, 7
+		double[] B0 = { 6, 8, 10}; // ini cash can order 5 or 10 items
+		double[] p = { 5, 6, 7};  // margin is 3, 5, 7
 		double[] h = {0};
 		double salvageValue = 0;	
 		
@@ -77,7 +77,7 @@ public class CashConstraintTesting {
 		/*******************************************************************
 		 * set demands length, for testing 
 		 */
-		int newLength = 8;
+		int newLength = iniMeanDemands[0].length;
 		double[][] meanDemands = new double[iniMeanDemands.length][newLength];
 		for (int i = 0; i < iniMeanDemands.length; i++)
 			for (int j = 0; j < newLength; j++) {
@@ -97,7 +97,7 @@ public class CashConstraintTesting {
 								double iniCash = fixOrderCost + overheadCost + variCost * B0[iB];
 								double holdingCost = h[ih];
 								double iniInventory = 0;
-
+								
 								
 								// get demand possibilities for each period
 								int T = meanDemand.length;
@@ -176,16 +176,16 @@ public class CashConstraintTesting {
 								System.out.println("************************************************");
 								double[][] optTable = recursion.getOptTable();
 								FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-								double[][] optsCS = findsCS.getsC12S(optTable, overheadCost, criteria);
+//								double[][] optsCS = findsCS.getsC12S(optTable, overheadCost, criteria);
 								Map<State, Double> cacheC1Values = new TreeMap<>();
-								Map<State, Double> cacheC2Values = new TreeMap<>();
-								cacheC1Values = findsCS.cacheC1Values;
-								cacheC2Values = findsCS.cacheC2Values;
-								double simsC1C2SFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values,
-										overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-								double gapsC1C2S1 = (finalValue - simsC1C2SFinalValue) / finalValue;
-								double gapsC1C2S2 = (simFinalValue - simsC1C2SFinalValue) / simFinalValue;
-								System.out.printf("Optimality gap for (s, C1, C2, S) is: %.2f%% or %.2f%%\n", gapsC1C2S1 * 100, gapsC1C2S2 * 100);
+//								Map<State, Double> cacheC2Values = new TreeMap<>();
+//								cacheC1Values = findsCS.cacheC1Values;
+//								cacheC2Values = findsCS.cacheC2Values;
+//								double simsC1C2SFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values,
+//										overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+//								double gapsC1C2S1 = (finalValue - simsC1C2SFinalValue) / finalValue;
+//								double gapsC1C2S2 = (simFinalValue - simsC1C2SFinalValue) / simFinalValue;
+//								System.out.printf("Optimality gap for (s, C1, C2, S) is: %.2f%% or %.2f%%\n", gapsC1C2S1 * 100, gapsC1C2S2 * 100);
 																
 								
 								/*******************************************************************
@@ -193,7 +193,7 @@ public class CashConstraintTesting {
 								 */
 								System.out.println("");
 								System.out.println("************************************************");
-								optsCS = findsCS.getsCS(optTable, overheadCost, criteria);
+								double[][] optsCS = findsCS.getsCS(optTable, overheadCost, criteria);
 								cacheC1Values = findsCS.cacheC1Values;
 								double simsC1SFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
 										overheadCost, maxOrderQuantity, fixOrderCost, variCost);
@@ -226,19 +226,19 @@ public class CashConstraintTesting {
 								double gap11 = 0;
 								double gap22 = 0;
 								double time2 = 0;
-//								currTime = System.currentTimeMillis();
-//						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions);
-//						 		double[][] sCS = mipHeuristic.findsCS(); 					 		
-//						 		time2 = (System.currentTimeMillis() - currTime) / 1000;
-//								System.out.println("running time is " + time2 + "s");
-//						 		cacheC1Values = mipHeuristic.cacheC1Values;
-//						 		simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//								gap11 = (finalValue - simsCSMIPValue)/finalValue;
-//								gap22 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
-//								System.out.printf("Optimality gap by Mip is: %.2f%% or %.2f%%\n", gap11 * 100, gap22 * 100);
-//								
-//								System.out.printf(
-//										"\n*******************************************************************\n");
+								currTime = System.currentTimeMillis();
+						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
+						 		double[][] sCS = mipHeuristic.findsCS(); 					 		
+						 		time2 = (System.currentTimeMillis() - currTime) / 1000;
+								System.out.println("running time is " + time2 + "s");
+						 		cacheC1Values = mipHeuristic.cacheC1Values;
+						 		simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+								gap11 = (finalValue - simsCSMIPValue)/finalValue;
+								gap22 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
+								System.out.printf("Optimality gap by Mip is: %.2f%% or %.2f%%\n", gap11 * 100, gap22 * 100);
+								
+								System.out.printf(
+										"\n*******************************************************************\n");
 								
 								/*******************************************************************
 								 * Check K-convexity of GA or GB
@@ -340,8 +340,7 @@ public class CashConstraintTesting {
 								String out = fixOrderCost + ",\t" + variCost + ",\t" + holdingCost + ",\t"
 										+ iniInventory + ",\t" + price + ",\t" + salvageValue + ",\t" + iniCash + ",\t" + (idemand + 1) + ",\t"
 										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t"
-										+ simsC1C2SFinalValue +",\t" + gapsC1C2S1 + ",\t" + gapsC1C2S2 + ",\t" + totalStates + ",\t"
-										+ simsC1SFinalValue +",\t" + gapsC1S1 + ",\t" + gapsC1S2 + ",\t" 
+										+ totalStates + ",\t"+ simsC1SFinalValue +",\t" + gapsC1S1 + ",\t" + gapsC1S2 + ",\t" 
 										+ simsMeanCSFinalValue +",\t" + gapsMeanCS1 + ",\t" + gapsMeanCS2 + ",\t" 
 										+ firstQ + ",\t" + convexity + ",\t"+ 
 										simsCSMIPValue + ",\t" + gap11 + ",\t" + gap22+ ",\t" + time2;

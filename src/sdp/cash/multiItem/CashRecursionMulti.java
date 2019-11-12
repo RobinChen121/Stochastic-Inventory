@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 
-import multiItem.ImmediateValueFunction;
-import multiItem.StateTransitionFunction;
+import cash.multiItem.ImmediateValueFunction;
+import cash.multiItem.StateTransitionFunction;
 
 
 
@@ -115,13 +115,26 @@ public class CashRecursionMulti {
 	 * 
 	 * @return optimal decision table of SDP
 	 */
-	public double[][] getOptTable(){
+	public double[][] getOptTable(double[] variCost){
 		Iterator<Map.Entry<CashStateMulti, Actions>> iterator = cacheActions.entrySet().iterator();
-		double[][] arr = new double[cacheActions.size()][5];
+		double[][] arr = new double[cacheActions.size()][10];
 		int i = 0;
 		while (iterator.hasNext()) {
 			Map.Entry<CashStateMulti, Actions> entry = iterator.next();
-			arr[i++] =new double[]{entry.getKey().getPeriod(), entry.getKey().getIniInventory1(), entry.getKey().getIniInventory2(), entry.getKey().getIniCash(), entry.getValue().getFirstAction(), entry.getValue().getSecondAction()};
+			double period = entry.getKey().getPeriod();
+			double x1 = entry.getKey().getIniInventory1();
+			double x2 = entry.getKey().getIniInventory2();
+			double w = entry.getKey().getIniCash();
+			double Q1 = entry.getValue().getFirstAction();
+			double Q2 = entry.getValue().getSecondAction();
+			double alpha = 10000;
+			double boolAlpha = 0;
+			double R = w + x1 * variCost[0] + x2 * variCost[1];
+			if (w <= variCost[0] * Q1 + variCost[1] * Q2 && Q1 > 0 && Q2 > 0) {
+				boolAlpha = 1;
+				alpha = variCost[0] * Q1 / R;
+			}			
+			arr[i++] = new double[]{period, x1, x2, w, R, boolAlpha, alpha, Q1, Q2, variCost[0], variCost[1]};
 		}
 		return arr;
 	}
