@@ -33,7 +33,7 @@ public class MultiItemCash {
 
 	public static void main(String[] args) {
 		double[] price = {10, 5};
-		double[] variCost = {10, 2};  // higher margin vs lower margin
+		double[] variCost = {9, 2};  // higher margin vs lower margin
 		
 		double iniCash = 30;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
