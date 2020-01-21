@@ -18,6 +18,8 @@ import java.util.stream.DoubleStream;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 
+
+
 /**
 *@author: Zhen Chen
 *@email: 15011074486@163.com
@@ -59,6 +61,10 @@ public class Recursion {
 		this.cacheValues = new TreeMap<>(keyComparator);
 	}
 		
+
+
+
+
 	public StateTransitionFunction<State, Double, Double, State> getStateTransitionFunction(){
 		return stateTransition;
 	}

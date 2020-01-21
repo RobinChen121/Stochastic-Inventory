@@ -26,8 +26,8 @@ public class GetPmf {
 		double[] supportLB = new double[T];
 		double[] supportUB = new double[T];
 		for (int i = 0; i < T; i++) {
-			supportLB[i] = distributions[i].inverseF(1 - truncationQuantile);
-			supportUB[i] = distributions[i].inverseF(truncationQuantile);
+			supportLB[i] = (int) distributions[i].inverseF(1 - truncationQuantile);
+			supportUB[i] = (int) distributions[i].inverseF(truncationQuantile);
 		}
 
 		double[][][] pmf = new double[T][][];

@@ -49,21 +49,21 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {15.7, 10, 4.3, 2, 4.3, 10, 15.7, 18, 15.7, 10};
+		double[] meanDemand = {15};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 28;
-		double fixOrderCost = 20;
-		double variCost = 1;
+		double iniCash = 100;
+		double fixOrderCost = 0;
+		double variCost = 2;
 		double price = 5;
-		double salvageValue = 0;
+		double salvageValue = 1;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
-		double overheadCost = 2; // costs like wages or rents which is required to pay in each period
+		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
-		double truncationQuantile = 0.9999;
+		double truncationQuantile = 0.99;
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
@@ -75,8 +75,8 @@ public class CashConstraint {
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				//.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
-				.mapToObj(i -> new PoissonDist(meanDemand[i]))
+				.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
+				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
 				.toArray(Distribution[]::new);
 
 //		double[] values1 = {6, 7};

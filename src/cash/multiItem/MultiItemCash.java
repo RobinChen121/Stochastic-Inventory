@@ -16,14 +16,14 @@ package cash.multiItem;
 import java.util.ArrayList;
 import java.util.function.Function;
 
-import sdp.cash.CashSimulation;
 import sdp.cash.multiItem.Actions;
 import sdp.cash.multiItem.CashRecursionMulti;
 import sdp.cash.multiItem.CashSimulationMulti;
 import sdp.cash.multiItem.CashStateMulti;
 import sdp.cash.multiItem.Demands;
 import sdp.cash.multiItem.GetPmfMulti;
-import sdp.write.WriteToCsv;
+import sdp.inventory.ImmediateValue.ImmediateValueFunction;
+import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.write.WriteToExcel;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 
@@ -33,14 +33,14 @@ public class MultiItemCash {
 
 	public static void main(String[] args) {
 		double[] price = {10, 5};
-		double[] variCost = {9, 2};  // higher margin vs lower margin
+		double[] variCost = {4, 2};  // higher margin vs lower margin
 		
-		double iniCash = 30;  // initial cash
+		double iniCash = 25;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 		
 		
-		double[][] demand = {{6, 6, 6, 6}, {15, 15, 15, 15}}; // higher average demand vs lower averaage demand
+		double[][] demand = {{ 6, 6, 6}, {15, 15, 15}}; // higher average demand vs lower average demand
 		double[] coe = {0.5, 0.25}; // higher variance vs lower variance
 		
 		
@@ -55,9 +55,8 @@ public class MultiItemCash {
 		int minInventoryState = 0;
 		
 		
-		
 		int maxInventoryState = 200;
-		int Qbound = 50;
+		int Qbound = 100;
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
@@ -160,6 +159,7 @@ public class MultiItemCash {
 		String headString =  "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w"+ "\t" + "R" + "\t" + "is limited cash and both ordering" + "\t" + "alpha"
 				 				+ "\t" + "Q1"+ "\t" + "Q2" + "\t" + "c1" + "\t" + "c2";
 		wr.writeArrayToExcel(optTable, fileName, headString);
+		
 	}
 
 }

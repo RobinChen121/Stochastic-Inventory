@@ -56,10 +56,10 @@ public class CashConstraintTesting {
 				{ 4.7, 8.1, 23.6, 39.4, 16.4, 28.7, 50.8, 39.1, 75.4, 69.4 }, { 4.4, 11.6, 26.4, 14.4, 14.6, 19.8, 7.4, 18.3, 20.4, 11.4 },
 				{ 4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7, 29.1, 54.7 } };
 
-		double[] K = {10, 15, 20};
+		double[] K = {10, 15, 20, 25};
 		double[] v = {1};
-		double[] B0 = { 6, 8, 10}; // ini cash can order 5 or 10 items
-		double[] p = { 5, 6, 7};  // margin is 3, 5, 7
+		double[] B0 = { 4, 6, 8, 10}; // ini cash can order 5 or 10 items
+		double[] p = { 5, 6, 7, 8};  // margin is 3, 5, 7
 		double[] h = {0};
 		double salvageValue = 0;	
 		
@@ -83,13 +83,14 @@ public class CashConstraintTesting {
 			for (int j = 0; j < newLength; j++) {
 				meanDemands[i][j] = iniMeanDemands[i][j];
 			}
+		
 
 		for (int idemand = 0; idemand < meanDemands.length; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
 						for (int ih = 0; ih < h.length; ih++)
-							for (int iB = 0; iB < B0.length; iB++) {
+							for (int iB = 0; iB <= 0; iB++) {
 								double[] meanDemand = meanDemands[idemand];
 								double fixOrderCost = K[iK];
 								double variCost = v[iv];

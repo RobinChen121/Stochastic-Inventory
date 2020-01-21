@@ -16,8 +16,10 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 
-import cash.multiItem.ImmediateValueFunction;
-import cash.multiItem.StateTransitionFunction;
+import sdp.inventory.ImmediateValue.ImmediateValueFunction;
+import sdp.inventory.StateTransition.StateTransitionFunction;
+
+
 
 
 
@@ -132,7 +134,7 @@ public class CashRecursionMulti {
 			double R = w + x1 * variCost[0] + x2 * variCost[1];
 			if (w <= variCost[0] * Q1 + variCost[1] * Q2 && Q1 > 0 && Q2 > 0) {
 				boolAlpha = 1;
-				alpha = variCost[0] * Q1 / R;
+				alpha = variCost[0] * Q1 / w;
 			}			
 			arr[i++] = new double[]{period, x1, x2, w, R, boolAlpha, alpha, Q1, Q2, variCost[0], variCost[1]};
 		}

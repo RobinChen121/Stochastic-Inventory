@@ -110,6 +110,7 @@ public class CashRecursion {
 				
 				double thisQValue = 0;								
 				for (int j = 0; j < dAndP.length; j++) {
+					double thisValue = immediateValue.apply(s, orderQty, dAndP[j][0]);
 					thisQValue += dAndP[j][1] * immediateValue.apply(s, orderQty, dAndP[j][0]);
 					if (s.getPeriod() < pmf.length) {
 						CashState newState = stateTransition.apply(s, orderQty, dAndP[j][0]);
