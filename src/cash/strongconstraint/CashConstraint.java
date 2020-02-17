@@ -31,7 +31,9 @@ import umontreal.ssj.probdist.PoissonDist;
  * @email: 15011074486@163.com
  * @date 2018, March 3th, 6:31:10 pm
  * @Description stochastic lot sizing problem with strong cash balance
- *              constraint, provide a (s, C, S) policy
+ *              constraint, provide a (s, C, S) policy,
+ *              when there is no fixed ordering cost, it is a similar base-stock
+ *              policy.
  *
  * a numerical case:
  * double[] meanDemand = {41.8, 6.6, 2, 21.8};
@@ -49,14 +51,15 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {15};
+		double[] meanDemand = {10, 10, 10, 10};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 100;
+		double iniCash = 50;
 		double fixOrderCost = 0;
-		double variCost = 2;
-		double price = 5;
-		double salvageValue = 1;
+		double variCost = 1;
+		double price = 1.3;
+		double depositeRate = 0.1;
+		double salvageValue = 0.5;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
 		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
@@ -75,7 +78,7 @@ public class CashConstraint {
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i])) // can be changed to other distributions
+				.mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
 				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
 				.toArray(Distribution[]::new);
 
@@ -106,9 +109,10 @@ public class CashConstraint {
 			double revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
 			double fixedCost = action > 0 ? fixOrderCost : 0;
 			double variableCost = variCost * action;
+			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
 			double inventoryLevel = state.getIniInventory() + action - randomDemand;
 			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
-			double cashIncrement = (1 - overheadRate)*revenue - fixedCost - variableCost - holdCosts - overheadCost;
+			double cashIncrement = (1 - overheadRate)*revenue + deposite - holdCosts - overheadCost - state.getIniCash();
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
 			cashIncrement += salValue;
 			return cashIncrement;
@@ -146,6 +150,8 @@ public class CashConstraint {
 		
 		/*******************************************************************
 		 * Simulating sdp results
+		 * parameter vales like price, variCost, holdingCost etc.
+		 * are only for compute L(y), not very necessary
 		 */
 		int sampleNum = 10000;
 		
