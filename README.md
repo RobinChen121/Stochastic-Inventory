@@ -1,9 +1,9 @@
-# Stochastic-Lot-Sizing
-Codes in Java to solve stochastic lot sizing problems in which demands are stochastic.
+# Stochastic-Inventory
+Codes in Java to solve stochastic inventory problems in which demands are stochastic.
 
 Coded by Zhen Chen, 15011074486@163.com.
 
-MIT licence.
+MIT license.
 
 
 ### Attention:
