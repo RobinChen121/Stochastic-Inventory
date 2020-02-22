@@ -1,0 +1,149 @@
+package cash.strongconstraint;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+
+import cash.strongconstraint.FindsCS.FindCCrieria;
+import sdp.cash.CashRecursionXR.OptDirection;
+import sdp.cash.CashRecursionXR;
+import sdp.cash.CashSimulationXR;
+import sdp.inventory.GetPmf;
+import sdp.inventory.ImmediateValue.ImmediateValueFunction;
+import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.write.WriteToCsv;
+import sdp.cash.CashStateXR;
+import umontreal.ssj.probdist.DiscreteDistribution;
+import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.NormalDist;
+import umontreal.ssj.probdist.PoissonDist;
+
+/**
+ * @author: Zhen Chen
+ * @email: 15011074486@163.com
+ * @date 2020, Feb 22th, 12:31:10 pm
+ * @Description a multi-period stochastic inventory problem to implement the method in Chao's paper:
+ *              Dynamic inventory management with cash flow constraints (2008) in Naval Research Logistics.
+ *              There is no fixed ordering cost and it is a multi-period newsvendor problem.
+ *              
+ *              In this dynamic programming, states are inventory level x and working capital R = w+cx, 
+ *              action is order-up-to level y.
+ *
+ */
+
+public class CashConstraintXR {
+	
+	public static void main(String[] args) {
+		double[] meanDemand = {10, 10, 10, 10};
+		double iniInventory = 0;
+		double iniCash = 50;
+		double fixOrderCost = 0;
+		double variCost = 1;
+		double price = 1.3;
+		double depositeRate = 0.1;
+		double salvageValue = 0.5;
+		double holdingCost = 0;	
+		FindCCrieria criteria = FindCCrieria.XRELATE;		
+		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
+		double overheadRate = 0; // rate from revenue to pay overhead wages
+		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
+
+		double truncationQuantile = 0.99;
+		int stepSize = 1;
+		double minInventoryState = 0;
+		double maxInventoryState = 500;
+		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
+		double maxCashState = 2000;
+		
+		double discountFactor = 1;
+
+		// get demand possibilities for each period
+		int T = meanDemand.length;
+		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+				.mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
+				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
+				.toArray(Distribution[]::new);
+	
+		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
+			
+
+		// feasible actions
+		Function<CashStateXR, double[]> getFeasibleAction = s -> {
+			double maxY = s.getIniR() / variCost;
+			return DoubleStream.iterate(s.getIniInventory(), i -> i + stepSize).limit((int) maxY + 1).toArray();
+		};
+
+		// immediate value
+		ImmediateValueFunction<CashStateXR, Double, Double, Double> immediateValue = (state, actionY, randomDemand) -> {
+			double revenue = price * Math.min(actionY, randomDemand);
+			double action = actionY - state.getIniInventory();
+			double fixedCost = actionY > state.getIniInventory() ? fixOrderCost : 0;
+			double variableCost = variCost * action;
+			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
+			double inventoryLevel = actionY - randomDemand;
+			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
+			double cashIncrement = (1 - overheadRate)*revenue + deposite - holdCosts - overheadCost - state.getIniCash();
+			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
+			cashIncrement += salValue;
+			return cashIncrement;
+		};
+
+		// state transition function
+		StateTransitionFunction<CashStateXR, Double, Double, CashStateXR> stateTransition = (state, actionY,
+				randomDemand) -> {
+			double nextInventory = Math.max(0, actionY - randomDemand);
+			double nextCash = state.getIniCash() + immediateValue.apply(state, actionY, randomDemand);
+			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
+			nextCash = nextCash < minCashState ? minCashState : nextCash;
+			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
+			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
+			// cash is integer or not
+			nextCash = Math.round(nextCash * 1) / 1; 
+			double nextR = nextCash + variCost * nextInventory;
+			return new CashStateXR(state.getPeriod() + 1, nextInventory, nextR, variCost);
+		};
+
+		/*******************************************************************
+		 * Solve
+		 */
+		CashRecursionXR recursion = new CashRecursionXR(OptDirection.MAX, pmf, getFeasibleAction, stateTransition,
+				immediateValue, discountFactor);
+		int period = 1;		
+		CashStateXR initialState = new CashStateXR(period, iniInventory, iniCash, variCost);
+		long currTime = System.currentTimeMillis();
+		recursion.setTreeMapCacheAction();
+		double finalValue = iniCash + recursion.getExpectedValue(initialState);
+		System.out.println("final optimal cash  is " + finalValue);
+		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
+		double time = (System.currentTimeMillis() - currTime) / 1000;
+		System.out.println("running time is " + time + "s");
+
+		
+		/*******************************************************************
+		 * Simulating sdp results
+		 * parameter vales like price, variCost, holdingCost etc.
+		 * are only for compute L(y), not very necessary
+		 */
+		int sampleNum = 10000;
+		
+		CashSimulationXR simuation = new CashSimulationXR(distributions, sampleNum, recursion, discountFactor, 
+				fixOrderCost, price, variCost, holdingCost, salvageValue); // no need to add overheadCost in this class
+		double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
+		double error = 0.0001; 
+		double confidence = 0.95;
+		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);
+		
+		/*******************************************************************
+		 * get optimal table of SDP, 
+		 * and output it to a excel file
+		 */
+		System.out.println("");
+		double[][] optTable = recursion.getOptTable();
+		
+		
+	}			
+}
