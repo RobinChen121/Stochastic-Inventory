@@ -16,6 +16,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.write.WriteToCsv;
+import sdp.write.WriteToExcel;
 import sdp.cash.CashStateXR;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
@@ -40,7 +41,7 @@ public class CashConstraintXR {
 	public static void main(String[] args) {
 		double[] meanDemand = {10, 10, 10, 10};
 		double iniInventory = 0;
-		double iniCash = 50;
+		double iniCash = 2;
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double price = 1.3;
@@ -143,7 +144,9 @@ public class CashConstraintXR {
 		 */
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
-		
+		WriteToExcel wr = new WriteToExcel();
+		String headString =  "period" + "\t" + "x" + "\t" + "R" + "\t" + "y";
+		wr.writeArrayToExcel(optTable, "optTable.xls", headString);
 		
 	}			
 }
