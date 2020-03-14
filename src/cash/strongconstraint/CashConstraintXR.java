@@ -84,7 +84,7 @@ public class CashConstraintXR {
 			double action = actionY - state.getIniInventory();
 			double fixedCost = actionY > state.getIniInventory() ? fixOrderCost : 0;
 			double variableCost = variCost * action;
-			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
+			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate); // (1+d)(S-cy)
 			double inventoryLevel = actionY - randomDemand;
 			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
 			double cashIncrement = (1 - overheadRate)*revenue + deposite - holdCosts - overheadCost - state.getIniCash();
