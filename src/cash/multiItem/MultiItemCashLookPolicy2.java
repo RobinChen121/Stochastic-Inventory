@@ -28,19 +28,19 @@ import sdp.write.WriteToExcel;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 
 
-public class MultiItemCash {
+public class MultiItemCashLookPolicy2 {
 
 
 	public static void main(String[] args) {
-		double[] price = {4, 50};
-		double[] variCost = {2, 4};  // higher margin vs lower margin
+		double[] price = {4, 8};
+		double[] variCost = {2, 2};  // higher margin vs lower margin
 		
-		double iniCash = 50;  // initial cash
+		double iniCash = 25;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 		
 		
-		double[][] demand = {{ 5, 6}, { 5, 6}}; // higher average demand vs lower average demand
+		double[][] demand = {{ 5, 7}, {5, 7}}; // higher average demand vs lower average demand
 		double[] coe = {0.25, 0.25}; // higher variance vs lower variance
 		
 		
@@ -59,6 +59,14 @@ public class MultiItemCash {
 		int Qbound = 100;
 		double discountFactor = 1;
 		
+		double Rmin = 4; double Rmax = 80; int incre = 2;
+		
+		int rowNum = (int) ((Rmax - Rmin)/incre) + 2;
+		int row = 0;
+		double[][] optResults = new double[rowNum][6];
+		
+		for (iniCash = Rmin; iniCash <= Rmax; iniCash = iniCash + incre) {
+			
 		// get demand possibilities for each period
 		BiNormalDist[] distributions =  new BiNormalDist[T];
 		for (int t = 0; t < T; t++)
@@ -80,26 +88,26 @@ public class MultiItemCash {
 		};
 		
 		// Immediate Value Function	      
-				ImmediateValueFunction<CashStateMulti, Actions, Demands, Double> immediateValue
-				= (IniState, Actions, RandomDemands) -> {
-					double action1 = Actions.getFirstAction();
-					double action2 = Actions.getSecondAction();
-					double demand1 = RandomDemands.getFirstDemand();
-					double demand2 = RandomDemands.getSecondDemand();
-					double endInventory1 = Math.max(0, IniState.getIniInventory1() + action1 - demand1);
-					double endInventory2 = Math.max(0, IniState.getIniInventory2() + action2 - demand2);
-					double revenue1 = price[0] * (IniState.getIniInventory1() + action1 - endInventory1);
-					double revenue2 = price[1] * (IniState.getIniInventory2() + action2 - endInventory2);
-					double revenue = revenue1 + revenue2;
-					double orderingCost1 = variCost[0] * action1;
-					double orderingCost2 = variCost[1] * action2;
-					double orderingCosts = orderingCost1 + orderingCost2;
-					double salValue = 0;
-					if (IniState.getPeriod() == T - 1) {
-						salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
-					}
-					return revenue - orderingCosts + salValue;
-				};
+		ImmediateValueFunction<CashStateMulti, Actions, Demands, Double> immediateValue
+		= (IniState, Actions, RandomDemands) -> {
+			double action1 = Actions.getFirstAction();
+			double action2 = Actions.getSecondAction();
+			double demand1 = RandomDemands.getFirstDemand();
+			double demand2 = RandomDemands.getSecondDemand();
+			double endInventory1 = Math.max(0, IniState.getIniInventory1() + action1 - demand1);
+			double endInventory2 = Math.max(0, IniState.getIniInventory2() + action2 - demand2);
+			double revenue1 = price[0] * (IniState.getIniInventory1() + action1 - endInventory1);
+			double revenue2 = price[1] * (IniState.getIniInventory2() + action2 - endInventory2);
+			double revenue = revenue1 + revenue2;
+			double orderingCost1 = variCost[0] * action1;
+			double orderingCost2 = variCost[1] * action2;
+			double orderingCosts = orderingCost1 + orderingCost2;
+			double salValue = 0;
+			if (IniState.getPeriod() == T - 1) {
+				salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
+			}
+			return revenue - orderingCosts + salValue;
+		};
 	    	
 		// State Transition Function
 
@@ -155,14 +163,22 @@ public class MultiItemCash {
 		 * 
 		 * output results to excel
 		 */
-//		System.out.println("");
-//		double[][] optTable = recursion.getOptTable(variCost);
-//		WriteToExcel wr = new WriteToExcel();
-//		String fileName = "optTable" + "_c1=" + variCost[0] + "c2=" + variCost[1] + ".xls";
-//		String headString =  "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w"+ "\t" + "R" + "\t" + "is limited cash and both ordering" + "\t" + "alpha"
-//				 				+ "\t" + "Q1"+ "\t" + "Q2" + "\t" + "c1" + "\t" + "c2";
-//		wr.writeArrayToExcel(optTable, fileName, headString);
-//		
+		double Q1 = recursion.getAction(iniState).getFirstAction();
+		double Q2 = recursion.getAction(iniState).getSecondAction();
+		System.out.println("");
+		optResults[row][0] = iniInventory1; optResults[row][1] = iniInventory2;
+		optResults[row][2] = iniCash; optResults[row][3] = finalValue;
+		optResults[row][4] = Q1; optResults[row][5] = Q2;
+		row++;
+		System.out.println("**************************************************");
+		}
+		
+		
+		WriteToExcel wr = new WriteToExcel();
+		String fileName = "optTable.xls";
+		String headString =  "x1" + "\t" + "x2" + "\t" + "R" + "\t" + "finalvalue" + "\t" + "Q1"+ "\t" + "Q2";
+		wr.writeArrayToExcel(optResults, fileName, headString);
+		
 	}
 
 }

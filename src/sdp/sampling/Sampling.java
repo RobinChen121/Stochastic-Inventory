@@ -138,6 +138,51 @@ public class Sampling {
 	}
 	
 	
+	/** latin hypercube sampling for bi poisson distribution.
+	 * 
+	 * Since two independent variable, generate two variable independently, and merge the two samples into one
+	 * @param distributions
+	 * @param sampleNum
+	 * @return a 2D random samples
+	 */
+	public static double[][] generateLHSamplesMulti(Distribution[][] distributions, int sampleNum){
+		int periodNum = distributions.length;		
+		double[][] samples = new double[sampleNum][periodNum * 2]; 
+		
+		double[][] samples1 = new double[sampleNum][periodNum];
+		double[][] samples2 = new double[sampleNum][periodNum];
+		
+		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
+		for (int i = 0; i < periodNum; i++) {
+			Distribution distribution1 = distributions[i][0];
+			for (int j = 0; j < sampleNum; j++) {
+				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double lowBound = (double) j/ (double) sampleNum;
+				samples1[j][i] = lowBound + randomNum;
+				samples1[j][i] = distribution1.inverseF(samples1[j][i]);
+			}		
+			shuffle(samples1); // 打乱数组		
+		}
+		for (int i = 0; i < periodNum; i++) {
+			Distribution distribution2 = distributions[i][1];
+			for (int j = 0; j < sampleNum; j++) {
+				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double lowBound = (double) j/ (double) sampleNum;
+				samples2[j][i] = lowBound + randomNum;
+				samples2[j][i] = distribution2.inverseF(samples2[j][i]);
+			}		
+			shuffle(samples2); // 打乱数组		
+		}
+		
+		for (int i = 0; i < sampleNum; i++) {
+			for (int j = 0; j < periodNum; j++) {
+				samples[i][j] = samples1[i][j];
+				samples[i][j + periodNum] = samples2[i][j];
+			}			
+		}
+		
+		return samples;
+	}
 	
 	/** latin hypercube sampling with truncationQuantile 
 	 * @param distributions

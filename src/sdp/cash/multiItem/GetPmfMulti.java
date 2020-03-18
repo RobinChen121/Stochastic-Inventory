@@ -2,12 +2,13 @@
  * @author: Zhen Chen
  * @email: 15011074486@163.com
  * @date: Jun 24, 2019, 11:40:52 AM
- * @Desc: 
+ * @Desc: for binormal distribution only
  *
  *
  * 
  */
 package sdp.cash.multiItem;
+
 
 
 import umontreal.ssj.probdist.NormalDist;
@@ -19,7 +20,7 @@ import umontreal.ssj.probdistmulti.BiNormalDist;
 public class GetPmfMulti {
 	BiNormalDist[] distributions;
 	double truncationQuantile;
-	double stepSize;
+	double stepSize;	
 	
 	
 	public GetPmfMulti(BiNormalDist[] distributions, double truncationQuantile, double stepSize) {
@@ -28,13 +29,14 @@ public class GetPmfMulti {
 		this.stepSize = stepSize;
 	}
 	
+	
 	public double[][] getPmf(int t){
 		
 		BiNormalDist tDistributions = distributions[t];
 
 		
-		if (t > 2)
-			stepSize = 2;
+
+		stepSize = 2;
 		if (t > 4)
 			stepSize = 4;
 		
