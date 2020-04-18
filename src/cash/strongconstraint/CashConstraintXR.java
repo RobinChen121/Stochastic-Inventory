@@ -1,5 +1,6 @@
 package cash.strongconstraint;
 
+import java.awt.print.Printable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class CashConstraintXR {
 	public static void main(String[] args) {
 		double[] meanDemand = {10, 10, 10, 10};
 		double iniInventory = 0;
-		double iniCash = 2;
+		double iniCash = 7;
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double price = 1.3;
@@ -74,8 +75,9 @@ public class CashConstraintXR {
 
 		// feasible actions
 		Function<CashStateXR, double[]> getFeasibleAction = s -> {
-			double maxY = s.getIniR() / variCost;
-			return DoubleStream.iterate(s.getIniInventory(), i -> i + stepSize).limit((int) maxY + 1).toArray();
+			double maxY = s.getIniR() / variCost < s.getIniInventory() ? s.getIniInventory() : s.getIniR() / variCost;
+			int length = (int) (maxY - s.getIniInventory()) + 1;
+			return DoubleStream.iterate(s.getIniInventory(), i -> i + stepSize).limit(length).toArray();
 		};
 
 		// immediate value
@@ -84,20 +86,26 @@ public class CashConstraintXR {
 			double action = actionY - state.getIniInventory();
 			double fixedCost = actionY > state.getIniInventory() ? fixOrderCost : 0;
 			double variableCost = variCost * action;
-			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate); // (1+d)(S-cy)
+			double initCash = state.getIniR() - variCost * state.getIniInventory();
+			double deposite = (initCash- fixedCost - variableCost) * (1 + depositeRate); // (1+d)(S-cy)
 			double inventoryLevel = actionY - randomDemand;
-			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
-			double cashIncrement = (1 - overheadRate)*revenue + deposite - holdCosts - overheadCost - state.getIniCash();
+			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);			
+			double cashIncrement = (1 - overheadRate)*revenue + deposite - holdCosts - overheadCost - initCash;
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
 			cashIncrement += salValue;
+//			if (cashIncrement < 0)
+//				System.out.println(cashIncrement);
 			return cashIncrement;
 		};
 
 		// state transition function
 		StateTransitionFunction<CashStateXR, Double, Double, CashStateXR> stateTransition = (state, actionY,
 				randomDemand) -> {
+			if (randomDemand < 0)
+				System.out.println(randomDemand);
 			double nextInventory = Math.max(0, actionY - randomDemand);
-			double nextCash = state.getIniCash() + immediateValue.apply(state, actionY, randomDemand);
+			double initCash = state.getIniR() - variCost * state.getIniInventory();
+			double nextCash = initCash + immediateValue.apply(state, actionY, randomDemand);
 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
@@ -105,6 +113,7 @@ public class CashConstraintXR {
 			// cash is integer or not
 			nextCash = Math.round(nextCash * 1) / 1; 
 			double nextR = nextCash + variCost * nextInventory;
+			
 			return new CashStateXR(state.getPeriod() + 1, nextInventory, nextR, variCost);
 		};
 
@@ -145,7 +154,7 @@ public class CashConstraintXR {
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		WriteToExcel wr = new WriteToExcel();
-		String headString =  "period" + "\t" + "x" + "\t" + "R" + "\t" + "y";
+		String headString =  "period" + "\t" + "x" + "\t" + "S" + "\t" + "R" + "\t" + "y";
 		wr.writeArrayToExcel(optTable, "optTable.xls", headString);
 		
 	}			

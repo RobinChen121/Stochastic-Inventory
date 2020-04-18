@@ -29,9 +29,6 @@ public class CashStateXR extends State{
 		return this.iniR;
 	}
 	
-	public double getIniCash() {
-		return this.iniR - this.unitVariCost * this.initialInventory;
-	}
 	
 	@Override
 	public int hashCode(){

@@ -89,10 +89,14 @@ public class CashRecursionXR {
 				double orderY = feasibleActions[i];				
 				double thisYValue = 0;								
 				for (int j = 0; j < dAndP.length; j++) {
+					//System.out.println(dAndP[j][0]);
 					double thisValue = immediateValue.apply(s, orderY, dAndP[j][0]);
 					thisYValue += dAndP[j][1] * thisValue;
 					if (s.getPeriod() < pmf.length) {
+						double a = dAndP[j][0];
 						CashStateXR newState = stateTransition.apply(s, orderY, dAndP[j][0]);
+						if (dAndP[j][0] < 0)
+							System.out.println(a);
 						thisYValue += dAndP[j][1] * discountFactor * getExpectedValue(newState);
 					}
 				}
@@ -138,7 +142,10 @@ public class CashRecursionXR {
 		int i = 0;
 		while (iterator.hasNext()) {
 			Map.Entry<CashStateXR, Double> entry = iterator.next();
-			arr[i++] =new double[]{entry.getKey().getPeriod(), entry.getKey().getIniInventory(), entry.getKey().getIniR(), entry.getValue()};
+			double a = entry.getKey().getIniInventory();
+			double b = entry.getKey().getIniR();
+			double S = b - entry.getKey().unitVariCost * a;
+			arr[i++] =new double[]{entry.getKey().getPeriod(), entry.getKey().getIniInventory(), S, entry.getKey().getIniR(), entry.getValue()};
 		}
 		return arr;
 	}

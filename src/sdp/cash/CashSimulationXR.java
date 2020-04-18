@@ -98,7 +98,7 @@ public class CashSimulationXR {
 			{
 				recursion.getExpectedValue(state);
 				double optQ = recursion.getAction(state);
-				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
+				double randomDemand = Math.round(Math.max(0, samples[i][t])); // integer samples to test sdp
 				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, optQ, randomDemand);
 				state = stateTransition.apply(state, optQ, randomDemand);
 			}
@@ -124,7 +124,7 @@ public class CashSimulationXR {
 			{
 				recursion.getExpectedValue(state);
 				double optQ = recursion.getAction(state);
-				double randomDemand = Math.round(realizedDemand[t]); // integer samples to test sdp
+				double randomDemand = Math.round(Math.max(0, realizedDemand[t])); // integer samples to test sdp
 				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, optQ, randomDemand);
 				state = stateTransition.apply(state, optQ, randomDemand);
 			}

@@ -55,6 +55,8 @@ public class MultiItemCashG {
 		int Qbound = 80;
 		double discountFactor = 1;
 		
+
+		
 		// get demand possibilities for a product in each period
 		NormalDist[] distributions =  new NormalDist[T]; // normal dist for one product
 		for (int t = 0; t < T; t++)

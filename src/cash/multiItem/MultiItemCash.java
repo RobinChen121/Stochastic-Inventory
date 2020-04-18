@@ -35,7 +35,7 @@ public class MultiItemCash {
 		double[] price = {4, 50};
 		double[] variCost = {2, 4};  // higher margin vs lower margin
 		
-		double iniCash = 50;  // initial cash
+		double iniCash = 100;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 		

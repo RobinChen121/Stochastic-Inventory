@@ -54,7 +54,7 @@ public class CashConstraint {
 		double[] meanDemand = {10, 10, 10, 10};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 50;
+		double iniCash = 7;
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double price = 1.3;
