@@ -4,7 +4,7 @@ package sdp.cash;
 *@author: Zhen Chen
 *@email: 15011074486@163.com
 *@date: Jul 14, 2018---10:31:11 AM
-*@description:  simulate cash stochastic lot sizing problem
+*@description:  simulate cash stochastic inventory problem for the algorithm in Chao(2008)'s paper.
 */
 
 import java.text.DecimalFormat;
@@ -142,4 +142,30 @@ public class CashSimulationXR {
 		System.out.println("using " + df2.format(sampleNumUse) + " samples, " +  "confidence interval is [" + "-" + df1.format(centerAndRadius[1]) + ", " + df1.format(centerAndRadius[1]) + "]");
 		return centerAndRadius;
 	}
+	
+	/**
+	 * @param a* in each period
+	 * @return simulate results for the policy proposed by Chao (2008)
+	 */
+	public double simulateAStar(double[] optY, CashStateXR iniState) {
+		Sampling.resetStartStream();
+		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		double[] simValues = new double[samples.length];
+		for (int i = 0; i < samples.length; i++) {
+			double sum = 0; CashStateXR state = iniState;
+			for (int t = 0; t < samples[0].length; t++) {
+				recursion.getExpectedValue(state);
+				double thisY = state.iniR > variOrderCost * optY[t] ? optY[t] : state.iniR / variOrderCost;
+				double randomDemand = Math.round(Math.max(0, samples[i][t])); // integer samples to test sdp
+				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, thisY, randomDemand);
+				state = stateTransition.apply(state, thisY, randomDemand);
+			}
+			simValues[i] = sum;
+		}
+		DecimalFormat df2 = new DecimalFormat("###,###");
+		double simFinalValue = Arrays.stream(simValues).sum()/samples.length + iniState.iniR;
+		System.out.println("\nfinal simulated expected value for a* policy with " + df2.format(sampleNum) + " samples is: " + simFinalValue);
+		return simFinalValue;
+	}
+
 }

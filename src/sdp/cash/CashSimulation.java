@@ -1,11 +1,6 @@
 package sdp.cash;
 
-/**
-*@author: Zhen Chen
-*@email: 15011074486@163.com
-*@date: Jul 14, 2018---10:31:11 AM
-*@description:  simulate cash stochastic lot sizing problem
-*/
+
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -19,7 +14,12 @@ import sdp.sampling.Sampling;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.stat.Tally;
 
-
+/**
+*@author: Zhen Chen
+*@email: 15011074486@163.com
+*@date: Jul 14, 2018---10:31:11 AM
+*@description:  simulate cash stochastic inventory problem
+*/
 public class CashSimulation {
 
 	protected int sampleNum;
@@ -110,6 +110,13 @@ public class CashSimulation {
 		return simFinalValue;
 	}
 
+	/**
+	 * @param iniState
+	 * @param error
+	 * @param confidence
+	 * @return simulate sdp results with error confidence
+	 * @date: Apr 23, 2020, 11:43:23 AM 
+	 */
 	public double[] simulateSDPwithErrorConfidence(CashState iniState, double error, double confidence) {
 		int minRuns = 1000;   int maxRuns = 1000000;
 		Sampling.resetStartStream();

@@ -19,6 +19,7 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.write.WriteToCsv;
 import sdp.write.WriteToExcel;
 import sdp.cash.CashStateXR;
+import sdp.cash.RecursionG;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.NormalDist;
@@ -129,7 +130,7 @@ public class CashConstraintXR {
 		double finalValue = iniCash + recursion.getExpectedValue(initialState);
 		System.out.println("final optimal cash  is " + finalValue);
 		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
-		double time = (System.currentTimeMillis() - currTime) / 1000;
+		double time = (System.currentTimeMillis() - currTime) / 1000.0;
 		System.out.println("running time is " + time + "s");
 
 		
@@ -151,11 +152,32 @@ public class CashConstraintXR {
 		 * get optimal table of SDP, 
 		 * and output it to a excel file
 		 */
-		System.out.println("");
-		double[][] optTable = recursion.getOptTable();
-		WriteToExcel wr = new WriteToExcel();
-		String headString =  "period" + "\t" + "x" + "\t" + "S" + "\t" + "R" + "\t" + "y";
-		wr.writeArrayToExcel(optTable, "optTable.xls", headString);
+//		System.out.println("");
+//		double[][] optTable = recursion.getOptTable();
+//		WriteToExcel wr = new WriteToExcel();
+//		String headString =  "period" + "\t" + "x" + "\t" + "S" + "\t" + "R" + "\t" + "y";
+//		wr.writeArrayToExcel(optTable, "optTable.xls", headString);
+		
+		
+		/*******************************************************************
+		 * get a* in each period
+		 */
+		RecursionG recursion2 = new RecursionG(pmf, distributions, 
+				price, variCost, depositeRate, salvageValue);
+		currTime = System.currentTimeMillis();	
+		double[] optY = recursion2.getOptY();
+		System.out.println();
+		time = (System.currentTimeMillis() - currTime) / 1000.0; // if 1000, then it will be integer
+		System.out.println("a* in each period: ");
+		System.out.println(Arrays.toString(optY));
+		System.out.printf("running time is %.3f s", time);
+		System.out.println();
+		
+		/*******************************************************************
+		 * simulate a* in each period
+		 */
+		simuation.simulateAStar(optY, initialState);
+		
 		
 	}			
 }
