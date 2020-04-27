@@ -414,6 +414,7 @@ public class MipCashConstraint {
 			}
 		}
 		sCS[T - 1][1] = 0; // C default value is 0
+		// ascertain C for the last period
 		for (int j = (int) S; j >= 0; j--) {
 			int jj = 0;
 			for (jj = j + 1; jj <= (int) S; jj++) {
@@ -431,71 +432,69 @@ public class MipCashConstraint {
 		
 		for (int t = 0; t < T - 1; t++) {
 			S = distributions[t].inverseF((price - variCost) / (holdingCost  + price));
-//			if (Ly(S, t, distributions[t]) < fixOrderCost) { // not ordering for all
-//				S = 0;
-//				sCS[t][2] = S;
-//				sCS[t][0] = 0;	
-//			}
-//			else {
-				if (Arrays.stream(varx).sum() < 0.1) // default values when x are all zeros
+			if (Arrays.stream(varx).sum() < 0.1) // default values when x are all zeros
+				break;
+			int orderLastTo = nextIndex(varx, t);
+			double demandSum = IntStream.range(t, orderLastTo + 1).mapToObj(i -> distributions[i].getMean())
+					.reduce(0.0, (x, y) -> x.doubleValue() + y.doubleValue());
+			double sigmaSqureSum = IntStream.range(t, orderLastTo + 1).mapToObj(i -> distributions[i].getStandardDeviation())
+					.reduce(0.0, (x, y) -> Math.pow(x.doubleValue(), 2) + Math.pow(y.doubleValue(), 2));
+			double sigmaSum = Math.sqrt(sigmaSqureSum);
+			Distribution distribution;
+			if (distributions[0] instanceof ContinuousDistribution) // normal distribution
+				distribution = new NormalDist(demandSum, sigmaSum);
+			else
+				distribution = new PoissonDist(demandSum);
+			S = distribution.inverseF((price - variCost) / (holdingCost  + price));
+
+			double maxQ = 0;
+			if (t == 0)
+				maxQ = Math.max(0, (iniCash - fixOrderCost)/variCost);
+			else
+				maxQ = Math.max(0, (varB[t - 1] - fixOrderCost)/variCost);
+			double cashS = t == 0 ? iniInventory + maxQ : varI[t - 1] + maxQ;
+			S = Math.min(S, cashS);
+			sCS[t][2] = S;	
+
+
+			// ascertain s
+			for (int i = 0; i <= (int) S; i++) {
+				if (Ly(S, t, distribution) - Ly(i, t, distribution) < fixOrderCost + 0.1) {
+					s = i;
+					sCS[t][0] = s;	
 					break;
-				int orderLastTo = nextIndex(varx, t);
-				double demandSum = IntStream.range(t, orderLastTo + 1).mapToObj(i -> distributions[i].getMean())
-						.reduce(0.0, (x, y) -> x.doubleValue() + y.doubleValue());
-				double sigmaSqureSum = IntStream.range(t, orderLastTo + 1).mapToObj(i -> distributions[i].getStandardDeviation())
-						.reduce(0.0, (x, y) -> Math.pow(x.doubleValue(), 2) + Math.pow(y.doubleValue(), 2));
-				double sigmaSum = Math.sqrt(sigmaSqureSum);
-				Distribution distribution;
-				if (distributions[0] instanceof ContinuousDistribution) // normal distribution
-					distribution = new NormalDist(demandSum, sigmaSum);
-				else
-					distribution = new PoissonDist(demandSum);
-				S = distribution.inverseF((price - variCost) / (holdingCost  + price));
-
-				double maxQ = 0;
-				if (t == 0)
-					maxQ = Math.max(0, (iniCash - fixOrderCost)/variCost);
-				else
-					maxQ = Math.max(0, (varB[t - 1] - fixOrderCost)/variCost);
-				double cashS = t == 0 ? iniInventory + maxQ : varI[t - 1] + maxQ;
-				S = Math.min(S, cashS);
-				sCS[t][2] = S;	
-
-
-				// ascertain s
-				for (int i = 0; i <= (int) S; i++) {
-					if (Ly(S, t, distribution) - Ly(i, t, distribution) < fixOrderCost + 0.1) {
-						s = i;
-						sCS[t][0] = s;	
-						break;
-					}
-					if (i == (int) S)
-						sCS[t][0] = S;
 				}
-				if (sCS[0][0] == 0 && iniInventory == 0 ) {
-					sCS[0][0] = 1;	
-				}
-			
+				if (i == (int) S)
+					sCS[t][0] = S;
+			}
+			if (sCS[0][0] == 0 && iniInventory == 0 ) {
+				sCS[0][0] = 1;	
+			}
+
 			// ascertain C
 			for (int j = 0; j < (int) s; j++) {
 				int jj = 0;
+				S = distributions[t].inverseF((price - variCost) / (holdingCost  + price)); // one period S
 				for (jj = j + 1; jj <= (int) S; jj++) {
 					if (Ly(jj, t, distributions[t]) > fixOrderCost + Ly(j, t, distributions[t])) {
 						sCS[t][1] = fixOrderCost + variCost * (jj - 1 - j); // C for x = 0 at last
 						cacheC1Values.put(new State(t + 1, j), sCS[t][1]);
 						break;
 					}				
-				}
-				S = distributions[t].inverseF((price - variCost) / (holdingCost  + price));
-				if (Ly(S, t, distributions[t]) < fixOrderCost) { // choose a large value for C, since expected profit is too small
+				}				
+				//System.out.println(Ly(onePeriodS, t, distributions[t]));
+				if (Ly(S, t, distributions[t]) < fixOrderCost 
+						||Ly(S, t, distributions[t]) - Ly(j, t, distributions[t]) < fixOrderCost
+						)
+				{ // choose a large value for C, since expected profit is too small
 					sCS[t][1] = fixOrderCost * 20;
 					cacheC1Values.put(new State(t + 1, j), sCS[t][1]);
 				}
 			}
-			
+
 		}
-		
-		
+
+
 		System.out.println("(s, C, S) from MIP are: " + Arrays.deepToString(sCS));
 		return sCS;
 	}

@@ -46,7 +46,7 @@ public class CashConstraintTesting {
 				+ "totalStates, "
 				+ "simsC1SValue, gap1, gap2, "
 				+ "simsMeanCSValue, gap1, gap2, "
-				+ "firstQ, CKConvexity, mipValue, gap11, gap22, time2";
+				+ "firstQ, capacity, mipValue, gap11, gap22, time2";
 		WriteToCsv.writeToFile("./" + "test_results.csv", headString);
 
 		double[][] iniMeanDemands = { { 15, 15, 15, 15, 15, 15, 15, 15, 15, 15 },
@@ -56,17 +56,17 @@ public class CashConstraintTesting {
 				{ 4.7, 8.1, 23.6, 39.4, 16.4, 28.7, 50.8, 39.1, 75.4, 69.4 }, { 4.4, 11.6, 26.4, 14.4, 14.6, 19.8, 7.4, 18.3, 20.4, 11.4 },
 				{ 4.9, 18.8, 6.4, 27.9, 45.3, 22.4, 22.3, 51.7, 29.1, 54.7 } };
 
-		double[] K = {10, 15, 20, 25};
+		double[] K = {10, 15, 20};
 		double[] v = {1};
-		double[] B0 = { 4, 6, 8, 10}; // ini cash can order 5 or 10 items
-		double[] p = { 5, 6, 7, 8};  // margin is 3, 5, 7
+		double[] B0 = { 3, 5, 7}; // ini cash can order 4 or 6 items
+		double[] p = { 5, 6, 7};  // margin is 4, 5, 6
 		double[] h = {0};
 		double salvageValue = 0;	
 		
 		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double truncationQuantile = 0.999;
 		int stepSize = 1;
-		double overheadCost = 2; // minimum cash balance the retailer can withstand
+		double overheadCost = 0; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 150; // maximum ordering quantity when having enough cash
 		double minInventoryState = 0;
 		double maxInventoryState = 200;
@@ -84,13 +84,13 @@ public class CashConstraintTesting {
 				meanDemands[i][j] = iniMeanDemands[i][j];
 			}
 		
-
+		 
 		for (int idemand = 0; idemand < meanDemands.length; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
 						for (int ih = 0; ih < h.length; ih++)
-							for (int iB = 0; iB <= 0; iB++) {
+							for (int iB = 0; iB < B0.length; iB++) {
 								double[] meanDemand = meanDemands[idemand];
 								double fixOrderCost = K[iK];
 								double variCost = v[iv];
@@ -159,13 +159,13 @@ public class CashConstraintTesting {
 								System.out.println("final optimal expected cash is: " + finalValue);
 								double firstQ = recursion.getAction(initialState);
 								System.out.println("optimal order quantity in the first priod is : " + firstQ);
-								double time = (System.currentTimeMillis() - currTime) / 1000;
+								double time = (System.currentTimeMillis() - currTime) / 1000.0;
 								System.out.println("running time is " + time + "s");
 
 								/*******************************************************************
 								 * Simulating sdp results
 								 */
-								int sampleNum = 10000;
+								int sampleNum = 100000;
 								CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion,
 										discountFactor, fixOrderCost, price, variCost, holdingCost, salvageValue);
 								double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
@@ -230,7 +230,7 @@ public class CashConstraintTesting {
 								currTime = System.currentTimeMillis();
 						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
 						 		double[][] sCS = mipHeuristic.findsCS(); 					 		
-						 		time2 = (System.currentTimeMillis() - currTime) / 1000;
+						 		time2 = (System.currentTimeMillis() - currTime) / 1000.0;
 								System.out.println("running time is " + time2 + "s");
 						 		cacheC1Values = mipHeuristic.cacheC1Values;
 						 		simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
@@ -343,7 +343,7 @@ public class CashConstraintTesting {
 										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t"
 										+ totalStates + ",\t"+ simsC1SFinalValue +",\t" + gapsC1S1 + ",\t" + gapsC1S2 + ",\t" 
 										+ simsMeanCSFinalValue +",\t" + gapsMeanCS1 + ",\t" + gapsMeanCS2 + ",\t" 
-										+ firstQ + ",\t" + convexity + ",\t"+ 
+										+ firstQ + ",\t" + B0[iB] + ",\t"+ 
 										simsCSMIPValue + ",\t" + gap11 + ",\t" + gap22+ ",\t" + time2;
 
 								WriteToCsv.writeToFile("./" + "test_results.csv", out);

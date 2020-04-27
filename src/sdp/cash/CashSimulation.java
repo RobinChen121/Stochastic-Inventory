@@ -230,7 +230,7 @@ public class CashSimulation {
 					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
 					if (state.getIniInventory() < optsCS[t][0]) {
 						if (cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory())) == null)
-							optsCS[t][1] = 0;	
+							optsCS[t][1] = 0;	// 不存在 C(x) 就默认不存资金节点
 						else 
 							optsCS[t][1] = cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory()));
 					}

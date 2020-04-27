@@ -31,21 +31,9 @@ import umontreal.ssj.probdist.PoissonDist;
  * @author: Zhen Chen
  * @email: 15011074486@163.com
  * @date 2018, March 3th, 6:31:10 pm
- * @Description stochastic lot sizing problem with strong cash balance
- *              constraint, provide a (s, C, S) policy,
- *              when there is no fixed ordering cost, it is a similar base-stock
- *              policy.
+ * @Description find the characteristics of the optimal policy;
+ * 
  *
- * a numerical case:
- * double[] meanDemand = {41.8, 6.6, 2, 21.8};
- * double iniCash = 15;
- * double iniInventory = 0;
- * double fixOrderCost = 10;
- * double variCost = 1;
- * double price = 8;
- * double salvageValue = 0.5;
- *
- * there are states: [3, 14, 16, 6], [3, 14, 23, 0]
  */
 
 public class CashConstraintLookPolicy {
@@ -63,7 +51,7 @@ public class CashConstraintLookPolicy {
 		double salvageValue = 0;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
-		double overheadCost = 2; // costs like wages or rents which is required to pay in each period
+		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
@@ -77,7 +65,7 @@ public class CashConstraintLookPolicy {
 		double discountFactor = 1;
 		
 		double xmin = 0; double xmax = 10;
-		double Rmin = 25; double Rmax = 51;
+		double Rmin = 23; double Rmax = 49;
 		int row = 0;
 		int column = 0;
 		int rowNum = (int) (xmax - xmin + 1) + 1;

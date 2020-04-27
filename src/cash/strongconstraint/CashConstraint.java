@@ -33,7 +33,9 @@ import umontreal.ssj.probdist.PoissonDist;
  * @Description stochastic lot sizing problem with strong cash balance
  *              constraint, provide a (s, C, S) policy,
  *              when there is no fixed ordering cost, it is a similar base-stock
- *              policy.
+ *              policy. 
+ * when no inventory holding cost, (s, C, S) may not be optimal, because sometimes may be exist C2,
+ * or S is not always follows, S may be x during the states
  *
  * a numerical case:
  * double[] meanDemand = {41.8, 6.6, 2, 21.8};
@@ -51,22 +53,22 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 10, 10, 10};
+		double[] meanDemand = {15.7,10,4.3,2,4.3,10,15.7};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 7;
-		double fixOrderCost = 0;
+		double iniCash = 25;
+		double fixOrderCost = 20;
 		double variCost = 1;
-		double price = 1.3;
-		double depositeRate = 0.1;
-		double salvageValue = 0.5;
+		double price = 7;
+		double depositeRate = 0;
+		double salvageValue = 0;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
 		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
-		double truncationQuantile = 0.99;
+		double truncationQuantile = 0.999;
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
@@ -78,8 +80,8 @@ public class CashConstraint {
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
-				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
+				//.mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
+				.mapToObj(i -> new PoissonDist(meanDemand[i]))
 				.toArray(Distribution[]::new);
 
 //		double[] values1 = {6, 7};
@@ -203,27 +205,28 @@ public class CashConstraint {
 //		double gap32 = (simFinalValue -simsCSFinalValue)/simFinalValue;
 //		System.out.printf("Optimality gap for (s, meanC, S) is: %.2f%% or %.2f%%\n", gap31 * 100, gap32 * 100);
 
-//		/*******************************************************************
-//		 * Check (s, C1, C2, S) policy, 
-//		 * sometimes not always hold, because in certain period 
-//		 * for some state C is 12, and 13 in other state, 
-//		 * we use heuristic step by choosing maximum one
-//		 */		
-// 		findsCS.checksC12S(optsC12S, optTable, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-// 		System.out.printf(
-//				"\n*******************************************************************\n");
+		/*******************************************************************
+		 * Check (s, C1, C2, S) policy, 
+		 * sometimes not always hold, because in certain period 
+		 * for some state C is 12, and 13 in other state, 
+		 * we use heuristic step by choosing maximum one
+		 */		
+ 		findsCS.checksCS(optsCS, optTable, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+ 		System.out.printf(
+				"\n*******************************************************************\n");
  		
  		/*******************************************************************
 		 * Find (s, C, S) by MIP and simulate
 		 */
-//		System.out.println("************************************************");
-// 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
-// 		double[][] sCS = mipHeuristic.findsCS(); 
-// 		cacheC1Values = mipHeuristic.cacheC1Values;
-// 		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//		double gap1 = (finalValue - simsCSMIPValue)/finalValue;
-//		double gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
-//		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
+		System.out.println("************************************************");
+ 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
+ 		double[][] sCS = mipHeuristic.findsCS(); 
+ 		Map<State, Double> cacheCValues = new TreeMap<>();
+ 		cacheCValues = mipHeuristic.cacheC1Values;
+ 		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheCValues, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+		double gap1 = (finalValue - simsCSMIPValue)/finalValue;
+		double gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
+		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 		
  		
 // 		/*******************************************************************

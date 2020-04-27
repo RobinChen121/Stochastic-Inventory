@@ -498,7 +498,9 @@ public class FindsCS {
 	}
 	
 	/**
-	 * check whether (s, C, S) policy satisfy all states in the optimal table of sdp
+	 * check whether (s, C, S) policy satisfy all states in the optimal table of sdp;
+	 * when no inventory holding cost, (s, C, S) may not be optimal, because sometimes may be exist C2,
+	 * or S is not always follows, S may be x during the states
 	 * 
 	 * @param sCS
 	 * @param optTable
@@ -575,5 +577,7 @@ public class FindsCS {
 		System.out.println("there are " + nonOptCount + "/" + totalStateNum + " states that not satisfy (s, C1, C2, S) ordering property");
 		return nonOptCount;
 	}
+	
+
 	
 }

@@ -36,15 +36,15 @@ public class CashConstraintTest {
 
 	// d=[10, 10, 10, 10], coe = 10, iniCash=20, K=0; price=1.3, v=1; h = 0, salvageValue = 0.5, interestRate = 0.1 
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 10, 10, 10};
+		double[] meanDemand = {20, 7, 2, 14};
 		double iniInventory = 0;
-		double iniCash = 50;		
-		double fixOrderCost = 0;
+		double iniCash = 33;		
+		double fixOrderCost = 24;
 		double variCost = 1;
 		double holdingCost = 0;
-		double price = 1.3;
-		double salvageValue = 0.5;
-		double interestRate = 0.1;
+		double price = 4;
+		double salvageValue = 0;
+		double interestRate = 0;
 		FindCCrieria criteria = FindCCrieria.XRELATE;			
 		double minCashRequired = 0; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
