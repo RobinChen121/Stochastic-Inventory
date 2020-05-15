@@ -22,6 +22,7 @@ import sdp.cash.CashStateXR;
 import sdp.cash.RecursionG;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
@@ -41,14 +42,14 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashConstraintXR {
 	
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 10, 10, 10};
+		double[] meanDemand = {8, 8, 8, 8};
 		double iniInventory = 0;
-		double iniCash = 7;
+		double iniCash = 30;
 		double fixOrderCost = 0;
-		double variCost = 1;
-		double price = 1.3;
-		double depositeRate = 0.1;
-		double salvageValue = 0.5;
+		double variCost = 5;
+		double price = 10;
+		double depositeRate = 0;
+		double salvageValue = 1;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
 		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
@@ -67,8 +68,9 @@ public class CashConstraintXR {
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
+				//.mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
 				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
+				.mapToObj(i -> new GammaDist(meanDemand[i], 2))
 				.toArray(Distribution[]::new);
 	
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
@@ -94,8 +96,6 @@ public class CashConstraintXR {
 			double cashIncrement = (1 - overheadRate)*revenue + deposite - holdCosts - overheadCost - initCash;
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
 			cashIncrement += salValue;
-//			if (cashIncrement < 0)
-//				System.out.println(cashIncrement);
 			return cashIncrement;
 		};
 

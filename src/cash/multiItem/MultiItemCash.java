@@ -5,9 +5,6 @@
  * @Desc: This class is to build a stochastic dynamic programming model for a cash constrained problem 
  *        with two products
  *        
- *        Roberto use the states of two consecutive periods to compute state transition probability, by 
- *        get the random demand given consecutive states and actions
- *
  *
  * 
  */

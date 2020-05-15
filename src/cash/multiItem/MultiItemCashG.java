@@ -24,6 +24,7 @@ import sdp.inventory.State;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.inventory.Recursion.OptDirection;
 import sdp.write.WriteToExcel;
+import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 
@@ -40,14 +41,14 @@ public class MultiItemCashG {
 		
 		int d = 2; // compute G(d)
 		
-		
-		double[][] demand = {{ 6, 6, 6, 6}, {15, 15, 15, 15}}; // higher average demand vs lower average demand
-		double[] coe = {0.5, 0.25}; // higher variance vs lower variance
+		// mean demand is shape * scale and variance is shape * scale^2
+		double[][] shape = {{ 6, 6, 6, 6}, {15, 15, 15, 15}}; // higher average shape vs lower average shape
+		double[] scale = {0.5, 0.25}; // higher variance vs lower variance
 		
 		
 		double[] salvagePrice = {2, 1};
 		
-		int T = demand[0].length; // horizon length
+		int T = shape[0].length; // horizon length
 		
 		double truncationQuantile = 0.99;
 		int stepSize = 1;			
@@ -57,10 +58,10 @@ public class MultiItemCashG {
 		
 
 		
-		// get demand possibilities for a product in each period
-		NormalDist[] distributions =  new NormalDist[T]; // normal dist for one product
+		// get shape possibilities for a product in each period
+		GammaDist[] distributions =  new GammaDist[T]; // normal dist for one product
 		for (int t = 0; t < T; t++)
-			distributions[t] = new NormalDist(demand[d - 1][t], coe[d - 1] * demand[d - 1][t]);
+			distributions[t] = new GammaDist(shape[d - 1][t], scale[d - 1] * shape[d - 1][t]);
 		
 
 		

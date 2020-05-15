@@ -1,5 +1,7 @@
 package sdp.inventory;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.text.NumberFormat;
@@ -10,14 +12,19 @@ import javax.swing.JFrame;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartFrame;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYTitleAnnotation;
+import org.jfree.chart.block.BlockBorder;
 import org.jfree.chart.labels.StandardXYItemLabelGenerator;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleEdge;
 
 
 /**
@@ -352,17 +359,20 @@ public class Drawing {
 		XYSeriesCollection seriesCollectionB = new XYSeriesCollection(seriesGB);
 		
 		String cashString = String.valueOf(iniCash);
-		String title = "G(y) with different order-up-to level y, B0 = " + cashString;
+		String title = "G(y) with different order-up-to level y, R0 = " + cashString;
 		
 		JFreeChart chart = ChartFactory.createXYLineChart(title, // chart title
 				"y", // x axis label
 				"G()", // y axis label
 				seriesCollectionA, // data
 				PlotOrientation.VERTICAL, 
-				true, // include legend
+				false, //true, // include legend
 				true, // tooltips
 				false // urls
 				);
+		
+//		LegendTitle legend = chart.getLegend();
+//		legend.setPosition(RectangleEdge.TOP);		
 		
 		XYPlot plot = (XYPlot) chart.getPlot();
 		
@@ -378,7 +388,18 @@ public class Drawing {
 //		
 		//plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, null); 
 		//plot.getRendererForDataset(plot.getDataset(1)).setSeriesPaint(1, null);
-			
+		
+		// legend
+		LegendTitle lt = new LegendTitle(plot);
+		lt.setItemFont(new Font("Dialog", Font.PLAIN, 15));
+		lt.setBackgroundPaint(new Color(200, 200, 255, 100));
+		lt.setFrame(new BlockBorder(Color.white));
+		lt.setPosition(RectangleEdge.BOTTOM);
+		XYTitleAnnotation ta = new XYTitleAnnotation(0.98, 0.95, lt,RectangleAnchor.TOP_RIGHT);
+
+		ta.setMaxWidth(1.5);
+		plot.addAnnotation(ta);
+		
 		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
 		frame.pack();
 		frame.setVisible(true);

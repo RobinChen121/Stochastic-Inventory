@@ -2,7 +2,7 @@
  * @author: Zhen Chen
  * @email: 15011074486@163.com
  * @date: Jun 21, 2019, 11:16:49 AM
- * @Desc: 
+ * @Desc:  cash state for multi item: x1, x2, w
  *
  *
  * 

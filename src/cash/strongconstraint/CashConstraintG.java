@@ -12,6 +12,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.State;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;
 
 /**
@@ -26,12 +27,12 @@ import umontreal.ssj.probdist.NormalDist;
 
 public class CashConstraintG {
 	public static void main(String[] args) {
-		double[] meanDemand = {15, 15, 15, 15};
+		double[] meanDemand = {8, 8, 8, 8};
 
-		double variCost = 1;
-		double price = 1.3;
-		double depositeRate = 0.1;
-		double salvageValue = 0.5;
+		double variCost = 5;
+		double price = 10;
+		double depositeRate = 0;
+		double salvageValue = 1;
 		double truncationQuantile = 0.99;
 		int stepSize = 1;
 
@@ -40,8 +41,9 @@ public class CashConstraintG {
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new NormalDist(meanDemand[i], coe * Math.sqrt(meanDemand[i]))) // can be changed to other distributions
+				//.mapToObj(i -> new NormalDist(meanDemand[i], coe * Math.sqrt(meanDemand[i]))) // can be changed to other distributions
 				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
+				.mapToObj(i -> new GammaDist(meanDemand[i], 2))
 				.toArray(Distribution[]::new);
 		
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();

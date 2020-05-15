@@ -201,6 +201,9 @@ public class CashConstraintTesting {
 								double gapsC1S1 = (finalValue - simsC1SFinalValue) / finalValue;
 								double gapsC1S2 = (simFinalValue - simsC1SFinalValue) / simFinalValue;
 								System.out.printf("Optimality gap for (s, C1, S) is: %.2f%% or %.2f%%\n", gapsC1S1 * 100, gapsC1S2 * 100);
+								double[][] numFrequency = findsCS.getMaxSFrequency(optTable, overheadCost, criteria);
+//								System.out.println("most frequent S in each period");
+//								System.out.println(Arrays.deepToString(numFrequency));
 								
 								/*******************************************************************
 								 * Find (s, meanC, S) by SDP and simulate
@@ -241,88 +244,6 @@ public class CashConstraintTesting {
 								System.out.printf(
 										"\n*******************************************************************\n");
 								
-								/*******************************************************************
-								 * Check K-convexity of GA or GB
-								 */
-								// immediate value
-//								boolean isForDrawGy = true;
-//								ImmediateValueFunction<CashState, Double, Double, Double> immediateValue2 = (state, action, randomDemand) -> {
-//									double revenue = 0;
-//									double fixedCost = 0;
-//									double variableCost = 0;
-//									double inventoryLevel = 0;
-//									if (isForDrawGy == true && state.getPeriod() == 1) {
-//										revenue = price * Math.min(state.getIniInventory(), randomDemand);
-//										fixedCost = 0;
-//										variableCost = variCost * state.getIniInventory();
-//										inventoryLevel = state.getIniInventory() - randomDemand;
-//									} else {
-//										revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
-//										fixedCost = action > 0 ? fixOrderCost : 0;
-//										variableCost = variCost * action;
-//										inventoryLevel = state.getIniInventory() + action - randomDemand;
-//									}
-//									double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
-//									double cashIncrement = revenue - fixedCost - variableCost - holdCosts - overheadCost;
-//									double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
-//									cashIncrement += salValue;
-//									return cashIncrement;
-//								};
-//								StateTransitionFunction<CashState, Double, Double, CashState> stateTransition2 = (state, action,
-//										randomDemand) -> {
-//									double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
-//												: state.getIniInventory() + action - randomDemand;
-//									double nextCash = state.getIniCash() + immediateValue2.apply(state, action, randomDemand);
-//									nextCash = nextCash > maxCashState ? maxCashState : nextCash;
-//									nextCash = nextCash < minCashState ? minCashState : nextCash;
-//									nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
-//									nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
-//									return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
-//								};
-//								CashRecursion recursion2 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition2,
-//										immediateValue2, discountFactor);								
-//								
-//								int minInventorys = 0;
-//								int maxInventorys = 50; // for drawing pictures
-//								int xLength = maxInventorys - minInventorys + 1;
-//								int index = 0;
-//								int capacity = (int) Math.max(0, (iniCash - overheadCost - fixOrderCost) / variCost);
-//								double[][] yG2 = new double[xLength][2];
-//								index = 0;
-////								for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
-////									yG2[index][0] = initialInventory;
-////									yG2[index][1] = -recursion2.getExpectedValue(new CashState(period, initialInventory, iniCash));
-////									index++;
-////								}		
-////						 		
-////								Drawing drawing = new Drawing();
-////								drawing.drawSimpleG(yG2, iniCash, "K transfered in cash GB"); // GB
-////								System.out.println();
-////								System.out.println("CK convex of GB:");
-////						 		CheckKConvexity.checkCK(yG2, fixOrderCost, capacity); // check the CK convex of GB
-////						 		System.out.println();
-//						 		
-//						 	    // state transition function 3
-//						 		StateTransitionFunction<CashState, Double, Double, CashState> stateTransition3 = (state, action,
-//						 				randomDemand) -> {
-//						 		double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
-//						 					: state.getIniInventory() + action - randomDemand;
-//						 			double nextCash = state.getIniCash() + immediateValue2.apply(state, action, randomDemand);
-//						 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
-//						 			nextCash = nextCash < minCashState ? minCashState : nextCash;
-//						 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
-//						 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
-//						 			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
-//						 		};
-//						 		CashRecursion recursion3 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition3,
-//										immediateValue2, discountFactor);
-//								double[][] yG3 = new double[xLength][2];
-//								index = 0;
-//								for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
-//									yG3[index][0] = initialInventory;
-//									yG3[index][1] = -recursion3.getExpectedValue(new CashState(period, initialInventory, iniCash));
-//									index++;
-//								}
 //								
 								String convexity = "";
 //								double[][] yG = new double[xLength][2];

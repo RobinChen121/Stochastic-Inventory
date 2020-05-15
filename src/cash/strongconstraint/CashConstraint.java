@@ -53,13 +53,13 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {15.7,10,4.3,2,4.3,10,15.7};
+		double[] meanDemand = {15.7,10,4.3,2,4.3,10,15.7,18,15.7,10};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 25;
-		double fixOrderCost = 20;
+		double iniCash = 20;
+		double fixOrderCost = 15;
 		double variCost = 1;
-		double price = 7;
+		double price = 6;
 		double depositeRate = 0;
 		double salvageValue = 0;
 		double holdingCost = 0;	
@@ -193,6 +193,10 @@ public class CashConstraint {
 		double gap21 = (finalValue -simsCSFinalValue)/finalValue;
 		double gap22 = (simFinalValue -simsCSFinalValue)/simFinalValue;
 		System.out.printf("Optimality gap for (s, C1, S) is: %.2f%% or %.2f%%\n", gap21 * 100, gap22 * 100);
+		double[][] numFrequency = findsCS.getMaxSFrequency(optTable, overheadCost, criteria);
+		System.out.println("most frequent S in each period");
+		System.out.println(Arrays.deepToString(numFrequency));
+		
 		
 		/*******************************************************************
 		 * Find (s, meanC, S) by SDP and simulate

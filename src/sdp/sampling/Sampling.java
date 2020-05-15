@@ -55,6 +55,7 @@ public class Sampling {
 	/**
 	 * 
 	 * @param distributions
+	 * 
 	 * @return one demands sample
 	 */
 	
@@ -68,6 +69,33 @@ public class Sampling {
 		return sample;
 	}
 	
+	
+
+	/** latin hypercube sampling
+	 * @param distributions
+	 * @param sampleNum
+	 * @param t
+	 * @return a 2D random samples for two items in a period t
+	 * @date: Apr 29, 2020, 12:04:34 PM 
+	 */
+	public static double[][] generateLHSamples(Distribution[][] distributions, int sampleNum){
+		int itemNum = distributions.length;		
+		int T = distributions[0].length;
+		double[][] samples = new double[sampleNum][itemNum * T]; 
+		
+		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
+		for (int i = 0; i < sampleNum; i++) {
+			for (int t = 0; t < T; t++)
+				for (int j = 0; j < itemNum; j++) {
+					double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+					double lowBound = (double) i/ (double) sampleNum;
+					double ppf = lowBound + randomNum;
+					samples[i][j + t * itemNum] = distributions[j][t].inverseF(ppf);
+				}
+		}
+	    shuffle(samples); // ´òÂÒÊý×é
+		return samples;
+	}
 	
 	/** latin hypercube sampling
 	 * @param distributions
