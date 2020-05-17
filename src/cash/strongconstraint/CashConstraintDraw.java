@@ -48,7 +48,7 @@ public class CashConstraintDraw {
 	public static void main(String[] args) {
 		double[] meanDemand = {7, 2, 6};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 18;
+		double iniCash = 30;
 		double iniInventory = 0;
 		double fixOrderCost = 15;
 		double variCost = 1;
@@ -261,7 +261,7 @@ public class CashConstraintDraw {
 		index = 0;
 		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
 			yG3[index][0] = initialInventory;
-			yG3[index][1] = recursion3.getExpectedValue(new CashState(period, initialInventory, iniCash));
+			yG3[index][1] = recursion3.getExpectedValue(new CashState(period, initialInventory, iniCash)) + fixOrderCost;
 			index++;
 		}
 		drawing.drawSimpleG(yG3, iniCash, "K not transfered in cash GA");

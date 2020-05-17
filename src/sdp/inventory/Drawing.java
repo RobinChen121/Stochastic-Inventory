@@ -347,7 +347,7 @@ public class Drawing {
 	 * drawing a picture for Q() and different B with fixed x
 	 */
 	public void drawTwoG(double[][] GA, double[][] GB, double iniCash) {
-		XYSeries seriesGA = new XYSeries("GA");
+		XYSeries seriesGA = new XYSeries("GA+K");
 		XYSeries seriesGB = new XYSeries("GB");
 		int N = GA.length;
 		for (int i = 0; i < N; i++) {
