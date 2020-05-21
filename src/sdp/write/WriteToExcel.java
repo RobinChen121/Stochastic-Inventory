@@ -45,9 +45,25 @@ public class WriteToExcel {
 		}
 		catch (IOException e){
 			e.printStackTrace();
-		}
-		
+		}		
 	}
+	
+	
+	public void writeToExcelAppend(double[] data, String string) {
+		int columnNum = data.length;
+		try {
+			FileWriter fw = new FileWriter(string, true);
+			for (int i = 0; i < columnNum; i++) {
+				fw.write(data[i]+ "\t");			
+			}
+			fw.write("\n");
+			fw.close();
+		}
+		catch (IOException e){
+			e.printStackTrace();
+		}		
+	}
+	
 	
 	public void writeArrayToExcel(double[][] data, String string, String head) {
 		int rowNum = data.length + 1;

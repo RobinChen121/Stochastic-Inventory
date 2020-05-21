@@ -4,6 +4,7 @@
 package scenario.pragramming;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,7 +60,9 @@ public class ScenarioReduction {
 		double[] possiblities = {0.105, 0.341, 0.330, 0.106, 0.119};
 		double[][] demandRealizations = {{25, 290, 109}, {58, 365, 90}, {62, 134, 132}, {289, 789, 273}, {74, 965, 564}};
 		int scenarioNum = (int) Math.pow(realizationNum, T);
-		double[][] scenarioIndexP = new double[scenarioNum][T + 2];
+		double[][] scenarioIndexP = new double[scenarioNum][T + 1];
+		
+		// all the possible scenarios
 		int index = 0;
 		for (int i1 = 0; i1 < realizationNum; i1++)
 			for (int i2 = 0; i2 < realizationNum; i2++)
@@ -68,62 +71,106 @@ public class ScenarioReduction {
 						for (int i5 = 0; i5 < realizationNum; i5++)
 							for (int i6 = 0; i6 < realizationNum; i6++) {
 								double ratio = possiblities[i1]*possiblities[i2]*possiblities[i3]*possiblities[i4]*possiblities[i5]*possiblities[i6];
-								scenarioIndexP[index] = new double[]{i1, i2, i3, i4, i5, i6, ratio, index};
+								scenarioIndexP[index] = new double[]{i1, i2, i3, i4, i5, i6, ratio};
 								index++;
 							}
 
-//		for (int i = 0; i < scenarioNum; i++)
-//			for (int j = i + 1; j < scenarioNum; j++) {
-//				double[] scenario1 = scenarioIndex[i]; 
-//				double[] scenario2 = scenarioIndex[j];
-//				double squreSum = 0;
-//				for (int k = 0; k < T; k++) 
-//					for (int m = 0; m < itemNum; m++) {
-//						int index1 = (int) scenario1[k];
-//						int index2 = (int) scenario2[k];
-//						squreSum += Math.pow(demandRealizations[index1][m] - demandRealizations[index2][m], 2);
-//					}
-//				distances[i][j] = Math.sqrt(squreSum);
-//			}
-		
-		Map<int[], Double> distances = new HashMap<>();
-		
-		double[] weightedDistance = new double[scenarioNum];
-		double minDistance = 100000;
-		int minDIndex = 0;
+		// select K scenarios
+		int selected = 0;
 		ArrayList<Integer> indexRecord = new ArrayList<>();
-		index = 0;
+		ArrayList<Double> possibRecord = new ArrayList<>();
+		while (selected < K) {
+			double[] weightedDistance = new double[scenarioNum];
+			double minDistance = 100000;
+			int minDIndex = 0;	
+			index = 0;
+			for (int i = 0; i < scenarioNum; i++) {
+				if (!indexRecord.contains(new Integer(i))) {
+					double upperWeightD = 0;
+					double lowerWeightD = 0;
+					double[] scenarioIndexP1 = new double[T + 1];
+					double[] scenarioIndexP2 = new double[T + 1];
+					for (int j1 = 0; j1 < i; j1 ++) {
+						if (!indexRecord.contains(new Integer(j1))) {
+							scenarioIndexP1 = scenarioIndexP[j1]; 
+							scenarioIndexP2 = scenarioIndexP[i]; 
+							double thisDistance = euclDistance(demandRealizations, scenarioIndexP1, scenarioIndexP2);
+							for (int k = 0; k < indexRecord.size(); k++) {
+								double[] scenarioIndexPL = scenarioIndexP[indexRecord.get(k)];
+								double tempDistance = euclDistance(demandRealizations, scenarioIndexP1, scenarioIndexPL);
+								if (tempDistance < thisDistance) 
+									thisDistance = tempDistance;
+							}
+							upperWeightD += scenarioIndexP[j1][6] * thisDistance;
+						}
+					}
+					for (int j2 = i + 1; j2 < scenarioNum; j2++) {
+						if (!indexRecord.contains(new Integer(j2))) {
+							scenarioIndexP1 = scenarioIndexP[i]; 
+							scenarioIndexP2 = scenarioIndexP[j2]; 
+							double thisDistance = euclDistance(demandRealizations, scenarioIndexP1, scenarioIndexP2);
+							for (int k = 0; k < indexRecord.size(); k++) {
+								double[] scenarioIndexPL = scenarioIndexP[indexRecord.get(k)];
+								double tempDistance = euclDistance(demandRealizations, scenarioIndexP2, scenarioIndexPL);
+								if (tempDistance < thisDistance) 
+									thisDistance = tempDistance;
+							}
+							lowerWeightD += scenarioIndexP[j2][6] * thisDistance;	
+						}
+					}
+					weightedDistance[i] = upperWeightD + lowerWeightD;
+					if (weightedDistance[i] < minDistance) {
+						minDistance = weightedDistance[i];
+						minDIndex = i;			
+					}
+					index++;
+				}
+				else {
+					continue;
+				}
+			}
+			indexRecord.add(minDIndex);
+			possibRecord.add(scenarioIndexP[minDIndex][T]);
+			System.out.println(minDistance);
+			selected++;		
+		}		
+		
+		// add possibilities
 		for (int i = 0; i < scenarioNum; i++) {
-			double upperWeightD = 0;
-			double lowerWeightD = 0;
-			double[] scenarioIndexP1 = new double[T + 1];
-			double[] scenarioIndexP2 = new double[T + 1];
-			for (int j1 = 0; j1 < i; j1 ++) {
-				scenarioIndexP1 = scenarioIndexP[j1]; 
-				scenarioIndexP2 = scenarioIndexP[i]; 
-				double thisDistance = euclDistance(demandRealizations, scenarioIndexP1, scenarioIndexP2);
-				upperWeightD += scenarioIndexP[j1][6] * thisDistance;
-				distances.putIfAbsent(new int[]{i, j1}, thisDistance);
-			}
-			for (int j2 = i + 1; j2 < scenarioNum; j2++) {
-				scenarioIndexP1 = scenarioIndexP[i]; 
-				scenarioIndexP2 = scenarioIndexP[j2]; 
-				double thisDistance = euclDistance(demandRealizations, scenarioIndexP1, scenarioIndexP2);
-				lowerWeightD += scenarioIndexP[j2][6] * thisDistance;	
-				distances.putIfAbsent(new int[]{i, j2}, thisDistance);
-			}
-			weightedDistance[i] = upperWeightD + lowerWeightD;
-			if (weightedDistance[i] < minDistance) {
-				minDistance = weightedDistance[i];
-				minDIndex = i;			
-			}
-			index++;
-		}
-		indexRecord.add(minDIndex);
-		System.out.println("test");
-								
-			
+			if (!indexRecord.contains(new Integer(i))) {
+				double[] scenarioIndexP1 = new double[T + 1];
+				double[] scenarioIndexP2 = new double[T + 1];
+				double minDistance = 100000;
+				int minDIndex = 0;
+				for (int j = 0; j < indexRecord.size(); j++) {
+					scenarioIndexP1 = scenarioIndexP[i]; 
+					scenarioIndexP2 = scenarioIndexP[indexRecord.get(j)];
+					double thisDistance = euclDistance(demandRealizations, scenarioIndexP1, scenarioIndexP2);
+					if (thisDistance < minDistance) {
+						minDistance = thisDistance;
+						minDIndex = j;
+					}
+				}
+				double newP = possibRecord.get(minDIndex) + scenarioIndexP[i][T];
+				possibRecord.set(minDIndex, newP);		
 
+			}
+		}
+		
+		System.out.println(indexRecord.toString());
+		System.out.println();
+		System.out.println(possibRecord.toString());
+		
+		// output scenario index
+		System.out.println("the scenarios are: ");
+		for (int j = 0; j < indexRecord.size(); j++) {
+			double[] scenario = scenarioIndexP[indexRecord.get(j)]; 
+			System.out.println(Arrays.toString(scenario));
+		}
+		
 	}
+	
+	
+	
 
 }

@@ -17,6 +17,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.write.WriteToExcel;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
@@ -48,7 +49,7 @@ public class CashConstraintDraw {
 	public static void main(String[] args) {
 		double[] meanDemand = {7, 2, 6};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 30;
+		double iniCash = 16;
 		double iniInventory = 0;
 		double fixOrderCost = 15;
 		double variCost = 1;
@@ -261,10 +262,15 @@ public class CashConstraintDraw {
 		index = 0;
 		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
 			yG3[index][0] = initialInventory;
-			yG3[index][1] = recursion3.getExpectedValue(new CashState(period, initialInventory, iniCash)) + fixOrderCost;
+			yG3[index][1] = recursion3.getExpectedValue(new CashState(period, initialInventory, iniCash));
 			index++;
 		}
 		drawing.drawSimpleG(yG3, iniCash, "K not transfered in cash GA");
 		drawing.drawTwoG(yG3, yG2, iniCash);
+		
+		double[] interPoint = drawing.intersectionPoint(yG3, yG2, iniCash);
+		WriteToExcel wr = new WriteToExcel();
+		String fileName= "interSectionPoints.xls";
+		wr.writeToExcelAppend(interPoint, fileName);
 	}
 }

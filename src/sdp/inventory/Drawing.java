@@ -347,7 +347,7 @@ public class Drawing {
 	 * drawing a picture for Q() and different B with fixed x
 	 */
 	public void drawTwoG(double[][] GA, double[][] GB, double iniCash) {
-		XYSeries seriesGA = new XYSeries("GA+K");
+		XYSeries seriesGA = new XYSeries("GA");
 		XYSeries seriesGB = new XYSeries("GB");
 		int N = GA.length;
 		for (int i = 0; i < N; i++) {
@@ -406,4 +406,25 @@ public class Drawing {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
+	
+	/**
+	 * @param GA
+	 * @param GB
+	 * @param iniCash
+	 * @return the intersection point of GA and GB
+	 * @date: May 18, 2020, 10:38:49 AM 
+	 */
+	public double[] intersectionPoint(double[][] GA, double[][] GB, double iniCash) {
+		int L = GA.length;
+		double[] point = new double[3];
+		for (int i = 0; i < L; i++) {
+			if (GA[i][1] - GB[i][1] < 0.1) {
+				point[0] = GA[i][0];
+				point[1] = iniCash;
+				point[2] = GA[i][1];
+				break;
+			}
+		}
+		return point;
+	}	
 }
