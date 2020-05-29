@@ -143,7 +143,9 @@ public class CashConstraintLookPolicy {
 		resultTable[0][column + 1] = iniCash;
 		resultTable[row + 1][0] = iniInventory;
 		try {
-		resultTable[row + 1][column + 1] = optQ;
+		resultTable[row + 1][column + 1] = finalValue; //optQ;
+		if (optQ > 0)
+			resultTable[row + 1][column + 1] -= fixOrderCost;
 		System.out.println("**********************************************************");
 		}catch (Exception e) {
 			System.out.println(row);

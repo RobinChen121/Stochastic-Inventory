@@ -54,7 +54,7 @@ public class ScenarioReduction {
 	public static void main(String[] args) {
 		//int itemNum = 3;
 		
-		int K = 10; // K is the final scenario number needed
+		int K = 15; // K is the final scenario number needed
 		int T = 6;
 		int realizationNum = 5;
 		double[] possiblities = {0.105, 0.341, 0.330, 0.106, 0.119};
