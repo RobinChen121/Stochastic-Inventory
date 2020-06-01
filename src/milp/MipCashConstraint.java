@@ -454,13 +454,22 @@ public class MipCashConstraint {
 				maxQ = Math.max(0, (varB[t - 1] - fixOrderCost)/variCost);
 			double cashS = t == 0 ? iniInventory + maxQ : varI[t - 1] + maxQ;
 			S = Math.min(S, cashS);
-			sCS[t][2] = S;	
-
-
+			sCS[t][2] = S;					
+			
 			// ascertain s
 			for (int i = 0; i <= (int) S; i++) {
 				if (Ly(S, t, distribution) - Ly(i, t, distribution) < fixOrderCost + 0.1) {
 					s = i;
+					
+//					if (t==0)
+//						s=1;
+//					if (t==1)
+//						s=2;
+//					if (t==2)
+//						s=4;
+//					if (t==3)
+//						s=4;
+					
 					sCS[t][0] = s;	
 					break;
 				}
@@ -470,6 +479,7 @@ public class MipCashConstraint {
 			if (sCS[0][0] == 0 && iniInventory == 0 ) {
 				sCS[0][0] = 1;	
 			}
+					
 
 			// ascertain C
 			for (int j = 0; j < (int) s; j++) {
@@ -477,7 +487,7 @@ public class MipCashConstraint {
 				S = distributions[t].inverseF((price - variCost) / (holdingCost  + price)); // one period S
 				for (jj = j + 1; jj <= (int) S; jj++) {
 					if (Ly(jj, t, distributions[t]) > fixOrderCost + Ly(j, t, distributions[t])) {
-						sCS[t][1] = fixOrderCost + variCost * (jj - 1 - j); // C for x = 0 at last
+						sCS[t][1] = fixOrderCost + variCost * (jj - 1 - j); 
 						cacheC1Values.put(new State(t + 1, j), sCS[t][1]);
 						break;
 					}				
@@ -493,8 +503,7 @@ public class MipCashConstraint {
 			}
 
 		}
-
-
+		//sCS[2][2] = 10; sCS[2][2] = 35; sCS[3][2] = 68;
 		System.out.println("(s, C, S) from MIP are: " + Arrays.deepToString(sCS));
 		return sCS;
 	}

@@ -344,7 +344,7 @@ public class Drawing {
 	
 	/**
 	 * 
-	 * drawing a picture for Q() and different B with fixed x
+	 * drawing a picture for GA and GB for fixed initial cash R
 	 */
 	public void drawTwoG(double[][] GA, double[][] GB, double iniCash) {
 		XYSeries seriesGA = new XYSeries("GA");
@@ -388,6 +388,64 @@ public class Drawing {
 //		
 		//plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, null); 
 		//plot.getRendererForDataset(plot.getDataset(1)).setSeriesPaint(1, null);
+		
+		// legend
+		LegendTitle lt = new LegendTitle(plot);
+		lt.setItemFont(new Font("Dialog", Font.PLAIN, 15));
+		lt.setBackgroundPaint(new Color(200, 200, 255, 100));
+		lt.setFrame(new BlockBorder(Color.white));
+		lt.setPosition(RectangleEdge.BOTTOM);
+		XYTitleAnnotation ta = new XYTitleAnnotation(0.98, 0.95, lt,RectangleAnchor.TOP_RIGHT);
+
+		ta.setMaxWidth(1.5);
+		plot.addAnnotation(ta);
+		
+		ChartFrame frame = new ChartFrame("chen zhen's picture", chart);
+		frame.pack();
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	/**
+	 * 
+	 * drawing a picture for GA and GB for fixed initial inventory and different R
+	 */
+	public void drawTwoGR(double[][] GA, double[][] GB, double iniInventory) {
+		XYSeries seriesGA = new XYSeries("GA");
+		XYSeries seriesGB = new XYSeries("GB");
+		int N = GA.length;
+		for (int i = 0; i < N; i++) {
+			seriesGA.add(GA[i][0], GA[i][1]);
+			seriesGB.add(GB[i][0], GB[i][1]);
+		}
+
+		XYSeriesCollection seriesCollectionA = new XYSeriesCollection(seriesGA);
+		XYSeriesCollection seriesCollectionB = new XYSeriesCollection(seriesGB);
+		
+		String cashString = String.valueOf(iniInventory);
+		String title = "G(y) with different initial cash R, y0 = " + cashString;
+		
+		JFreeChart chart = ChartFactory.createXYLineChart(title, // chart title
+				"R", // x axis label
+				"G()", // y axis label
+				seriesCollectionA, // data
+				PlotOrientation.VERTICAL, 
+				false, //true, // include legend
+				true, // tooltips
+				false // urls
+				);
+			
+		
+		XYPlot plot = (XYPlot) chart.getPlot();
+		
+		// "0" is the GA plot, "1" is the GB plot		
+		plot.setDataset(0, seriesCollectionA); // first data set
+		plot.setDataset(1, seriesCollectionB); // second data set
+		
+		XYItemRenderer renderer0 = new XYLineAndShapeRenderer(true, false); // boolean lines, boolean shapes
+		XYItemRenderer renderer1 = new XYLineAndShapeRenderer(true, false); // boolean lines, boolean shapes
+		plot.setRenderer(0, renderer0); 
+		plot.setRenderer(1, renderer1); 
 		
 		// legend
 		LegendTitle lt = new LegendTitle(plot);

@@ -59,7 +59,7 @@ public class CashConstraint {
 		double iniCash = 20;
 		double fixOrderCost = 15;
 		double variCost = 1;
-		double price = 6;
+		double price = 5;
 		double depositeRate = 0;
 		double salvageValue = 0;
 		double holdingCost = 0;	

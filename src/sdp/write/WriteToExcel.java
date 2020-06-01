@@ -49,6 +49,11 @@ public class WriteToExcel {
 	}
 	
 	
+	/** output one-dimension array in excel
+	 * @param data
+	 * @param string
+	 * @date: May 31, 2020, 6:05:18 PM 
+	 */
 	public void writeToExcelAppend(double[] data, String string) {
 		int columnNum = data.length;
 		try {

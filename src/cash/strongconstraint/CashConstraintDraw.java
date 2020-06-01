@@ -167,17 +167,23 @@ public class CashConstraintDraw {
 		 */
 		int minInventorys = 0;
 		int maxInventorys = 50; // for drawing pictures
-		int xLength = maxInventorys - minInventorys + 1;
-		double[][] xQ = new double[xLength][2];
-		int index = 0;
-		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
-			period = 1;
-			xQ[index][0] = initialInventory;
-			recursion.getExpectedValue(new CashState(period, initialInventory, iniCash));
-			xQ[index][1] = recursion.getAction(new CashState(period, initialInventory, iniCash));
-			index++;
-		}
-		Drawing drawing = new Drawing();
+		int minCash = 0;
+		int maxCash = 50;
+		int xLength = maxCash - minCash + 1;
+		int yLength = maxInventorys - minInventorys + 1;
+		Drawing drawing = new Drawing();		
+		double initialInventory = 3;
+		
+//		double[][] xQ = new double[xLength][2];
+//		int index = 0;
+//		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+//		//for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
+//			period = 1;
+//			xQ[index][0] = initialInventory;
+//			recursion.getExpectedValue(new CashState(period, initialInventory, iniCash));
+//			xQ[index][1] = recursion.getAction(new CashState(period, initialInventory, iniCash));
+//			index++;
+//		}		
 		//drawing.drawXQ(xQ);
 
 		/*******************************************************************
@@ -209,7 +215,7 @@ public class CashConstraintDraw {
 			return cashIncrement;
 		};
 
-		// state transition function 2
+		// state transition function 2, for GB
 		StateTransitionFunction<CashState, Double, Double, CashState> stateTransition2 = (state, action,
 				randomDemand) -> {
 			double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
@@ -224,14 +230,15 @@ public class CashConstraintDraw {
 			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 		};
 		
-
+		
 		CashRecursion recursion2 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition2,
 				immediateValue2, discountFactor);
 		double[][] yG2 = new double[xLength][2];
-		index = 0;
-		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
-			yG2[index][0] = initialInventory;
-			yG2[index][1] = recursion2.getExpectedValue(new CashState(period, initialInventory, iniCash));
+		int index = 0;
+		//for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+		for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
+			yG2[index][0] = initialCash; // initialInventory
+			yG2[index][1] = recursion2.getExpectedValue(new CashState(period, initialInventory, initialCash)); // iniCash
 			index++;
 		}
 		//CheckKConvexity.check(yG2, fixOrderCost);
@@ -258,18 +265,23 @@ public class CashConstraintDraw {
 
 		CashRecursion recursion3 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition3,
 				immediateValue2, discountFactor);
-		double[][] yG3 = new double[xLength][2];
+		double[][] yG3 = new double[xLength * yLength][3];
 		index = 0;
-		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
-			yG3[index][0] = initialInventory;
-			yG3[index][1] = recursion3.getExpectedValue(new CashState(period, initialInventory, iniCash));
+		//for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+		for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
+			for (initialInventory = minInventoryState; initialInventory <= maxInventorys; initialInventory++) {
+			yG3[index][0] = initialCash; // initialInventory
+			yG3[index][1] = initialInventory; // initialInventory
+			yG3[index][2] = recursion3.getExpectedValue(new CashState(period, initialInventory, initialCash)); // iniCash
 			index++;
+			}
 		}
+		WriteToExcel wr = new WriteToExcel();
+		wr.writeArrayToExcel(yG3, "GA.xls");
 		drawing.drawSimpleG(yG3, iniCash, "K not transfered in cash GA");
-		drawing.drawTwoG(yG3, yG2, iniCash);
+		drawing.drawTwoGR(yG3, yG2, initialInventory); //drawing.drawTwoG(yG3, yG2, iniCash);
 		
 		double[] interPoint = drawing.intersectionPoint(yG3, yG2, iniCash);
-		WriteToExcel wr = new WriteToExcel();
 		String fileName= "interSectionPoints.xls";
 		wr.writeToExcelAppend(interPoint, fileName);
 	}
