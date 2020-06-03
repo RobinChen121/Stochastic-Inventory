@@ -159,8 +159,34 @@ public class CashRecursion {
 		int i = 0;
 		while (iterator.hasNext()) {
 			Map.Entry<CashState, Double> entry = iterator.next();
-			arr[i++] =new double[]{entry.getKey().getPeriod(), entry.getKey().getIniInventory(), entry.getKey().getIniCash(), entry.getValue()};
+			arr[i++] = new double[]{entry.getKey().getPeriod(), entry.getKey().getIniInventory(), entry.getKey().getIniCash(), entry.getValue()};
 		}
 		return arr;
+	}
+	
+	
+	/**
+	 * @param GA
+	 * @param GB
+	 * @return minus value of resultGB(y*) to resultGA(x)
+	 * @date: Jun 2, 2020, 9:52:18 PM 
+	 */
+	public double[][] getMinusGAGB(double[][] resultGA, double[][] resultGB, double minCash, double fixCost, double variCost){
+		int RLength = resultGA.length; 
+		int xLength = resultGA[0].length;
+		double[][] values = new double[RLength][xLength];
+		for (int i = 0; i < RLength; i++) {
+			double cash = minCash + i;
+			int Qbound = Math.max(0, (int) ((cash - fixCost) / variCost));		
+			for (int j = 0; j < xLength; j++) { // this error
+				double optimalGB = resultGB[i][j];
+				for (int k = j; k < Math.min(j + Qbound + 1, xLength); k++) {
+					if (resultGB[i][k] > optimalGB)
+						optimalGB = resultGB[i][k];
+				}
+				values[i][j] = optimalGB - resultGA[i][j] - fixCost;
+			}		
+		}
+		return values;
 	}
 }

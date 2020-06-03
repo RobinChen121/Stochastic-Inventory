@@ -460,16 +460,6 @@ public class MipCashConstraint {
 			for (int i = 0; i <= (int) S; i++) {
 				if (Ly(S, t, distribution) - Ly(i, t, distribution) < fixOrderCost + 0.1) {
 					s = i;
-					
-//					if (t==0)
-//						s=1;
-//					if (t==1)
-//						s=2;
-//					if (t==2)
-//						s=4;
-//					if (t==3)
-//						s=4;
-					
 					sCS[t][0] = s;	
 					break;
 				}

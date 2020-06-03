@@ -7,6 +7,7 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import cash.strongconstraint.FindsCS.FindCCrieria;
+import gurobi.GRB.DoubleParam;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
@@ -17,6 +18,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.write.WriteToCsv;
 import sdp.write.WriteToExcel;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
@@ -166,11 +168,11 @@ public class CashConstraintDraw {
 		 * Drawing x Q
 		 */
 		int minInventorys = 0;
-		int maxInventorys = 50; // for drawing pictures
-		int minCash = 0;
-		int maxCash = 50;
-		int xLength = maxCash - minCash + 1;
-		int yLength = maxInventorys - minInventorys + 1;
+		int maxInventorys = 30; // for drawing pictures
+		int minCash = 15;
+		int maxCash = 45;
+		int RLength = maxCash - minCash + 1;
+		int xLength = maxInventorys - minInventorys + 1;
 		Drawing drawing = new Drawing();		
 		double initialInventory = 3;
 		
@@ -233,16 +235,28 @@ public class CashConstraintDraw {
 		
 		CashRecursion recursion2 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition2,
 				immediateValue2, discountFactor);
-		double[][] yG2 = new double[xLength][2];
+		double[][] yG2 = new double[xLength * RLength][3];
 		int index = 0;
-		//for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+		double[][] resultTableGB = new double[RLength][xLength];
+		int rowIndex = 0;
+		int columnIndex = 0;
 		for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
+			columnIndex = 0;
+			for (initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {			
 			yG2[index][0] = initialCash; // initialInventory
-			yG2[index][1] = recursion2.getExpectedValue(new CashState(period, initialInventory, initialCash)); // iniCash
+			yG2[index][1] = initialInventory;
+			yG2[index][2] = recursion2.getExpectedValue(new CashState(period, initialInventory, initialCash)); // iniCash
+			resultTableGB[rowIndex][columnIndex] = yG2[index][2];
 			index++;
+			columnIndex++;
+			}
+			rowIndex++;
 		}
+		
+		
+		
 		//CheckKConvexity.check(yG2, fixOrderCost);
-		drawing.drawSimpleG(yG2, iniCash, "K transfered in cash GB"); // GB
+		//drawing.drawSimpleG(yG2, iniCash, "K transfered in cash GB"); // GB
 		
 		/*******************************************************************
 		 * Drawing another G() that has no fixed ordering cost transition in the 
@@ -265,24 +279,32 @@ public class CashConstraintDraw {
 
 		CashRecursion recursion3 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition3,
 				immediateValue2, discountFactor);
-		double[][] yG3 = new double[xLength * yLength][3];
+		double[][] yG3 = new double[xLength * RLength][3];
 		index = 0;
+		double[][] resultTableGA = new double[RLength][xLength];
+		rowIndex = 0;
 		//for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
 		for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
+			columnIndex = 0;
 			for (initialInventory = minInventoryState; initialInventory <= maxInventorys; initialInventory++) {
 			yG3[index][0] = initialCash; // initialInventory
 			yG3[index][1] = initialInventory; // initialInventory
 			yG3[index][2] = recursion3.getExpectedValue(new CashState(period, initialInventory, initialCash)); // iniCash
+			resultTableGA[rowIndex][columnIndex] = yG3[index][2];
 			index++;
+			columnIndex++;
 			}
+			rowIndex++;
 		}
-		WriteToExcel wr = new WriteToExcel();
-		wr.writeArrayToExcel(yG3, "GA.xls");
-		drawing.drawSimpleG(yG3, iniCash, "K not transfered in cash GA");
-		drawing.drawTwoGR(yG3, yG2, initialInventory); //drawing.drawTwoG(yG3, yG2, iniCash);
+		double[][] resultMinusGBA = recursion.getMinusGAGB(resultTableGA, resultTableGB, minCash, fixOrderCost, variCost);
+		WriteToCsv wr = new WriteToCsv();
+		wr.writeArrayCSV(resultTableGA, "GA.csv");
+		wr.writeArrayCSV(resultMinusGBA, "minusGBA.csv");
+		//drawing.drawSimpleG(yG3, iniCash, "K not transfered in cash GA");
+		//drawing.drawTwoGR(yG3, yG2, initialInventory); //drawing.drawTwoG(yG3, yG2, iniCash);
 		
-		double[] interPoint = drawing.intersectionPoint(yG3, yG2, iniCash);
-		String fileName= "interSectionPoints.xls";
-		wr.writeToExcelAppend(interPoint, fileName);
+//		double[] interPoint = drawing.intersectionPoint(yG3, yG2, iniCash);
+//		String fileName= "interSectionPoints.xls";
+//		wr.writeToExcelAppend(interPoint, fileName);
 	}
 }

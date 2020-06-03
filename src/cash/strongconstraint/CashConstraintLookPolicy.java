@@ -65,16 +65,16 @@ public class CashConstraintLookPolicy {
 		double discountFactor = 1;
 		
 		double xmin = 0; double xmax = 10;
-		double Rmin = 23; double Rmax = 49;
+		double Rmin = 20; double Rmax = 40;
 		int row = 0;
 		int column = 0;
 		int rowNum = (int) (xmax - xmin + 1) + 1;
-		int columnNum = (int) ((Rmax - Rmin + 1)/2) + 2;
+		int columnNum = (int) ((Rmax - Rmin + 1)/1) + 1; // ((Rmax - Rmin + 1)/2) + 2;
 		double[][] resultTable = new double[rowNum][columnNum];
 		
 		for (iniInventory = xmin; iniInventory <= xmax; iniInventory++) {
 			column = 0;
-			for (iniCash = Rmin; iniCash <= Rmax; iniCash = iniCash + 2) {
+			for (iniCash = Rmin; iniCash <= Rmax; iniCash = iniCash + 1) {
 		
 		// get demand possibilities for each period
 		int T = meanDemand.length;
@@ -143,7 +143,7 @@ public class CashConstraintLookPolicy {
 		resultTable[0][column + 1] = iniCash;
 		resultTable[row + 1][0] = iniInventory;
 		try {
-		resultTable[row + 1][column + 1] = finalValue - iniCash; //optQ;
+		resultTable[row + 1][column + 1] = optQ; // finalValue - iniCash;
 		System.out.println("**********************************************************");
 		}catch (Exception e) {
 			System.out.println(row);

@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 /**
@@ -32,19 +33,22 @@ public class WriteToCsv {
 	}
 	
 	/**
-	* @Description: write array to excel file
+	* @Description: write array to csv file
 	* @param data array
 	* @param string  file name, must be xls, not xlsx   
 	* @return a xls file   
 	*/
-	public void writeArrayExcel(double[][] data, String string) {
+	public void writeArrayCSV(double[][] data, String string) {
 		int rowNum = data.length;
 		int columnNum = data[0].length;
+		BigDecimal bg;
 		try {
-			FileWriter fw = new FileWriter(string);
+			FileWriter fw = new FileWriter(string);		
 			for (int i = 0; i < rowNum; i++) {
-				for (int j = 0; j < columnNum; j++)
-					fw.write(data[i][j]+ "\t"); // tab 间隔
+				for (int j = 0; j < columnNum; j++) {
+					 bg = new BigDecimal(data[i][j]);
+					 fw.write(bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue() + ","); // tab 间隔 \t 或 ，间隔
+				}
 				fw.write("\n"); // 换行
 			}
 			fw.close();
