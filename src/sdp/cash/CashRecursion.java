@@ -189,4 +189,57 @@ public class CashRecursion {
 		}
 		return values;
 	}
+	
+	
+	/**
+	 * @param valuse of GB - GA - K
+	 * @return check the non-increasing of GB - GA - K for fixed R
+	 * @date: Jun 4, 2020, 7:36:55 PM 
+	 */
+	public boolean checkNonIncreasing(double[][] arr){
+		int RLength = arr.length; 
+		int xLength = arr[0].length;
+		double[][] values = new double[RLength][xLength];
+		for (int i = 0; i < RLength; i++) {
+			Arrays.fill(values[0], 0);
+			for (int j = 0; j < xLength - 1; j++) {
+			  if (arr[i][j + 1] - arr[i][j] < 0.1)
+				  continue;
+			  else {
+				  values[i][j] = 1;
+				  return false;
+			  }
+			}
+		}		
+		return true;
+	}
+	
+	/**
+	 * @param valuse of GB - GA - K
+	 * @return check the non-decreasing of GB - GA - K for fixed x
+	 * @date: Jun 4, 2020, 7:36:55 PM 
+	 */
+	public boolean checkNonDecreasing(double[][] arr){
+		int RLength = arr.length; 
+		int xLength = arr[0].length;
+		double[][] values = new double[RLength][xLength];
+		for (int i = 0; i < RLength; i++) {
+			Arrays.fill(values[0], 0);
+		}				
+		for (int j = 0; j < xLength; j++) {
+			for (int i = 0; i < RLength - 1; i++) {
+			  if (arr[i + 1][j] - arr[i][j] > -0.1)
+				  continue;
+			  else {
+				  values[i][j] = 1;
+				  return false;
+			  }
+			}
+		}		
+		return true;
+	}
+	
+	
 }
+	
+

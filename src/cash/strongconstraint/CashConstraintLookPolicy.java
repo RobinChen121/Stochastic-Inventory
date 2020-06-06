@@ -65,7 +65,7 @@ public class CashConstraintLookPolicy {
 		double discountFactor = 1;
 		
 		double xmin = 0; double xmax = 10;
-		double Rmin = 20; double Rmax = 40;
+		double Rmin = 15; double Rmax = 40;
 		int row = 0;
 		int column = 0;
 		int rowNum = (int) (xmax - xmin + 1) + 1;

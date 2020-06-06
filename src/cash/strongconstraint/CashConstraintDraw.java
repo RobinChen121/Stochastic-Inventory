@@ -51,11 +51,11 @@ public class CashConstraintDraw {
 	public static void main(String[] args) {
 		double[] meanDemand = {7, 2, 6};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniCash = 16;
+		double iniCash = 13;
 		double iniInventory = 0;
-		double fixOrderCost = 15;
+		double fixOrderCost = 20;
 		double variCost = 1;
-		double price = 6;
+		double price = 5;
 		double salvageValue = 0;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
@@ -169,16 +169,16 @@ public class CashConstraintDraw {
 		 */
 		int minInventorys = 0;
 		int maxInventorys = 30; // for drawing pictures
-		int minCash = 15;
-		int maxCash = 45;
+		int minCash = (int) fixOrderCost;
+		int maxCash = (int) (fixOrderCost + 50);
 		int RLength = maxCash - minCash + 1;
 		int xLength = maxInventorys - minInventorys + 1;
 		Drawing drawing = new Drawing();		
-		double initialInventory = 3;
+		double initialInventory = 0;
 		
 //		double[][] xQ = new double[xLength][2];
 //		int index = 0;
-//		for (int initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
+//		for (initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {
 //		//for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
 //			period = 1;
 //			xQ[index][0] = initialInventory;
@@ -186,14 +186,14 @@ public class CashConstraintDraw {
 //			xQ[index][1] = recursion.getAction(new CashState(period, initialInventory, iniCash));
 //			index++;
 //		}		
-		//drawing.drawXQ(xQ);
+//		drawing.drawXQ(xQ);
 
 		/*******************************************************************
 		 * Drawing y G since comupteIfAbsent, we need initializing a new class to draw
 		 * Gy; if not, java would not compute sdp again, we must redefine
 		 * stateTransition function and immediate Function;
 		 */
-		// immediate value
+		// immediate value for GB
 		ImmediateValueFunction<CashState, Double, Double, Double> immediateValue2 = (state, action, randomDemand) -> {
 			double revenue = 0;
 			double fixedCost = 0;
@@ -252,8 +252,8 @@ public class CashConstraintDraw {
 			}
 			rowIndex++;
 		}
-		
-		
+		WriteToCsv wr = new WriteToCsv();
+		wr.writeArrayCSV(resultTableGB, "GB.csv");
 		
 		//CheckKConvexity.check(yG2, fixOrderCost);
 		//drawing.drawSimpleG(yG2, iniCash, "K transfered in cash GB"); // GB
@@ -297,7 +297,6 @@ public class CashConstraintDraw {
 			rowIndex++;
 		}
 		double[][] resultMinusGBA = recursion.getMinusGAGB(resultTableGA, resultTableGB, minCash, fixOrderCost, variCost);
-		WriteToCsv wr = new WriteToCsv();
 		wr.writeArrayCSV(resultTableGA, "GA.csv");
 		wr.writeArrayCSV(resultMinusGBA, "minusGBA.csv");
 		//drawing.drawSimpleG(yG3, iniCash, "K not transfered in cash GA");
