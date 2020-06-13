@@ -40,7 +40,7 @@ public class CashConstraintLookPolicy {
 	
 
 	public static void main(String[] args) {
-		double[] meanDemand = {7, 2, 6};
+		double[] meanDemand = {4, 3, 6};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 8;
 		double iniCash = 100;
@@ -68,14 +68,14 @@ public class CashConstraintLookPolicy {
 		double Rmin = 15; double Rmax = 40;
 		int row = 0;
 		int column = 0;
-		int rowNum = (int) (xmax - xmin + 1) + 1;
-		int columnNum = (int) ((Rmax - Rmin + 1)/1) + 1; // ((Rmax - Rmin + 1)/2) + 2;
+		int columnNum  = (int) (xmax - xmin + 1) + 1;
+		int rowNum= (int) ((Rmax - Rmin + 1)/1) + 1; // ((Rmax - Rmin + 1)/2) + 2;
 		double[][] resultTable = new double[rowNum][columnNum];
 		
-		for (iniInventory = xmin; iniInventory <= xmax; iniInventory++) {
+		for (iniCash = Rmin; iniCash <= Rmax; iniCash = iniCash + 1) {
 			column = 0;
-			for (iniCash = Rmin; iniCash <= Rmax; iniCash = iniCash + 1) {
-		
+			for (iniInventory = xmin; iniInventory <= xmax; iniInventory++) {
+	
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
@@ -140,14 +140,11 @@ public class CashConstraintLookPolicy {
 
 		System.out.println("initial inventory is " + iniInventory);
 		System.out.println("initial cash is " + iniCash);
-		resultTable[0][column + 1] = iniCash;
-		resultTable[row + 1][0] = iniInventory;
-		try {
+		resultTable[0][column + 1] = iniInventory;
+		resultTable[row + 1][0] = iniCash;
 		resultTable[row + 1][column + 1] = optQ; // finalValue - iniCash;
 		System.out.println("**********************************************************");
-		}catch (Exception e) {
-			System.out.println(row);
-		}
+
 
 		
 //		/*******************************************************************

@@ -191,7 +191,8 @@ public class MipCashConstraint {
 		
 		// default values
 		for (int t = 0; t < T; t++) {
-			sCS[t][2] = distributions[T - 1].inverseF((price - variCost) / (holdingCost  + price - salvageValue));
+			sCS[t][2] = variCost == salvageValue ? distributions[T - 1].inverseF((price - variCost) / (holdingCost  + price - salvageValue))
+					                             : distributions[T - 1].inverseF(0.999);
 			sCS[t][1] = fixOrderCost;
 		}
 				

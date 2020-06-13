@@ -301,7 +301,8 @@ public class FindsCS {
 			
 			if (t == T - 1) {
 				Distribution distribution = distributions[T - 1];
-				optimalsCS[T - 1][3] = distribution.inverseF((price - variOrderCost) / (holdCost  + price - salvageValue));
+				optimalsCS[T - 1][3] = variOrderCost != salvageValue ? distribution.inverseF((price - variOrderCost) / (holdCost  + price - salvageValue))
+																	 : distribution.inverseF(0.999);
 				optimalsCS[T - 1][2] = M;			
 				double S = optimalsCS[T - 1][3];
 				optimalsCS[T - 1][0] = 0; // s default value is 0

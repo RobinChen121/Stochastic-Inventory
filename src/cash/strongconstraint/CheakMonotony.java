@@ -94,8 +94,75 @@ public class CheakMonotony {
 									return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 								};
 								
+								// immediate value
+								ImmediateValueFunction<CashState, Double, Double, Double> immediateValue = (state, action, randomDemand) -> {
+									double revenue = 0;
+									double fixedCost = 0;
+									double variableCost = 0;
+									double inventoryLevel = 0;
+									revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
+									fixedCost = action > 0 ? fixOrderCost : 0;
+									variableCost = variCost * action;
+									inventoryLevel = state.getIniInventory() + action - randomDemand;
+									double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
+									double cashIncrement = revenue - fixedCost - variableCost - holdCosts;
+									double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
+									cashIncrement += salValue;
+									return cashIncrement;
+								};
+
+								// state transition function
+								StateTransitionFunction<CashState, Double, Double, CashState> stateTransition = (state, action,
+										randomDemand) -> {
+									double nextInventory = state.getIniInventory() + action - randomDemand;
+									double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
+									nextCash = nextCash > maxCashState ? maxCashState : nextCash;
+									nextCash = nextCash < minCashState ? minCashState : nextCash;
+									nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
+									nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
+									// cash is integer or not
+									// nextCash = Math.round(nextCash * 100) / 100.00;
+									return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
+								};
 								
-								// immediate value for GB
+								
+								/*******************************************************************
+								 * Solve F(x, R)
+								 */
+								int minInventorys = 0;
+								int maxInventorys = 30; // for drawing pictures
+								int minCash = (int) fixOrderCost;
+								int maxCash = (int) fixOrderCost + 30;
+								int RLength = maxCash - minCash + 1;
+								int xLength = maxInventorys - minInventorys + 1;
+								int period = 1;
+								int index = 0;
+								int rowIndex = 0;
+								int columnIndex = 0;
+								long currTime = System.currentTimeMillis();
+								
+								CashRecursion recursion = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition,
+										immediateValue, discountFactor);
+								
+								double[][] yG = new double[xLength * RLength][3];
+								double[][] resultTableF = new double[RLength][xLength];
+								
+								for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
+									columnIndex = 0;
+									for (double initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {			
+										yG[index][0] = initialCash; // initialInventory
+										yG[index][1] = initialInventory;
+										yG[index][2] = recursion.getExpectedValue(new CashState(period, initialInventory, initialCash)); // iniCash
+										resultTableF[rowIndex][columnIndex] = yG[index][2];
+										index++;
+										columnIndex++;
+									}
+									rowIndex++;
+								}				
+
+
+								
+								// immediate value for GB and GA
 								ImmediateValueFunction<CashState, Double, Double, Double> immediateValue2 = (state, action, randomDemand) -> {
 									double revenue = 0;
 									double fixedCost = 0;
@@ -119,51 +186,41 @@ public class CheakMonotony {
 									return cashIncrement;
 								};
 
-								// state transition function, for GB
-								StateTransitionFunction<CashState, Double, Double, CashState> stateTransition2 = (state, action,
-										randomDemand) -> {
-									double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
-											: state.getIniInventory() + action - randomDemand;
-									double nextCash = state.getIniCash() + immediateValue2.apply(state, action, randomDemand);
-									if (isForDrawGy == true && state.getPeriod() == 1)
-										nextCash -= fixOrderCost;
-									nextCash = nextCash > maxCashState ? maxCashState : nextCash;
-									nextCash = nextCash < minCashState ? minCashState : nextCash;
-									nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
-									nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
-									return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
-								};
+//								// state transition function, for GB
+//								StateTransitionFunction<CashState, Double, Double, CashState> stateTransition2 = (state, action,
+//										randomDemand) -> {
+//									double nextInventory = isForDrawGy && state.getPeriod() == 1 ? state.getIniInventory() - randomDemand
+//											: state.getIniInventory() + action - randomDemand;
+//									double nextCash = state.getIniCash() + immediateValue2.apply(state, action, randomDemand);
+//									if (isForDrawGy == true && state.getPeriod() == 1)
+//										nextCash -= fixOrderCost;
+//									nextCash = nextCash > maxCashState ? maxCashState : nextCash;
+//									nextCash = nextCash < minCashState ? minCashState : nextCash;
+//									nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
+//									nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
+//									return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
+//								};
 								
 								
-								int minInventorys = 0;
-								int maxInventorys = 30; // for drawing pictures
-								int minCash = (int) fixOrderCost;
-								int maxCash = (int) fixOrderCost + 30;
-								int RLength = maxCash - minCash + 1;
-								int xLength = maxInventorys - minInventorys + 1;
-								int period = 1;
+
 								
-								CashRecursion recursion2 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition2,
-										immediateValue2, discountFactor);
-								double[][] yG2 = new double[xLength * RLength][3];
-								int index = 0;
-								double[][] resultTableGB = new double[RLength][xLength];
-								int rowIndex = 0;
-								int columnIndex = 0;
-								long currTime = System.currentTimeMillis();
-								
-								for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
-									columnIndex = 0;
-									for (double initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {			
-									yG2[index][0] = initialCash; // initialInventory
-									yG2[index][1] = initialInventory;
-									yG2[index][2] = recursion2.getExpectedValue(new CashState(period, initialInventory, initialCash)); // iniCash
-									resultTableGB[rowIndex][columnIndex] = yG2[index][2];
-									index++;
-									columnIndex++;
-									}
-									rowIndex++;
-								}
+//								CashRecursion recursion2 = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction, stateTransition2,
+//										immediateValue2, discountFactor);
+//								double[][] yG2 = new double[xLength * RLength][3];
+//								double[][] resultTableGB = new double[RLength][xLength];
+//								
+//								for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
+//									columnIndex = 0;
+//									for (double initialInventory = minInventorys; initialInventory <= maxInventorys; initialInventory++) {			
+//									yG2[index][0] = initialCash; // initialInventory
+//									yG2[index][1] = initialInventory;
+//									yG2[index][2] = recursion2.getExpectedValue(new CashState(period, initialInventory, initialCash)); // iniCash
+//									resultTableGB[rowIndex][columnIndex] = yG2[index][2];
+//									index++;
+//									columnIndex++;
+//									}
+//									rowIndex++;
+//								}
 								
 								// state transition function for GA
 								StateTransitionFunction<CashState, Double, Double, CashState> stateTransition3 = (state, action,
@@ -197,11 +254,10 @@ public class CheakMonotony {
 									rowIndex++;
 								}
 								
-								double[][] resultMinusGBA = recursion3.getMinusGAGB(resultTableGA, resultTableGB, minCash, fixOrderCost, variCost);
+								double[][] resultMinusFG = recursion3.getMinusFG(resultTableGA, resultTableF, minCash, fixOrderCost, variCost);
 								double time = (System.currentTimeMillis() - currTime) / 1000;
 								System.out.println("running time is " + time + "s");
-								System.out.println("non-increasing property is " + recursion3.checkNonIncreasing(resultMinusGBA));
-								System.out.println("non-decreasing property is " + recursion3.checkNonDecreasing(resultMinusGBA));	
+
 							}
 		
 

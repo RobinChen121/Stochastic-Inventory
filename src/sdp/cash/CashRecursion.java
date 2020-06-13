@@ -190,6 +190,56 @@ public class CashRecursion {
 		return values;
 	}
 	
+	/**
+	 * @param G
+	 * @param F
+	 * @return minus value of result F to G
+	 * @date: Jun 2, 2020, 9:52:18 PM 
+	 */
+	public double[][] getMinusFG(double[][] resultG, double[][] resultF, double minCash, double fixCost, double variCost){
+		int RLength = resultG.length; 
+		int xLength = resultG[0].length;
+		double[][] values = new double[RLength][xLength];
+		for (int i = 0; i < RLength; i++) {
+			for (int j = 0; j < xLength; j++) { 
+				values[i][j] = resultF[i][j] - resultG[i][j] - variCost * j; // F-G-vx
+			}		
+		}
+		return values;
+	}
+	
+	/**
+	 * @param G
+	 * @param F
+	 * @return values of H
+	 * @date: Jun 2, 2020, 9:52:18 PM 
+	 */
+	public double[][] getH(double[][] resultG, double minCash, double fixCost, double variCost){
+		int RLength = resultG.length; 
+		int xLength = resultG[0].length;
+		double[][] values = new double[RLength][xLength];
+		for (int i = 0; i < RLength; i++) {
+			double cash = minCash + i;
+			for (int j = 0; j < xLength; j++) { 
+				int ybound = Math.min(xLength - 1, j + Math.max(0, (int) ((cash - fixCost) / variCost)));	
+				double optimalIncre = -fixCost;
+				int optyIndex = j;
+				for (int k = j + 1; k <= ybound; k++) {
+					int cashIndex = (int) (cash - fixCost - variCost * (k - j));
+					if (cashIndex < 0)
+						continue;
+					else {
+						if(resultG[cashIndex][k] - resultG[i][j] - fixCost- variCost * (k - j) > optimalIncre) { 
+							optimalIncre = resultG[cashIndex][k] - resultG[i][j] - fixCost- variCost * (k - j);
+							optyIndex = k;
+						}
+					}		
+				}	
+				values[i][j] = optimalIncre; // F-G-vx
+			}		
+		}
+		return values;
+	}
 	
 	/**
 	 * @param valuse of GB - GA - K
