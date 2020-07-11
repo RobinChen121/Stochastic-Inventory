@@ -25,6 +25,7 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.write.WriteToExcel;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 
@@ -54,7 +55,7 @@ public class MultiItemCashXR {
 		int T = demand[0].length; // horizon length
 		int m = demand.length; // number of products
 		
-		double truncationQuantile = 0.999;
+		double truncationQuantile = 0.9999; // may affect poisson results
 		int stepSize = 1;
 		double minCashState = 0;
 		double maxCashState = 10000;
@@ -66,12 +67,19 @@ public class MultiItemCashXR {
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
-		//Distribution[][] distributions =  new GammaDist[m][T];
-		Distribution[][] distributions =  new PoissonDist[m][T];
+		Distribution[][] distributions =  new GammaDist[m][T];
+		//Distribution[][] distributions =  new PoissonDist[m][T];
+		//Distribution[][] distributions =  new NormalDist[m][T];
 		for (int i = 0; i < m; i++)
-			for (int t = 0; t < T; t++)
-				//distributions[i][t] = new GammaDist(demand[i][t] / scale[i], scale[i]);
-				distributions[i][t] = new PoissonDist(demand[i][t]);
+			for (int t = 0; t < T; t++) {
+				try {
+				distributions[i][t] = new GammaDist(demand[i][t]/ scale[i], scale[i]);
+				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[t][i]);
+				}catch (Exception e) {
+					System.out.println(t);
+					System.out.println(i);
+				}
+			}
 		
 		// build action list (y1, y2) for two items
 		Function<CashStateMultiXR, ArrayList<double[]>> buildActionList = s -> {

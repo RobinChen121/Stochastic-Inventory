@@ -105,7 +105,7 @@ public class CashRecursion {
 				double orderQty = feasibleActions[i];
 				
 //				if (s.getPeriod() == 1) { // for debugging
-//					orderQty = 110;
+//					orderQty = 0;
 //				}
 				
 				double thisQValue = 0;								
@@ -229,13 +229,74 @@ public class CashRecursion {
 					if (cashIndex < 0)
 						continue;
 					else {
-						if(resultG[cashIndex][k] - resultG[i][j] - fixCost- variCost * (k - j) > optimalIncre) { 
-							optimalIncre = resultG[cashIndex][k] - resultG[i][j] - fixCost- variCost * (k - j);
+						if(resultG[cashIndex][k] - resultG[i][j] - fixCost > optimalIncre) { 
+							optimalIncre = resultG[cashIndex][k] - resultG[i][j] - fixCost; // be careful
 							optyIndex = k;
 						}
 					}		
 				}	
 				values[i][j] = optimalIncre; // F-G-vx
+			}		
+		}
+		return values;
+	}
+	
+	
+	public boolean checkSingleCrossing(double[][] resultH) {
+		int RLength = resultH.length; 
+		int xLength = resultH[0].length;
+		int lastColumnEnd = 0;
+		for (int i = 0; i < RLength; i++) {
+			for (int j = xLength - 1; j >= 0; j--) {
+				if (resultH[i][j] > -0.1) {
+					for (int i1 = i; i1 < RLength; i1++)
+						for (int j1 = lastColumnEnd; j1 <= j; j1++) {
+							if (resultH[i1][j1] > -0.1)
+								continue;
+							else 
+								return false;
+						}
+					lastColumnEnd = j + 1;
+					break;
+				}
+			}
+		}		
+		return true;		
+	}
+	
+	
+	/**
+	 * @param G
+	 * @param F
+	 * @return values of H in 3 columns
+	 * @date: Jun 2, 2020, 9:52:18 PM 
+	 */
+	public double[][] getH3Column(double[][] resultG, double minCash, double fixCost, double variCost){
+		int RLength = resultG.length; 
+		int xLength = resultG[0].length;
+		double[][] values = new double[RLength * xLength][3];
+		int index = 0;
+		for (int i = 0; i < RLength; i++) {
+			double cash = minCash + i;
+			for (int j = 0; j < xLength; j++) { 
+				int ybound = Math.min(xLength - 1, j + Math.max(0, (int) ((cash - fixCost) / variCost)));	
+				double optimalIncre = -fixCost;
+				int optyIndex = j;
+				for (int k = j + 1; k <= ybound; k++) {
+					int cashIndex = (int) (cash - fixCost - variCost * (k - j));
+					if (cashIndex < 0)
+						continue;
+					else {
+						if(resultG[cashIndex][k] - resultG[i][j] - fixCost > optimalIncre) { 
+							optimalIncre = resultG[cashIndex][k] - resultG[i][j] - fixCost; // be careful
+							optyIndex = k;
+						}
+					}		
+				}	
+				values[index][0] = resultG[i][0];
+				values[index][1] = resultG[0][j];
+				values[index][2] = optimalIncre; // F-G-vx
+				index++;
 			}		
 		}
 		return values;

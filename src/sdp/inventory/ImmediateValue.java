@@ -23,5 +23,12 @@ public class ImmediateValue {
 	public interface ImmediateValueFunction<S, A, R, V> {
 		public V apply(S s, A a, R r);
 	} 
+	
+	
+	@FunctionalInterface
+	public interface ImmediateValueFunctionV <S, R, V>{
+		public V apply (S s, R r);
+	}
+
 
 }

@@ -577,13 +577,14 @@ public class FindsCS {
 								}									
 							}
 							else {
-								if (tOptTable[j][3] < maxQ - 0.1 && tOptTable[j][1] + tOptTable[j][3] < S - 0.1) { //new S
+								// new S
+								if (tOptTable[j][3] > 0.1 && tOptTable[j][3] < maxQ - 0.1 && tOptTable[j][1] + tOptTable[j][3] < S - 0.1) { //new S
 
 									recordS.putIfAbsent(tOptTable[j][1] + tOptTable[j][3], 1);
 									lastOrderFullCapacity = false;
 								} 										
-								else // order at full capacity or same S
-									recordS.replace(S, recordS.get(S) + 1);
+								else // order at full capacity or same S, deem as same S
+									recordS.replace(S, recordS.get(S) + 1); // S and its frequency
 							}
 						}
 						else {

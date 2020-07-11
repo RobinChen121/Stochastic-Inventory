@@ -40,22 +40,22 @@ public class CashConstraintLookPolicy {
 	
 
 	public static void main(String[] args) {
-		double[] meanDemand = {4, 3, 6};
+		double[] meanDemand = {2, 3, 8};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 8;
 		double iniCash = 100;
-		double fixOrderCost = 20;
+		double fixOrderCost = 10;
 		double variCost = 1;
-		double price = 5;
+		double price = 8;
 		double depositeRate = 0;
-		double salvageValue = 0;
+		double salvageValue = 0.5;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
 		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
-		double truncationQuantile = 0.99;
+		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
@@ -65,16 +65,16 @@ public class CashConstraintLookPolicy {
 		double discountFactor = 1;
 		
 		double xmin = 0; double xmax = 10;
-		double Rmin = 15; double Rmax = 40;
+		double Rmin = fixOrderCost; double Rmax = 40;
 		int row = 0;
 		int column = 0;
-		int columnNum  = (int) (xmax - xmin + 1) + 1;
-		int rowNum= (int) ((Rmax - Rmin + 1)/1) + 1; // ((Rmax - Rmin + 1)/2) + 2;
+		int columnNum  = (int) (Rmax - Rmin + 1) + 1;
+		int rowNum= (int) ((xmax - xmin + 1)/1) + 1; // ((Rmax - Rmin + 1)/2) + 2;
 		double[][] resultTable = new double[rowNum][columnNum];
 		
-		for (iniCash = Rmin; iniCash <= Rmax; iniCash = iniCash + 1) {
+		for (iniInventory = xmin; iniInventory <= xmax; iniInventory++) {
 			column = 0;
-			for (iniInventory = xmin; iniInventory <= xmax; iniInventory++) {
+			for (iniCash = Rmin; iniCash <= Rmax; iniCash = iniCash + 1) {
 	
 		// get demand possibilities for each period
 		int T = meanDemand.length;
@@ -140,8 +140,8 @@ public class CashConstraintLookPolicy {
 
 		System.out.println("initial inventory is " + iniInventory);
 		System.out.println("initial cash is " + iniCash);
-		resultTable[0][column + 1] = iniInventory;
-		resultTable[row + 1][0] = iniCash;
+		resultTable[0][column + 1] = iniCash;
+		resultTable[row + 1][0] = iniInventory;
 		resultTable[row + 1][column + 1] = optQ; // finalValue - iniCash;
 		System.out.println("**********************************************************");
 

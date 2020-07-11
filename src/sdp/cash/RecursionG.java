@@ -82,7 +82,7 @@ public class RecursionG {
 	}
  
 	/**
-	 * 
+	 * the two functions call each other: getAStar and G
 	 * @param state
 	 * @return
 	 * @date: Apr 23, 2020
@@ -117,6 +117,7 @@ public class RecursionG {
 	}
 	
 	/**
+	 * the two functions call each other: getAStar and G
 	 * @param state
 	 * @return a* for a period
 	 */

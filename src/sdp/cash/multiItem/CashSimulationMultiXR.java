@@ -61,14 +61,20 @@ public class CashSimulationMultiXR {
 		Sampling.resetStartStream();
 		double[][] samples = Sampling.generateLHSamples(distributionsMulti, sampleNum);
 		
+//		double sumD = 0;
+//		for(int i = 0; i < samples.length; i++) {
+//			sumD += samples[i][3];
+//		}
+//		double meanD = sumD/samples.length;
+		
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; 
 			CashStateMultiXR state = iniState;
-			for (int t = 0; t < distributionsMulti[0].length; t++) {
+			for (int t = 0; t < distributionsMulti.length; t++) {
 				recursion.getExpectedValue(state);
 				double[] actions = new double[] {recursion.getAction(state)[0], recursion.getAction(state)[1]};
-				double[] randomDemands =new double[] {samples[i][t* 2], samples[i][t* 2 + 1]};
+				double[] randomDemands = new double[] {samples[i][t* 2], samples[i][t* 2 + 1]};
 				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, actions, randomDemands);
 				state = stateTransition.apply(state, actions, randomDemands);				
 			}

@@ -116,35 +116,35 @@ public class MultiItemCash {
 			return new CashStateMulti(IniState.getPeriod() + 1, endInventory1, endInventory2, nextCash);
 		};
 		
-		GetPmfMulti pmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);
-		
-		/*******************************************************************
-		 * Solve
-		 */
-		CashRecursionMulti recursion = new CashRecursionMulti(discountFactor, pmfMulti, buildActionList,
-				                             stateTransition, immediateValue, T);
-		int period = 1;
-		CashStateMulti iniState = new CashStateMulti(period, iniInventory1, iniInventory2, iniCash);
-		long currTime = System.currentTimeMillis();
-		double finalValue = iniCash + recursion.getExpectedValue(iniState);
-		System.out.println("final optimal cash  is " + finalValue);
-		System.out.println("optimal order quantity in the first priod is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
-				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
-		double time = (System.currentTimeMillis() - currTime) / 1000;
-		System.out.println("running time is " + time + "s");
-		
-		
-		
-		/*******************************************************************
-		 * Simulating sdp results
-		 * 
-		 * simulating results a little lower than SDP
-		 */
-		int sampleNum = 10000;		
-		CashSimulationMulti simuation = new CashSimulationMulti(sampleNum, distributions, discountFactor, 
-				 recursion, stateTransition, immediateValue);
-		double simFinalValue = simuation.simulateSDPGivenSamplNum(iniState);
-		System.out.println(simFinalValue);
+//		GetPmfMulti pmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);
+//		
+//		/*******************************************************************
+//		 * Solve
+//		 */
+//		CashRecursionMulti recursion = new CashRecursionMulti(discountFactor, pmfMulti, buildActionList,
+//				                             stateTransition, immediateValue, T);
+//		int period = 1;
+//		CashStateMulti iniState = new CashStateMulti(period, iniInventory1, iniInventory2, iniCash);
+//		long currTime = System.currentTimeMillis();
+//		double finalValue = iniCash + recursion.getExpectedValue(iniState);
+//		System.out.println("final optimal cash  is " + finalValue);
+//		System.out.println("optimal order quantity in the first priod is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
+//				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
+//		double time = (System.currentTimeMillis() - currTime) / 1000;
+//		System.out.println("running time is " + time + "s");
+//		
+//		
+//		
+//		/*******************************************************************
+//		 * Simulating sdp results
+//		 * 
+//		 * simulating results a little lower than SDP
+//		 */
+//		int sampleNum = 10000;		
+//		CashSimulationMulti simuation = new CashSimulationMulti(sampleNum, distributions, discountFactor, 
+//				 recursion, stateTransition, immediateValue);
+//		double simFinalValue = simuation.simulateSDPGivenSamplNum(iniState);
+//		System.out.println(simFinalValue);
 		
 		
 		/*******************************************************************

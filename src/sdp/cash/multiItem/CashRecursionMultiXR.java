@@ -60,8 +60,14 @@ public class CashRecursionMultiXR {
 	public double getExpectedValue(CashStateMultiXR initialState) {
 		return this.cacheValues.computeIfAbsent(initialState, s -> {
 			ArrayList<double[]> actions = buildActionList.apply(s);
-			double[][] dAndP = Pmf.getPmfGamma(s.getPeriod() - 1);
+			double[][] dAndP = Pmf.getPmf(s.getPeriod() - 1);
 			double val = -Double.MAX_VALUE;
+			
+//			double pSum = 0;
+//			for (int i = 0; i < dAndP.length; i++) {
+//				pSum += dAndP[i][2];
+//			}
+//			System.out.println(pSum);
 			
 			double[] actionValues = new double[actions.size()];
 			double[] bestYs = new double[] {0, 0};
@@ -131,7 +137,7 @@ public class CashRecursionMultiXR {
 			double alpha = 10000;
 			double boolAlpha = 0;
 			double w = R - x1 * variCost[0] - x2 * variCost[1];
-			if (w <= variCost[0] * Q1 + variCost[1] * Q2 && Q1 > 0 && Q2 > 0) {
+			if (R <= variCost[0] * y1 + variCost[1] * y2 + 0.1 && Q1 > 0.1 && Q2 > 0.1) {
 				boolAlpha = 1;
 				alpha = variCost[0] * y1 / R;
 			}			

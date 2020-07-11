@@ -28,13 +28,13 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CheckFG {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {4, 3, 5};
+		double[] meanDemand = {2, 3, 8};
 		double iniCash = 13;
 		double iniInventory = 0;
 		double fixOrderCost = 10;
 		double variCost = 1;
-		double price = 5;
-		double salvageValue = 0;
+		double price = 8;
+		double salvageValue = 0.5;
 		double holdingCost = 0;		
 		double overheadCost = 0; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
@@ -99,9 +99,9 @@ public class CheckFG {
 		 * Solve F(x, R)
 		 */
 		int minInventorys = 0;
-		int maxInventorys = 30; // for drawing pictures
+		int maxInventorys = 50; // for drawing pictures
 		int minCash = 0;
-		int maxCash = (int) fixOrderCost + 30;
+		int maxCash = (int) fixOrderCost + 50;
 		int RLength = maxCash - minCash + 1;
 		int xLength = maxInventorys - minInventorys + 1;
 		int period = 1;
@@ -179,8 +179,8 @@ public class CheckFG {
 			for (double initialInventory = minInventoryState; initialInventory <= maxInventorys; initialInventory++) {
 			yG3[index][0] = initialCash; // initialInventory
 			yG3[index][1] = initialInventory; // initialInventory
-			yG3[index][2] = recursion3.getExpectedValue(new CashState(period, initialInventory, initialCash)); // iniCash
-			resultTableGA[rowIndex][columnIndex] = yG3[index][2]; // 不用再减 cy 了
+			yG3[index][2] = recursion3.getExpectedValue(new CashState(period, initialInventory, initialCash)) - variCost * initialInventory; 
+			resultTableGA[rowIndex][columnIndex] = yG3[index][2]; // careful, minus cy
 			index++;
 			columnIndex++;
 			}
@@ -189,11 +189,14 @@ public class CheckFG {
 		
 		double[][] resultH= recursion3.getH(resultTableGA, minCash, fixOrderCost, variCost);
 		
+		System.out.println("Single-crossing property: " + recursion3.checkSingleCrossing(resultH));
+		
 		WriteToCsv wr = new WriteToCsv();
 		wr.writeArrayCSVLabel(resultTableQ, minCash, minInventorys, "Q.csv");
 		wr.writeArrayCSVLabel(resultTableF, minCash, minInventorys, "F.csv");
 		wr.writeArrayCSVLabel(resultTableGA, minCash, minInventorys,  "G.csv");
 		wr.writeArrayCSVLabel(resultH, minCash, minInventorys,  "H.csv");
+//		wr.writeArrayCSV(recursion3.getH3Column(resultTableGA, minCash, fixOrderCost, variCost), "G3column.csv");
 		
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
