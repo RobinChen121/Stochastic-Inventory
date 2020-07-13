@@ -7,10 +7,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 import sdp.cash.CashState;
 import sdp.inventory.State;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.PoissonDist;
 
 
 /**
@@ -345,11 +347,15 @@ public class FindsCS {
 																	    : tOptTable[j][1] + 1; // maximum not ordering inventory level as s
 						sHasRecorded = true;
 					}
-					if (tOptTable[j][1] + tOptTable[j][3] > optimalsCS[t][3]) //  maximum order-up-to level as S
-						optimalsCS[t][3] = tOptTable[j][1] + tOptTable[j][3];
+//					if (tOptTable[j][1] + tOptTable[j][3] > optimalsCS[t][3]) //  maximum order-up-to level as S
+//						optimalsCS[t][3] = tOptTable[j][1] + tOptTable[j][3];
+					double demandSum = IntStream.range(t, T).mapToObj(k -> distributions[k].getMean())
+							.reduce(0.0, (x, y) -> x.doubleValue() + y.doubleValue());
+					Distribution distribution = new PoissonDist(demandSum);
+					optimalsCS[t][3]  = distribution.inverseF((price - variOrderCost) / (price - salvageValue));
 						//if (tOptTable[j][2] > fixOrderCost + variOrderCost * tOptTable[j][3])
 							//recordS.add(tOptTable[j][1] + tOptTable[j][3]); // average order-up-to level as S, is worse than choosing maximum S
-					sHasRecorded = true; // 
+					sHasRecorded = true; 
 				}
 								
 				if (tOptTable[j][3] == 0 && sHasRecorded == true) 
@@ -609,6 +615,8 @@ public class FindsCS {
 					totalNum += entry.getValue();
 				}
 				numFrequency[t][1] = maxFre * 100 / totalNum;
+				if (recordS.size() > 1)
+					System.out.println(recordS.toString());
 			}
 			if (recordS.size() == 0 && optimalsCS[t][0] != 0) { // when ordering quantity is always full capacity
 				numFrequency[t][0] = 1; numFrequency[t][1] = 100;

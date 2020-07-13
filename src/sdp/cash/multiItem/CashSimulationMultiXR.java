@@ -71,7 +71,7 @@ public class CashSimulationMultiXR {
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; 
 			CashStateMultiXR state = iniState;
-			for (int t = 0; t < distributionsMulti.length; t++) {
+			for (int t = 0; t < distributionsMulti[0].length; t++) {
 				recursion.getExpectedValue(state);
 				double[] actions = new double[] {recursion.getAction(state)[0], recursion.getAction(state)[1]};
 				double[] randomDemands = new double[] {samples[i][t* 2], samples[i][t* 2 + 1]};

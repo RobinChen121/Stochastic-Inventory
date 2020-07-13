@@ -1,0 +1,159 @@
+/**
+ * @date: Jul 6, 2020
+ */
+package cash.multiItem;
+
+import java.util.ArrayList;
+import java.util.function.Function;
+
+import sdp.cash.multiItem.CashRecursionV;
+import sdp.cash.multiItem.CashStateMultiYR;
+import sdp.cash.multiItem.GetPmfMulti;
+import sdp.inventory.ImmediateValue.ImmediateValueFunctionV;
+import sdp.inventory.StateTransition.StateTransitionFunctionV;
+import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.PoissonDist;
+
+/**
+ * @author: Zhen Chen
+ * @email: 15011074486@163.com
+ * @date: Jul 6, 2020
+ * @Desc: recode the dynamic programming of two-product problem by new states: (y1, y2, R) and two functional
+ *        equations: V(y1, y2, R) and Pi(y1, y2, R)
+ *
+ */
+public class MultiItemYR {
+	
+	
+	
+	
+	
+	public static void main(String[] args) {
+		double[] price = {4, 10};
+		double[] variCost = {2, 5};  // higher margin vs lower margin
+		double depositeRate = 0;
+		double[] salPrice = {1, 1};
+		
+		double iniCash = 30;  // initial cash
+		int iniInventory1 = 0;  // initial inventory
+		int iniInventory2 = 0;
+			
+		// gamma distribution:mean demand is shape * scale and variance is shape * scale^2
+		// shape = demand / scale
+		// variance = demand * scale
+		double[][] demand = {{ 5, 5}, {8, 8}}; // higher average demand vs lower average demand
+		double[] scale = {1, 2}; // higher variance vs lower variance
+			
+		int T = demand[0].length; // horizon length
+		int m = demand.length; // number of products
+		
+		double truncationQuantile = 0.9999; // may affect poisson results
+		int stepSize = 1;
+		double minCashState = 0;
+		double maxCashState = 10000;
+		int minInventoryState = 0;	
+		int maxInventoryState = 200;
+		int Qbound = 80;
+		double discountFactor = 1;
+		
+		// get demand possibilities for each period
+		//Distribution[][] distributions =  new GammaDist[m][T];
+		Distribution[][] distributions =  new PoissonDist[m][T];
+		//Distribution[][] distributions =  new NormalDist[m][T];
+		for (int i = 0; i < m; i++)
+			for (int t = 0; t < T; t++) {
+				//distributions[i][t] = new GammaDist(demand[i][t]/ scale[i], scale[i]);
+				distributions[i][t] = new PoissonDist(demand[i][t]);
+				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[t][i]);
+			}
+		
+		// build action list (y1, y2) for V(x1, x2, R)
+		Function<CashStateMultiYR, ArrayList<double[]>> buildActionListPai = s -> {
+			ArrayList<double[]> actions = new ArrayList<>();
+			int Ybound = Qbound;
+			for (int i = 0; i < Ybound; i++)
+				for (int j = 0; j < Ybound; j++) {
+					double[] thisActions = {i, j};
+					actions.add(thisActions);	
+				}
+			return actions;
+		};
+		
+		// build action list (y1, y2) for Pai(x1, x2, R)
+		Function<CashStateMultiYR, ArrayList<double[]>> buildActionListV = s -> {
+			ArrayList<double[]> actions = new ArrayList<>();
+			int miny1 = (int) s.getIniInventory1();
+			int miny2 = (int) s.getIniInventory2();
+			for (int i = miny1; i < miny1 + Qbound; i++)
+				for (int j = miny2; j < miny2 + Qbound; j++) {
+					if (variCost[0] * i + variCost[1] * j < s.getIniR() + 0.1) {
+						double[] thisActions = {i, j};
+						actions.add(thisActions);
+					}					
+				}
+			return actions;
+		};
+
+		// Immediate Value Function	for V(y1, y2, R), the increment for R 
+		
+		ImmediateValueFunctionV<CashStateMultiYR, double[], Double> immediateValue
+		= (IniState, RandomDemands) -> {
+			double demand1 = RandomDemands[0];
+			double demand2 = RandomDemands[1];
+			double endInventory1 = Math.max(0, IniState.getIniInventory1()  - demand1);
+			double endInventory2 = Math.max(0, IniState.getIniInventory2()  - demand2);
+			double revenue1 = price[0] * Math.min(IniState.getIniInventory1(), demand1);
+			double revenue2 = price[1] * Math.min(IniState.getIniInventory2(), demand2);
+			double revenue = revenue1 + revenue2;
+			//double initialCash = IniState.getIniR() - variCost[0] * IniState.getIniInventory1() - variCost[1] * IniState.getIniInventory2();
+			double orderingCostY1 = variCost[0] * IniState.getIniInventory1();
+			double orderingCostY2 = variCost[1] * IniState.getIniInventory2();
+			double orderingCostsY = orderingCostY1 + orderingCostY2;
+			double salValue = 0;
+			if (IniState.getPeriod() == T) {
+				salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
+			}
+			return revenue + (1 - depositeRate) * (IniState.getIniR() - orderingCostsY) + salValue - IniState.getIniR();
+		};
+	
+	
+	// State Transition Function
+	StateTransitionFunctionV<CashStateMultiYR, double[], CashStateMultiYR> stateTransition
+	= (IniState, RandomDemands) -> {
+		double endInventory1 = IniState.getIniInventory1() - RandomDemands[0];
+		endInventory1 = Math.max(0, endInventory1);
+		double endInventory2 = IniState.getIniInventory2()- RandomDemands[1];
+		endInventory2 = Math.max(0, endInventory2);
+		double nextR = IniState.getIniR()+ immediateValue.apply(IniState, RandomDemands);
+		
+		nextR = nextR> maxCashState ? maxCashState : nextR;
+		nextR = nextR < minCashState ? minCashState : nextR;
+		endInventory1 = endInventory1 > maxInventoryState ? maxInventoryState : endInventory1;
+		endInventory2 = endInventory2 < minInventoryState ? minInventoryState : endInventory2;
+		
+		return new CashStateMultiYR(IniState.getPeriod() + 1, endInventory1, endInventory2, nextR);
+	};
+
+	
+	
+	GetPmfMulti PmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);
+	
+	/*******************************************************************
+	 * Solve
+	 */
+	CashRecursionV recursion = new CashRecursionV(discountFactor, PmfMulti, buildActionListV, buildActionListPai,
+			stateTransition, immediateValue, T);
+	int period = 1;
+	CashStateMultiYR iniState = new CashStateMultiYR(period, iniInventory1, iniInventory2, iniCash);
+	long currTime = System.currentTimeMillis();
+	double finalValue = iniCash + recursion.getExpectedValueV(iniState);
+	System.out.println("final optimal cash  is " + finalValue);
+	System.out.println("optimal order quantity in the first priod is :  y1 = " + recursion.getAction(iniState)[0]
+			                      + ", y2 = " + recursion.getAction(iniState)[1]);
+	double time = (System.currentTimeMillis() - currTime) / 1000.0;
+	System.out.println("running time is " + time + "s");
+
+}
+	
+}

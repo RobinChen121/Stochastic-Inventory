@@ -61,7 +61,7 @@ public class CashConstraintTesting {
 		double[] B0 = { 3, 5, 7}; // ini cash can order 4 or 6 items
 		double[] p = { 5, 6, 7};  // margin is 4, 5, 6
 		double[] h = {0};
-		double salvageValue = 0;	
+		double salvageValue = 0.5;	
 		
 		FindCCrieria criteria = FindCCrieria.XRELATE;
 		double truncationQuantile = 0.999;

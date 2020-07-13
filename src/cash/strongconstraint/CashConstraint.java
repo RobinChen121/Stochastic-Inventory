@@ -53,13 +53,13 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4.08, 12.16, 37.36, 21.44};
+		double[] meanDemand = {20, 12, 10, 14};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-		double iniInventory = 4;
-		double iniCash = 100;
-		double fixOrderCost = 20;
+		double iniInventory = 0;
+		double iniCash = 33;
+		double fixOrderCost = 24;
 		double variCost = 1;
-		double price = 5;
+		double price = 4;
 		double depositeRate = 0;
 		double salvageValue = 0;
 		double holdingCost = 0;	
@@ -193,9 +193,9 @@ public class CashConstraint {
 		double gap21 = (finalValue -simsCSFinalValue)/finalValue;
 		double gap22 = (simFinalValue -simsCSFinalValue)/simFinalValue;
 		System.out.printf("Optimality gap for (s, C1, S) is: %.2f%% or %.2f%%\n", gap21 * 100, gap22 * 100);
-		double[][] numFrequency = findsCS.getMaxSFrequency(optTable, overheadCost, criteria);
-		System.out.println("most frequent S in each period");
-		System.out.println(Arrays.deepToString(numFrequency));
+//		double[][] numFrequency = findsCS.getMaxSFrequency(optTable, overheadCost, criteria);
+//		System.out.println("most frequent S in each period");
+//		System.out.println(Arrays.deepToString(numFrequency));
 		
 		
 		/*******************************************************************

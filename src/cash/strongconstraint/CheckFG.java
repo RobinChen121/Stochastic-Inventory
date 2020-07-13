@@ -28,10 +28,10 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CheckFG {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {2, 3, 8};
+		double[] meanDemand = {3, 7};
 		double iniCash = 13;
 		double iniInventory = 0;
-		double fixOrderCost = 10;
+		double fixOrderCost = 20;
 		double variCost = 1;
 		double price = 8;
 		double salvageValue = 0.5;
@@ -99,9 +99,9 @@ public class CheckFG {
 		 * Solve F(x, R)
 		 */
 		int minInventorys = 0;
-		int maxInventorys = 50; // for drawing pictures
+		int maxInventorys = 100; // for drawing pictures
 		int minCash = 0;
-		int maxCash = (int) fixOrderCost + 50;
+		int maxCash = (int) fixOrderCost + 80;
 		int RLength = maxCash - minCash + 1;
 		int xLength = maxInventorys - minInventorys + 1;
 		int period = 1;

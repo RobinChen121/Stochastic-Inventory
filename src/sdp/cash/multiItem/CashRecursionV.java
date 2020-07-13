@@ -71,7 +71,7 @@ public class CashRecursionV {
 	public double getExpectedValuePai(CashStateMultiYR initialState) {
 		return this.cacheValuesPai.computeIfAbsent(initialState, s -> {
 			int n = s.getPeriod();
-			double[][] dAndP = pmf[n - 1]; // demandAndPossibility
+			double[][] dAndP = Pmf.getPmf(n - 1); // demandAndPossibility
 			
 			double expectValue = 0;
 			for (int j = 0; j < dAndP.length; j++) {

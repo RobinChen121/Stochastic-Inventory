@@ -79,18 +79,19 @@ public class Sampling {
 	 * @date: Apr 29, 2020, 12:04:34 PM 
 	 */
 	public static double[][] generateLHSamples(Distribution[][] distributions, int sampleNum){
-		int itemNum = distributions[0].length;		
-		int T = distributions.length;
+		int itemNum = distributions.length;		
+		int T = distributions[0].length;
 		double[][] samples = new double[sampleNum][itemNum * T]; 
 		
 		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
 		for (int i = 0; i < sampleNum; i++) {
-			for (int t = 0; t < T; t++)
-				for (int j = 0; j < itemNum; j++) {
+			for (int j = 0; j < itemNum; j++)
+				for (int t = 0; t < T; t++)
+				 {
 					double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
 					double lowBound = (double) i/ (double) sampleNum;
 					double ppf = lowBound + randomNum;
-					samples[i][j + t * itemNum] = distributions[t][j].inverseF(ppf);
+					samples[i][j + t * itemNum] = distributions[j][t].inverseF(ppf);
 				}
 		}
 	    shuffle(samples); // ´òÂÒÊý×é

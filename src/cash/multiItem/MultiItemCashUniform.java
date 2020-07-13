@@ -1,88 +1,71 @@
 /**
- * @author: Zhen Chen
- * @email: 15011074486@163.com
- * @date: Jun 18, 2019, 9:49:16 PM
- * @Desc: This class is to build a stochastic dynamic programming model for a cash constrained problem 
- *        with two products, the states used are x, R and the action is y
- *        
- *
- * 
+ * @date: Jun 11, 2020
  */
 package cash.multiItem;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.function.Function;
-
+import java.util.stream.DoubleStream;
 
 import sdp.cash.multiItem.CashRecursionMultiXR;
-import sdp.cash.multiItem.CashSimulationMulti;
 import sdp.cash.multiItem.CashSimulationMultiXR;
 import sdp.cash.multiItem.CashStateMultiXR;
-
+import sdp.cash.multiItem.RecursionG;
 import sdp.cash.multiItem.GetPmfMulti;
+import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.write.WriteToExcel;
+import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.probdist.GammaDist;
-import umontreal.ssj.probdist.NormalDist;
-import umontreal.ssj.probdist.PoissonDist;
-import umontreal.ssj.probdistmulti.BiNormalDist;
 
-
-public class MultiItemCashXR {
-
-
+/**
+ * @author: Zhen Chen
+ * @email: 15011074486@163.com
+ * @date: Jun 11, 2020
+ * @Desc: test the dynamic programming of two item for uniform distribution
+ * 
+ *
+ */
+public class MultiItemCashUniform {
 	public static void main(String[] args) {
 		double[] price = {4, 10};
-		double[] variCost = {2, 5};  // higher margin vs lower margin
-		
-		double iniCash = 30;  // initial cash
+		double[] variCost = {2, 4};  // higher margin vs lower margin
+
+		double iniCash = 20;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
-		
+
 		double depositeRate = 0;
-		
-		// gamma distribution:mean demand is shape * scale and variance is shape * scale^2
-		// shape = demand / scale
-		// variance = demand * scale
-		double[][] demand = {{ 5, 5}, {8, 8}}; // higher average demand vs lower average demand
-		double[] scale = {1, 2}; // higher variance vs lower variance
-		
-		
 		double[] salPrice = {1, 1};
-		
-		int T = demand[0].length; // horizon length
-		int m = demand.length; // number of products
-		
-		double truncationQuantile = 0.9999; // may affect poisson results
+
+		int T = 5; // horizon length		
+		double truncationQuantile = 0.999;
 		int stepSize = 1;
 		double minCashState = 0;
 		double maxCashState = 10000;
-		int minInventoryState = 0;
-		
-		
+		int minInventoryState = 0;	
 		int maxInventoryState = 200;
-		int Qbound = 50;
+		int Qbound = 100;
 		double discountFactor = 1;
-		
-		// get demand possibilities for each period
-		// row is item, column is period
-		//Distribution[][] distributions =  new GammaDist[m][T];
-		Distribution[][] distributions =  new PoissonDist[m][T];
-		//Distribution[][] distributions =  new NormalDist[m][T];
-		for (int i = 0; i < m; i++)
-			for (int t = 0; t < T; t++) {
-				try {
-				//distributions[i][t] = new GammaDist(demand[i][t]/ scale[i], scale[i]);
-				distributions[i][t] = new PoissonDist(demand[i][t]);	
-				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
-				}catch (Exception e) {
-					System.out.println(t);
-					System.out.println(i);
-				}
-			}
-		
+
+		int N = 10; // possible number of demand values
+		double[] values1 = new double[N];		
+		double[] probs1 = new double[N];		
+		double[] values2 = new double[N];
+		double[] probs2 = new double[N];
+		float NN = N;
+		Arrays.fill(values1, 10);
+		Arrays.fill(values2, 5);
+		Arrays.fill(probs1, 1.0 / NN);
+		Arrays.fill(probs2, 1.0 / NN);
+		Distribution[][] distributions = new DiscreteDistribution[T][2];
+		for (int t = 0; t < T; t++) {
+			distributions[t][0] = new DiscreteDistribution(values1, probs1, values1.length);		
+			distributions[t][1] = new DiscreteDistribution(values2, probs2, values2.length);
+		}		
+
 		// build action list (y1, y2) for two items
 		Function<CashStateMultiXR, ArrayList<double[]>> buildActionList = s -> {
 			ArrayList<double[]> actions = new ArrayList<>();
@@ -97,7 +80,7 @@ public class MultiItemCashXR {
 				}
 			return actions;
 		};
-		
+
 		// Immediate Value Function	      
 		ImmediateValueFunction<CashStateMultiXR, double[], double[], Double> immediateValue
 		= (IniState, Actions, RandomDemands) -> {
@@ -115,14 +98,13 @@ public class MultiItemCashXR {
 			double orderingCostY2 = variCost[1] * action2;
 			double orderingCostsY = orderingCostY1 + orderingCostY2;
 			double salValue = 0;
-			if (IniState.getPeriod() == T) {
+			if (IniState.getPeriod() == T - 1) {
 				salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
 			}
 			return revenue + (1 - depositeRate) * (IniState.getIniR() - orderingCostsY) + salValue - initialCash;
 		};
-	    	
-		// State Transition Function
 
+		// State Transition Function
 		StateTransitionFunction<CashStateMultiXR, double[], double[], CashStateMultiXR> stateTransition = (IniState, Actions, RandomDemands) -> {
 			double endInventory1 = Actions[0] - RandomDemands[0];
 			endInventory1 = Math.max(0, endInventory1);
@@ -140,26 +122,26 @@ public class MultiItemCashXR {
 			double nextR = (int) nextCash + variCost[0] * endInventory1 + variCost[1] * endInventory2;
 			return new CashStateMultiXR(IniState.getPeriod() + 1, endInventory1, endInventory2, nextR);
 		};
-		
+
 		GetPmfMulti PmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);
-		
+
 		/*******************************************************************
 		 * Solve
 		 */
 		CashRecursionMultiXR recursion = new CashRecursionMultiXR(discountFactor, PmfMulti, buildActionList,
-				                             stateTransition, immediateValue, T);
+				stateTransition, immediateValue, T);
 		int period = 1;
 		CashStateMultiXR iniState = new CashStateMultiXR(period, iniInventory1, iniInventory2, iniCash);
 		long currTime = System.currentTimeMillis();
 		double finalValue = iniCash + recursion.getExpectedValue(iniState);
 		System.out.println("final optimal cash  is " + finalValue);
 		System.out.println("optimal order quantity in the first priod is :  y1 = " + recursion.getAction(iniState)[0]
-				                      + ", y2 = " + recursion.getAction(iniState)[1]);
+				+ ", y2 = " + recursion.getAction(iniState)[1]);
 		double time = (System.currentTimeMillis() - currTime) / 1000.0;
 		System.out.println("running time is " + time + "s");
-		
-		
-		
+
+
+
 		/*******************************************************************
 		 * Simulating sdp results
 		 * 
@@ -167,7 +149,7 @@ public class MultiItemCashXR {
 		 */
 		int sampleNum = 10000;		
 		CashSimulationMultiXR simuation = new CashSimulationMultiXR(sampleNum, distributions, discountFactor, 
-				 recursion, stateTransition, immediateValue);
+				recursion, stateTransition, immediateValue);
 		double simFinalValue = simuation.simulateSDPGivenSamplNum(iniState);
 		System.out.println(simFinalValue);
 		
@@ -184,7 +166,6 @@ public class MultiItemCashXR {
 		String headString =  "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w"+ "\t" + "R" + "\t" + "is limited cash and both ordering" + "\t" + "alpha"
 				 				+ "\t" + "y1"+ "\t" + "y2" + "\t" + "c1" + "\t" + "c2";
 		wr.writeArrayToExcel(optTable, fileName, headString);
-		
 	}
 
 }

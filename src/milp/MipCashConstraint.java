@@ -447,7 +447,15 @@ public class MipCashConstraint {
 			else
 				distribution = new PoissonDist(demandSum);
 			S = distribution.inverseF((price - variCost) / (holdingCost  + price));
-
+			
+			// try a different S
+			int orderLastTo2 = T - 1;
+			double demandSum2 = IntStream.range(t, orderLastTo2 + 1).mapToObj(i -> distributions[i].getMean())
+					.reduce(0.0, (x, y) -> x.doubleValue() + y.doubleValue());
+			Distribution distribution2 = new PoissonDist(demandSum2);
+			double S2 = distribution2.inverseF((price - variCost) / (price - salvageValue));
+			
+			
 			double maxQ = 0;
 			if (t == 0)
 				maxQ = Math.max(0, (iniCash - fixOrderCost)/variCost);
@@ -455,7 +463,8 @@ public class MipCashConstraint {
 				maxQ = Math.max(0, (varB[t - 1] - fixOrderCost)/variCost);
 			double cashS = t == 0 ? iniInventory + maxQ : varI[t - 1] + maxQ;
 			S = Math.min(S, cashS);
-			sCS[t][2] = S;					
+			sCS[t][2] = S;		
+			sCS[t][2] = S2;
 			
 			// ascertain s
 			for (int i = 0; i <= (int) S; i++) {

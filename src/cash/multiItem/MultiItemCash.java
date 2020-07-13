@@ -92,7 +92,7 @@ public class MultiItemCash {
 					double orderingCost2 = variCost[1] * action2;
 					double orderingCosts = orderingCost1 + orderingCost2;
 					double salValue = 0;
-					if (IniState.getPeriod() == T - 1) {
+					if (IniState.getPeriod() == T) {
 						salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
 					}
 					return revenue - orderingCosts + salValue;
