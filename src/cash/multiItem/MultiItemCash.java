@@ -101,9 +101,9 @@ public class MultiItemCash {
 		// State Transition Function
 
 		StateTransitionFunction<CashStateMulti, Actions, Demands, CashStateMulti> stateTransition = (IniState, Actions, RandomDemands) -> {
-			int endInventory1 = IniState.getIniInventory1() + Actions.getFirstAction() - RandomDemands.getFirstDemand();
+			double endInventory1 = IniState.getIniInventory1() + Actions.getFirstAction() - RandomDemands.getFirstDemand();
 			endInventory1 = Math.max(0, endInventory1);
-			int endInventory2 = IniState.getIniInventory2() + Actions.getSecondAction() - RandomDemands.getSecondDemand();
+			double endInventory2 = IniState.getIniInventory2() + Actions.getSecondAction() - RandomDemands.getSecondDemand();
 			endInventory2 = Math.max(0, endInventory2);
 			double nextCash = IniState.getIniCash() + immediateValue.apply(IniState, Actions, RandomDemands);
 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;

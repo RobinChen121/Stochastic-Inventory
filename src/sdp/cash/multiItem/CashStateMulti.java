@@ -13,11 +13,11 @@ package sdp.cash.multiItem;
 
 public class CashStateMulti {
 	int period;
-	int iniInventory1;
-	int iniInventory2;
+	double iniInventory1;
+	double iniInventory2;
 	double iniCash;
 	
-	public CashStateMulti(int period, int iniInventory1, int iniInventory2, double iniCash) {
+	public CashStateMulti(int period, double iniInventory1, double iniInventory2, double iniCash) {
 		this.period = period;
 		this.iniInventory1 = iniInventory1;
 		this.iniInventory2 = iniInventory2;
@@ -28,11 +28,11 @@ public class CashStateMulti {
 		return this.period;
 	}
 	
-	public int getIniInventory1() {
+	public double getIniInventory1() {
 		return this.iniInventory1;
 	}
 	
-	public int getIniInventory2() {
+	public double getIniInventory2() {
 		return this.iniInventory2;
 	}
 	

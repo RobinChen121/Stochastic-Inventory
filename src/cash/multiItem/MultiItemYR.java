@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.function.Function;
 
 import sdp.cash.multiItem.CashRecursionV;
+import sdp.cash.multiItem.CashStateMulti;
 import sdp.cash.multiItem.CashStateMultiYR;
 import sdp.cash.multiItem.GetPmfMulti;
+import sdp.inventory.FinalCash.BoundaryFuncton;
 import sdp.inventory.ImmediateValue.ImmediateValueFunctionV;
 import sdp.inventory.StateTransition.StateTransitionFunctionV;
 import umontreal.ssj.probdist.Distribution;
@@ -42,7 +44,7 @@ public class MultiItemYR {
 		// gamma distribution:mean demand is shape * scale and variance is shape * scale^2
 		// shape = demand / scale
 		// variance = demand * scale
-		double[][] demand = {{ 5, 5}, {8, 8}}; // higher average demand vs lower average demand
+		double[][] demand = {{ 5}, {8}}; // higher average demand vs lower average demand
 		double[] scale = {1, 2}; // higher variance vs lower variance
 			
 		int T = demand[0].length; // horizon length
@@ -81,13 +83,14 @@ public class MultiItemYR {
 		};
 		
 		// build action list (y1, y2) for Pai(x1, x2, R)
-		Function<CashStateMultiYR, ArrayList<double[]>> buildActionListV = s -> {
+		Function<CashStateMulti, ArrayList<double[]>> buildActionListV = s -> {
 			ArrayList<double[]> actions = new ArrayList<>();
 			int miny1 = (int) s.getIniInventory1();
 			int miny2 = (int) s.getIniInventory2();
+			double iniR = s.getIniCash() + variCost[0] * s.getIniInventory1() + variCost[1] * s.getIniInventory2();
 			for (int i = miny1; i < miny1 + Qbound; i++)
-				for (int j = miny2; j < miny2 + Qbound; j++) {
-					if (variCost[0] * i + variCost[1] * j < s.getIniR() + 0.1) {
+				for (int j = miny2; j < miny2 + Qbound; j++) {				
+					if (variCost[0] * i + variCost[1] * j < iniR + 0.1) {
 						double[] thisActions = {i, j};
 						actions.add(thisActions);
 					}					
@@ -114,25 +117,32 @@ public class MultiItemYR {
 			if (IniState.getPeriod() == T) {
 				salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
 			}
-			return revenue + (1 - depositeRate) * (IniState.getIniR() - orderingCostsY) + salValue - IniState.getIniR();
+			return revenue + (1 - depositeRate) * (IniState.getIniR() - orderingCostsY) - IniState.getIniR();
 		};
 	
+		BoundaryFuncton<CashStateMulti, Double> boundFinalCash
+		= (IniState) -> {
+			return IniState.getIniCash() + salPrice[0] * IniState.getIniInventory1() + salPrice[1] * IniState.getIniInventory2();
+		};
 	
 	// State Transition Function
-	StateTransitionFunctionV<CashStateMultiYR, double[], CashStateMultiYR> stateTransition
+	StateTransitionFunctionV<CashStateMultiYR, double[], CashStateMulti> stateTransition
 	= (IniState, RandomDemands) -> {
 		double endInventory1 = IniState.getIniInventory1() - RandomDemands[0];
 		endInventory1 = Math.max(0, endInventory1);
 		double endInventory2 = IniState.getIniInventory2()- RandomDemands[1];
 		endInventory2 = Math.max(0, endInventory2);
-		double nextR = IniState.getIniR()+ immediateValue.apply(IniState, RandomDemands);
+		double revenue1 = price[0] * Math.min(IniState.getIniInventory1(), RandomDemands[0]);
+		double revenue2 = price[1] * Math.min(IniState.getIniInventory2(), RandomDemands[1]);
+		double nextW = revenue1 + revenue2 + (1 + depositeRate) * (IniState.getIniR() - variCost[0] * IniState.getIniInventory1()
+									- variCost[1] * IniState.getIniInventory2());  // revise
 		
-		nextR = nextR> maxCashState ? maxCashState : nextR;
-		nextR = nextR < minCashState ? minCashState : nextR;
+		nextW = nextW> maxCashState ? maxCashState : nextW;
+		nextW = nextW < minCashState ? minCashState : nextW;
 		endInventory1 = endInventory1 > maxInventoryState ? maxInventoryState : endInventory1;
 		endInventory2 = endInventory2 < minInventoryState ? minInventoryState : endInventory2;
 		
-		return new CashStateMultiYR(IniState.getPeriod() + 1, endInventory1, endInventory2, nextR);
+		return new CashStateMulti(IniState.getPeriod() + 1, endInventory1, endInventory2, nextW);
 	};
 
 	
@@ -143,9 +153,9 @@ public class MultiItemYR {
 	 * Solve
 	 */
 	CashRecursionV recursion = new CashRecursionV(discountFactor, PmfMulti, buildActionListV, buildActionListPai,
-			stateTransition, immediateValue, T);
+			stateTransition, boundFinalCash, T, variCost);
 	int period = 1;
-	CashStateMultiYR iniState = new CashStateMultiYR(period, iniInventory1, iniInventory2, iniCash);
+	CashStateMulti iniState = new CashStateMulti(period, iniInventory1, iniInventory2, iniCash);
 	long currTime = System.currentTimeMillis();
 	double finalValue = iniCash + recursion.getExpectedValueV(iniState);
 	System.out.println("final optimal cash  is " + finalValue);

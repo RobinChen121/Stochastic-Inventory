@@ -46,7 +46,7 @@ public class MultiItemCashXR {
 		// gamma distribution:mean demand is shape * scale and variance is shape * scale^2
 		// shape = demand / scale
 		// variance = demand * scale
-		double[][] demand = {{ 5, 5}, {8, 8}}; // higher average demand vs lower average demand
+		double[][] demand = {{ 5}, {8}}; // higher average demand vs lower average demand
 		double[] scale = {1, 2}; // higher variance vs lower variance
 		
 		
