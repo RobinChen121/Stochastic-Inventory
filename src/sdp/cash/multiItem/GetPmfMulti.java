@@ -69,10 +69,14 @@ public class GetPmfMulti {
 		
 		if(distributionGeneral[0][t] instanceof GammaDist) {
 			
-			double scale1 =  distributionGeneral[0][t].getMean() / distributionGeneral[0][t].getVariance();
-			double shape1 = distributionGeneral[0][t].getMean() / scale1;
-			double scale2 = distributionGeneral[1][t].getMean() / distributionGeneral[1][t].getVariance();
-			double shape2 = distributionGeneral[1][t].getMean() / scale2;
+			double mean1 = distributionGeneral[0][t].getMean(); double mean2 = distributionGeneral[1][t].getMean(); 
+			double variance1 = distributionGeneral[0][t].getVariance(); double variance2 = distributionGeneral[1][t].getVariance();
+			
+			double scale1 =  mean1 / variance1;
+			double shape1 = mean1 * scale1;
+			double scale2 = mean2 / variance2;
+			double shape2 = mean2 * scale2;
+			
 			GammaDist distribution1 = new GammaDist(shape1, scale1);
 			GammaDist distribution2 = new GammaDist(shape2, scale2);
 			double[] supportLB = new double[2];

@@ -4,17 +4,23 @@
 package cash.multiItem;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.function.Function;
 
 import sdp.cash.multiItem.CashRecursionV;
+import sdp.cash.multiItem.CashSimulationMultiXR;
+import sdp.cash.multiItem.CashSimulationY;
 import sdp.cash.multiItem.CashStateMulti;
 import sdp.cash.multiItem.CashStateMultiYR;
+import sdp.cash.multiItem.CashStateR;
 import sdp.cash.multiItem.GetPmfMulti;
 import sdp.inventory.FinalCash.BoundaryFuncton;
 import sdp.inventory.ImmediateValue.ImmediateValueFunctionV;
 import sdp.inventory.StateTransition.StateTransitionFunctionV;
+import sdp.write.WriteToExcel;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 /**
@@ -33,49 +39,49 @@ public class MultiItemYR {
 	
 	public static void main(String[] args) {
 		double[] price = {4, 10};
-		double[] variCost = {2, 5};  // higher margin vs lower margin
+		double[] variCost = {2, 4};  // higher margin vs lower margin
 		double depositeRate = 0;
 		double[] salPrice = {1, 1};
 		
-		double iniCash = 30;  // initial cash
+		double iniCash = 20;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 			
 		// gamma distribution:mean demand is shape * scale and variance is shape * scale^2
-		// shape = demand / scale
-		// variance = demand * scale
-		double[][] demand = {{ 5}, {8}}; // higher average demand vs lower average demand
-		double[] scale = {1, 2}; // higher variance vs lower variance
+		// shape = demand * scale
+		// variance = demand / scale
+		double[][] demand = {{5, 5, 5}, {8, 8, 8}}; // higher average demand vs lower average demand
+		double[] rate = {2, 1}; // higher variance vs lower variance
 			
 		int T = demand[0].length; // horizon length
 		int m = demand.length; // number of products
 		
 		double truncationQuantile = 0.9999; // may affect poisson results
 		int stepSize = 1;
-		double minCashState = 0;
+		double minCashState = -50;
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
 		int maxInventoryState = 200;
-		int Qbound = 80;
+		int Qbound = 20;
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
-		//Distribution[][] distributions =  new GammaDist[m][T];
-		Distribution[][] distributions =  new PoissonDist[m][T];
+		Distribution[][] distributions =  new GammaDist[m][T];
+		//Distribution[][] distributions =  new PoissonDist[m][T];
 		//Distribution[][] distributions =  new NormalDist[m][T];
 		for (int i = 0; i < m; i++)
 			for (int t = 0; t < T; t++) {
-				//distributions[i][t] = new GammaDist(demand[i][t]/ scale[i], scale[i]);
-				distributions[i][t] = new PoissonDist(demand[i][t]);
-				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[t][i]);
+				distributions[i][t] = new GammaDist(demand[i][t]* rate[i], rate[i]);
+				//distributions[i][t] = new PoissonDist(demand[i][t]);
+				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
 			}
 		
 		// build action list (y1, y2) for V(x1, x2, R)
 		Function<CashStateMultiYR, ArrayList<double[]>> buildActionListPai = s -> {
 			ArrayList<double[]> actions = new ArrayList<>();
-			int Ybound = Qbound;
-			for (int i = 0; i < Ybound; i++)
-				for (int j = 0; j < Ybound; j++) {
+			double Ybound = Qbound;
+			for (double i = 0; i < Ybound; i++)
+				for (double j = 0; j < Ybound; j++) {
 					double[] thisActions = {i, j};
 					actions.add(thisActions);	
 				}
@@ -137,7 +143,10 @@ public class MultiItemYR {
 		double nextW = revenue1 + revenue2 + (1 + depositeRate) * (IniState.getIniR() - variCost[0] * IniState.getIniInventory1()
 									- variCost[1] * IniState.getIniInventory2());  // revise
 		
-		nextW = nextW> maxCashState ? maxCashState : nextW;
+		endInventory1 = Math.round(endInventory1);
+		endInventory2 = Math.round(endInventory2);
+		nextW = Math.round(nextW);
+		nextW = nextW > maxCashState ? maxCashState : nextW;
 		nextW = nextW < minCashState ? minCashState : nextW;
 		endInventory1 = endInventory1 > maxInventoryState ? maxInventoryState : endInventory1;
 		endInventory2 = endInventory2 < minInventoryState ? minInventoryState : endInventory2;
@@ -157,12 +166,46 @@ public class MultiItemYR {
 	int period = 1;
 	CashStateMulti iniState = new CashStateMulti(period, iniInventory1, iniInventory2, iniCash);
 	long currTime = System.currentTimeMillis();
-	double finalValue = iniCash + recursion.getExpectedValueV(iniState);
+	double finalValue = recursion.getExpectedValueV(iniState);
 	System.out.println("final optimal cash  is " + finalValue);
 	System.out.println("optimal order quantity in the first priod is :  y1 = " + recursion.getAction(iniState)[0]
 			                      + ", y2 = " + recursion.getAction(iniState)[1]);
 	double time = (System.currentTimeMillis() - currTime) / 1000.0;
 	System.out.println("running time is " + time + "s");
+	
+	CashStateR iniState2 = new CashStateR(period, iniCash);
+	double[] optY = recursion.getYStar(iniState2);
+	System.out.println("optimal order quantity y* in the first priod is : " + Arrays.toString(optY));
+	double[][] optTable = recursion.getOptTableDetail();
+	
+	
+	/*******************************************************************
+	 * Simulate
+	 * 
+	 * 
+	 */
+	int sampleNum = 10000;	
+	currTime = System.currentTimeMillis();
+	CashSimulationY simulation = new CashSimulationY(sampleNum, distributions, discountFactor, 
+			 recursion, stateTransition);
+	double simFinalValue = simulation.simulateSDPGivenSamplNum(iniState, variCost);
+	double gap = (simFinalValue - finalValue) / finalValue;
+	System.out.printf("optimality gap for this policy is %.2f%%\n", gap * 100);
+	time = (System.currentTimeMillis() - currTime) / 1000.0;
+	System.out.println("running time is " + time + "s");
+	
+	
+	WriteToExcel wr = new WriteToExcel();
+	String fileName = "Pai_yStar" + ".xls";
+	String headString =  "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
+	          "c1" + "\t" + "c2" + "\t" + "R" + "\t" + "y1*"+ "\t" + "y2*" + "\t" + 
+			   "cashConstrained" + "\t" + "alpha" + "\t" + "y1"  + "\t" + "y2";
+	wr.writeArrayToExcel(optTable, fileName, headString);
+	
+	
+	
+	
+	
 
 }
 	

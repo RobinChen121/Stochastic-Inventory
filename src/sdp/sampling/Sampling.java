@@ -75,7 +75,7 @@ public class Sampling {
 	 * @param distributions
 	 * @param sampleNum
 	 * @param t
-	 * @return a 2D random samples for two items in a period t
+	 * @return a 2D random samples for two items in a period t, very slow for multi products
 	 * @date: Apr 29, 2020, 12:04:34 PM 
 	 */
 	public static double[][] generateLHSamples(Distribution[][] distributions, int sampleNum){
@@ -91,7 +91,7 @@ public class Sampling {
 					double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
 					double lowBound = (double) i/ (double) sampleNum;
 					double ppf = lowBound + randomNum;
-					samples[i][j + t * itemNum] = distributions[j][t].inverseF(ppf);
+					samples[i][j + t * itemNum] = Math.round(distributions[j][t].inverseF(ppf) * 1.0) / 1.0;
 				}
 		}
 	    shuffle(samples); // ´òÂÒÊý×é

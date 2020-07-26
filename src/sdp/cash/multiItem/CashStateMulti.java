@@ -40,6 +40,10 @@ public class CashStateMulti {
 		return this.iniCash;
 	}
 	
+	public double getIniR(double[] variCosts) {
+		return this.iniCash + variCosts[0] * this.iniInventory1 + variCosts[1] * this.iniInventory2;
+	}
+	
 	@Override
 	public int hashCode(){
 		String hash = "";

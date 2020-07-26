@@ -74,7 +74,7 @@ public class WriteToCsv {
 				for (int j = 0; j < columnNum + 1; j++) {
 					if(i == 0) {
 						if (j == 0)
-							fw.write("R|x"+ ",");
+							fw.write("x|R"+ ",");
 						else {
 							bg = new BigDecimal(minInventory + j - 1);
 							fw.write(bg + ",");

@@ -53,15 +53,15 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 12, 10, 14};
+		double[] meanDemand = {2, 3, 8};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 33;
-		double fixOrderCost = 24;
+		double iniCash = 10;
+		double fixOrderCost = 10;
 		double variCost = 1;
-		double price = 4;
+		double price = 8;
 		double depositeRate = 0;
-		double salvageValue = 0;
+		double salvageValue = 0.5;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
 		double overheadCost = 0; // costs like wages or rents which is required to pay in each period

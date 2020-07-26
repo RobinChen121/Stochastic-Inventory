@@ -72,7 +72,7 @@ public class CashConstraintLookPolicy {
 		int rowNum= (int) ((xmax - xmin + 1)/1) + 1; // ((Rmax - Rmin + 1)/2) + 2;
 		double[][] resultTable = new double[rowNum][columnNum];
 		
-		for (iniInventory = xmin; iniInventory <= xmax; iniInventory++) {
+		for (iniInventory = xmax; iniInventory >= xmin; iniInventory--) {
 			column = 0;
 			for (iniCash = Rmin; iniCash <= Rmax; iniCash = iniCash + 1) {
 	

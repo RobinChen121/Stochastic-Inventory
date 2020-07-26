@@ -46,7 +46,7 @@ public class MultiItemCashXR {
 		// gamma distribution:mean demand is shape * scale and variance is shape * scale^2
 		// shape = demand / scale
 		// variance = demand * scale
-		double[][] demand = {{ 5}, {8}}; // higher average demand vs lower average demand
+		double[][] demand = {{ 5, 5, 5, 5}, {8, 8, 8, 8}}; // higher average demand vs lower average demand
 		double[] scale = {1, 2}; // higher variance vs lower variance
 		
 		
@@ -68,14 +68,14 @@ public class MultiItemCashXR {
 		
 		// get demand possibilities for each period
 		// row is item, column is period
-		//Distribution[][] distributions =  new GammaDist[m][T];
-		Distribution[][] distributions =  new PoissonDist[m][T];
+		Distribution[][] distributions =  new GammaDist[m][T];
+		//Distribution[][] distributions =  new PoissonDist[m][T];
 		//Distribution[][] distributions =  new NormalDist[m][T];
 		for (int i = 0; i < m; i++)
 			for (int t = 0; t < T; t++) {
 				try {
-				//distributions[i][t] = new GammaDist(demand[i][t]/ scale[i], scale[i]);
-				distributions[i][t] = new PoissonDist(demand[i][t]);	
+				distributions[i][t] = new GammaDist(demand[i][t]/ scale[i], scale[i]);
+				//distributions[i][t] = new PoissonDist(demand[i][t]);	
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
 				}catch (Exception e) {
 					System.out.println(t);

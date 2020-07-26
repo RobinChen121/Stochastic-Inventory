@@ -28,10 +28,10 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CheckFG {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {3, 7};
+		double[] meanDemand = {2, 3, 8};
 		double iniCash = 13;
 		double iniInventory = 0;
-		double fixOrderCost = 20;
+		double fixOrderCost = 10;
 		double variCost = 1;
 		double price = 8;
 		double salvageValue = 0.5;
@@ -172,17 +172,17 @@ public class CheckFG {
 				immediateValue2, discountFactor);
 		double[][] yG3 = new double[xLength * RLength][3];
 		index = 0;
-		double[][] resultTableGA = new double[RLength][xLength];
+		double[][] resultTableGA = new double[xLength][RLength];
 		rowIndex = 0;
-		for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
+		for (double initialInventory = minInventoryState; initialInventory <= maxInventorys; initialInventory++) {
 			columnIndex = 0;
-			for (double initialInventory = minInventoryState; initialInventory <= maxInventorys; initialInventory++) {
-			yG3[index][0] = initialCash; // initialInventory
-			yG3[index][1] = initialInventory; // initialInventory
-			yG3[index][2] = recursion3.getExpectedValue(new CashState(period, initialInventory, initialCash)) - variCost * initialInventory; 
-			resultTableGA[rowIndex][columnIndex] = yG3[index][2]; // careful, minus cy
-			index++;
-			columnIndex++;
+			for (double initialCash = minCash; initialCash <= maxCash; initialCash++) {
+				yG3[index][0] = initialInventory; // initialInventory
+				yG3[index][1] = initialCash; // initialCash
+				yG3[index][2] = recursion3.getExpectedValue(new CashState(period, initialInventory, initialCash)) - variCost * initialInventory; 
+				resultTableGA[rowIndex][columnIndex] = yG3[index][2]; // careful, minus cy
+				index++;
+				columnIndex++;
 			}
 			rowIndex++;
 		}
