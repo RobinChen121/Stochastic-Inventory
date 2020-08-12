@@ -28,13 +28,13 @@ import umontreal.ssj.probdist.PoissonDist;
 
 public class CashConstraintG {
 	public static void main(String[] args) {
-		double[] meanDemand = {8, 8, 8};
+		double[] meanDemand = {5, 5, 5};
 
-		double variCost = 5;
-		double price = 10;
+		double variCost = 2;
+		double price = 4;
 		double depositeRate = 0;
 		double salvageValue = 1;
-		double truncationQuantile = 0.99;
+		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 
 		double coe = 1;
@@ -42,9 +42,9 @@ public class CashConstraintG {
 		// get demand possibilities for each period
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new PoissonDist(meanDemand[i]))			
+				//.mapToObj(i -> new PoissonDist(meanDemand[i]))			
 				//.mapToObj(i -> new NormalDist(meanDemand[i], coe * Math.sqrt(meanDemand[i]))) // can be changed to other distributions				
-				//.mapToObj(i -> new GammaDist(meanDemand[i], 2))
+				.mapToObj(i -> new GammaDist(meanDemand[i] * 2, 2))
 				.toArray(Distribution[]::new);
 				
 		

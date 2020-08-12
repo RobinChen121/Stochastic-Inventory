@@ -38,12 +38,12 @@ public class MultiItemYR {
 	
 	
 	public static void main(String[] args) {
-		double[] price = {4, 10};
+		double[] price = {4, 7};
 		double[] variCost = {2, 4};  // higher margin vs lower margin
 		double depositeRate = 0;
 		double[] salPrice = {1, 1};
 		
-		double iniCash = 20;  // initial cash
+		double iniCash = 10;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 			
@@ -199,7 +199,7 @@ public class MultiItemYR {
 	String fileName = "Pai_yStar" + ".xls";
 	String headString =  "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
 	          "c1" + "\t" + "c2" + "\t" + "R" + "\t" + "y1*"+ "\t" + "y2*" + "\t" + 
-			   "cashConstrained" + "\t" + "alpha" + "\t" + "y1"  + "\t" + "y2";
+			   "cashSituation" + "\t" + "alpha" + "\t" + "yHead1"  + "\t" + "yHead2";
 	wr.writeArrayToExcel(optTable, fileName, headString);
 	
 	

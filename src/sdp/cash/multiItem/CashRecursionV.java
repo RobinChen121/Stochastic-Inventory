@@ -54,7 +54,7 @@ public class CashRecursionV {
 		this.T = T;
 		this.variCost = variCost;
 		
-		// sorted map for recorded actions and values 
+		// sorted map for recorded yHeads and values 
 		Comparator<CashStateMultiYR> keyComparator = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
 			o1.getPeriod() == o2.getPeriod() ? o1.getIniInventory1() > o2.getIniInventory1() ? 1 : 
 				o1.getIniInventory1() == o2.getIniInventory1() ? o1.getIniInventory2() > o2.getIniInventory2() ? 1 :
@@ -100,12 +100,12 @@ public class CashRecursionV {
 	// maybe only stateTransitionFunction needed
 	public double getExpectedValueV(CashStateMulti initialState) {
 		return this.cacheValuesV.computeIfAbsent(initialState, s -> {
-			ArrayList<double[]> actions = buildActionListV.apply(s);
+			ArrayList<double[]> yHeads = buildActionListV.apply(s);
 			double val = -Double.MAX_VALUE;
-			double[] bestYs = new double[] {0, 0};
+			double[] bestYs = new double[] {initialState.getIniInventory1(), initialState.getIniInventory2()};
 			if (initialState.getPeriod() <= T) {
-				for (int i = 0; i < actions.size(); i++) {
-					double[] thisActions = actions.get(i);
+				for (int i = 0; i < yHeads.size(); i++) {
+					double[] thisActions = yHeads.get(i);
 					double iniR = s.iniCash + variCost[0] * s.iniInventory1 + variCost[1] * s.iniInventory2;
 					CashStateMultiYR thisState = new CashStateMultiYR(s.getPeriod(), thisActions[0], thisActions[1], iniR);
 					double thisActionsValue = getExpectedValuePai(thisState);
@@ -131,7 +131,7 @@ public class CashRecursionV {
 	}
 	
 	/**
-	* @Description: return the optimal actions for a given state
+	* @Description: return the optimal yHeads for a given state
 	* @param @param state
 	* @param @return    
 	* @return optimal y1, y2  for state (x1, x2, R)
@@ -149,11 +149,11 @@ public class CashRecursionV {
 	public double[] getYStar(CashStateR initialState) { // revise
 		return this.cacheYStar.computeIfAbsent(initialState, s -> {
 		CashStateMultiYR state = new CashStateMultiYR(s.getPeriod(), 0, 0, s.iniR);
-		ArrayList<double[]> actions = buildActionListPai.apply(state);
+		ArrayList<double[]> yHeads = buildActionListPai.apply(state);
 		double val = -Double.MAX_VALUE;
 		double[] bestYs = new double[] {0, 0};
-		for (int i = 0; i < actions.size(); i++) {
-			double[] thisActions = actions.get(i);
+		for (int i = 0; i < yHeads.size(); i++) {
+			double[] thisActions = yHeads.get(i);
 			CashStateMultiYR thisState = new CashStateMultiYR(s.getPeriod(), thisActions[0], thisActions[1], s.iniR);
 			double thisActionsValue = getExpectedValuePai(thisState);
 			if (thisActionsValue > val + 0.1) {
@@ -237,12 +237,33 @@ public class CashRecursionV {
 			double alpha = 10000;
 			double x1 = entry.getKey().iniInventory1; double x2 = entry.getKey().iniInventory2;
 			double w = entry.getKey().getIniCash(); 
-			if (variCost[0] * yStars[0]+ variCost[1] * yStars[1] >= R + 0.1) {
+			double[] yHeads = new double[] {0, 0};
+			if (x1 < yStars[0]+0.1 && x2 < yStars[1]
+					&& variCost[0] * yStars[0] + variCost[1] * yStars[1] < stateR.iniR+0.1) {
+				yHeads[0] = yStars[0]; yHeads[1] = yStars[1];
 				cashConstrained = 1;
+			}
+			else if (x1 > yStars[0]-0.1 && x2 > yStars[1]-0.1) {
+				yHeads[0] = x1; yHeads[1] = x2;
+				cashConstrained = 5;
+			}
+			else if (x1 > yStars[0]-0.1 && x2 < yStars[1]+0.1) {
+				yHeads[0] = x1; yHeads[1] = Math.min(yStars[1], (stateR.iniR - x1*variCost[0]) / variCost[1]);
+				cashConstrained = 4;
+			}
+			else if (x1 < yStars[0]+0.1 && x2 > yStars[1]-0.1){
+				yHeads[0] = Math.min(yStars[0], (stateR.iniR -  x2*variCost[1]) / variCost[0]); yHeads[1] = x2;
+				cashConstrained = 3;
+			}
+			else if (x1 < yStars[0]+0.1 && x2 < yStars[1]+0.1
+					&& variCost[0] * yStars[0] + variCost[1] * yStars[1] > stateR.iniR-0.1) {
 				alpha = cacheAlpha.get(stateR);
-			}						
+				yHeads[0] = alpha * stateR.iniR / variCost[0]; 
+				yHeads[1] = (1 - alpha) * stateR.iniR / variCost[1];	
+				cashConstrained = 2;
+			}				
 
-			arr[i++] = new double[]{period, x1, x2, w, variCost[0], variCost[1], R, yStars[0], yStars[1], cashConstrained, alpha, y1, y2};					
+			arr[i++] = new double[]{period, x1, x2, w, variCost[0], variCost[1], R, yStars[0], yStars[1], cashConstrained, alpha, yHeads[0], yHeads[1]};					
 		}
 		return arr;
 	}
