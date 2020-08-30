@@ -174,12 +174,14 @@ public class CashRecursionV {
 		return this.cacheAlpha.computeIfAbsent(initialState, s -> {
 			double bestAlpha = 0;
 			double bestValue = -Double.MAX_VALUE;
-			for (double alpha = 0; alpha <= 1; alpha = alpha + 0.1) {
+			for (double alpha = 0; alpha <= 1; alpha = alpha + 0.01) {  // stepsize of alpha
+				if (initialState.period == 1 && alpha > 0.89)
+					System.out.print("");
 				double y1 = alpha * s.iniR / variCost[0];
 				double y2 = (1 - alpha) * s.iniR / variCost[1];
 				CashStateMultiYR state = new CashStateMultiYR(s.period, y1, y2, s.iniR);
 				double expectValue = getExpectedValuePai(state);
-				if (expectValue > bestValue) {
+				if (expectValue > bestValue - 0.1) {
 					bestValue = expectValue;
 					bestAlpha = alpha;
 				}

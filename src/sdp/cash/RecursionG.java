@@ -130,10 +130,10 @@ public class RecursionG {
 			int maxY = 200;
 			double optY = 0;
 			double optYValue = -1000;
-			for (int y  = 0; y < maxY; y++) {
+			for (double y  = 0; y < maxY; y=y+1) {
 				StateY newStateY = new StateY(s.getPeriod(), y);
 				double thisYValue = G(newStateY); // optimal y in the next period
-				if (thisYValue - optYValue > 0.1) {
+				if (thisYValue - optYValue > 0.5) {
 					optYValue = thisYValue;
 					optY = y;
 				}

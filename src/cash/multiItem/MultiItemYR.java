@@ -41,24 +41,28 @@ public class MultiItemYR {
 		double[] price = {4, 7};
 		double[] variCost = {2, 4};  // higher margin vs lower margin
 		double depositeRate = 0;
-		double[] salPrice = {1, 1};
+		double[] salPrice = {1, 4};
 		
-		double iniCash = 10;  // initial cash
+		double iniCash = 50;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 			
 		// gamma distribution:mean demand is shape * scale and variance is shape * scale^2
 		// shape = demand * scale
 		// variance = demand / scale
-		double[][] demand = {{5, 5, 5}, {8, 8, 8}}; // higher average demand vs lower average demand
+		double[][] demand = {{5, 5}, {8, 8}}; // higher average demand vs lower average demand
 		double[] rate = {2, 1}; // higher variance vs lower variance
 			
 		int T = demand[0].length; // horizon length
 		int m = demand.length; // number of products
 		
+//		for (int index = 5; index <= 10; index++) {
+//			price[1] = index;
+		
+		
 		double truncationQuantile = 0.9999; // may affect poisson results
 		int stepSize = 1;
-		double minCashState = -50;
+		double minCashState = 0;
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
 		int maxInventoryState = 200;
@@ -123,7 +127,7 @@ public class MultiItemYR {
 			if (IniState.getPeriod() == T) {
 				salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
 			}
-			return revenue + (1 - depositeRate) * (IniState.getIniR() - orderingCostsY) - IniState.getIniR();
+			return revenue + (1 - depositeRate) * (IniState.getIniR() - orderingCostsY) - IniState.getIniR() + salValue;
 		};
 	
 		BoundaryFuncton<CashStateMulti, Double> boundFinalCash
@@ -202,6 +206,10 @@ public class MultiItemYR {
 			   "cashSituation" + "\t" + "alpha" + "\t" + "yHead1"  + "\t" + "yHead2";
 	wr.writeArrayToExcel(optTable, fileName, headString);
 	
+	System.out.println("alpha in the first period: " + optTable[0][10]);
+	System.out.println("*******************************");
+	
+		}	
 	
 	
 	
@@ -209,4 +217,4 @@ public class MultiItemYR {
 
 }
 	
-}
+//}

@@ -46,8 +46,8 @@ public class CashConstraintXR {
 		double iniInventory = 0;
 		double iniCash = 30;
 		double fixOrderCost = 0;
-		double variCost = 5;
-		double price = 10;
+		double variCost = 2;
+		double price = 4;
 		double depositeRate = 0;
 		double salvageValue = 1;
 		double holdingCost = 0;	
