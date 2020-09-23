@@ -53,13 +53,13 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {2, 3, 8};
+		double[] meanDemand = {4.08, 12.16, 37.36, 21.44, 39.12, 35.68, 19.84, 22.48, 29.04, 12.4};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 10;
-		double fixOrderCost = 10;
+		double iniCash = 18;
+		double fixOrderCost = 15;
 		double variCost = 1;
-		double price = 8;
+		double price = 7;
 		double depositeRate = 0;
 		double salvageValue = 0.5;
 		double holdingCost = 0;	
@@ -224,7 +224,7 @@ public class CashConstraint {
 		 */
 		System.out.println("************************************************");
  		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
- 		double[][] sCS = mipHeuristic.findsCS(); 
+ 		double[][] sCS = mipHeuristic.findsCSNew(); 
  		Map<State, Double> cacheCValues = new TreeMap<>();
  		cacheCValues = mipHeuristic.cacheC1Values;
  		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheCValues, overheadCost, maxOrderQuantity, fixOrderCost, variCost);

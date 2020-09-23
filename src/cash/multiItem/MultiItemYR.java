@@ -38,20 +38,21 @@ public class MultiItemYR {
 	
 	
 	public static void main(String[] args) {
-		double[] price = {4, 7};
-		double[] variCost = {2, 4};  // higher margin vs lower margin
+		double[] price = {2, 10};
+		double[] variCost = {1, 8};  // higher margin vs lower margin
 		double depositeRate = 0;
-		double[] salPrice = {1, 4};
+		double[] salPrice = variCost;
 		
-		double iniCash = 50;  // initial cash
+		double iniCash = 10;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 			
-		// gamma distribution:mean demand is shape * scale and variance is shape * scale^2
+		// gamma distribution:mean demand is shape / scale and variance is shape / scale^2
+		// rate = 1 / scale
 		// shape = demand * scale
 		// variance = demand / scale
-		double[][] demand = {{5, 5}, {8, 8}}; // higher average demand vs lower average demand
-		double[] rate = {2, 1}; // higher variance vs lower variance
+		double[][] demand = {{10, 10, 10, 10}, {3, 3, 3, 3}}; // higher average demand vs lower average demand
+		double[] scale = {10, 1}; // higher variance vs lower variance
 			
 		int T = demand[0].length; // horizon length
 		int m = demand.length; // number of products
@@ -75,7 +76,7 @@ public class MultiItemYR {
 		//Distribution[][] distributions =  new NormalDist[m][T];
 		for (int i = 0; i < m; i++)
 			for (int t = 0; t < T; t++) {
-				distributions[i][t] = new GammaDist(demand[i][t]* rate[i], rate[i]);
+				distributions[i][t] = new GammaDist(demand[i][t]* scale[i], scale[i]);
 				//distributions[i][t] = new PoissonDist(demand[i][t]);
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
 			}
@@ -180,7 +181,9 @@ public class MultiItemYR {
 	CashStateR iniState2 = new CashStateR(period, iniCash);
 	double[] optY = recursion.getYStar(iniState2);
 	System.out.println("optimal order quantity y* in the first priod is : " + Arrays.toString(optY));
-	double[][] optTable = recursion.getOptTableDetail();
+	double[] mean = new double[] {demand[0][0], demand[1][0]};
+	double[] variance = new double[] {demand[0][0] / scale[0], demand[1][0] / scale[1]};
+	double[][] optTable = recursion.getOptTableDetail2(mean, variance, price);
 	
 	
 	/*******************************************************************
@@ -200,14 +203,17 @@ public class MultiItemYR {
 	
 	
 	WriteToExcel wr = new WriteToExcel();
-	String fileName = "Pai_yStar" + ".xls";
-	String headString =  "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
+	String fileName = "run" + ".xls";
+	String headString =  
+			"meanD1" + "\t" + "meanD2" + "\t" + "variance1" + "\t" + "variance2" + "\t" +
+	         "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
+			"p1" + "\t" + "p2" + "\t" +
 	          "c1" + "\t" + "c2" + "\t" + "R" + "\t" + "y1*"+ "\t" + "y2*" + "\t" + 
 			   "cashSituation" + "\t" + "alpha" + "\t" + "yHead1"  + "\t" + "yHead2";
 	wr.writeArrayToExcel(optTable, fileName, headString);
 	
-	System.out.println("alpha in the first period: " + optTable[0][10]);
-	System.out.println("*******************************");
+//	System.out.println("alpha in the first period: " + optTable[0][10]);
+//	System.out.println("*******************************");
 	
 		}	
 	

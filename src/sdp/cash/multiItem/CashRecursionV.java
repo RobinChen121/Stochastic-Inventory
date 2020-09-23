@@ -270,6 +270,58 @@ public class CashRecursionV {
 		return arr;
 	}
 	
+	
+	/**
+	 * 
+	 * @return more detailed optimal decision table
+	 */
+	public double[][] getOptTableDetail2(double[] mean, double[] variance, double[] price){
+		Iterator<Map.Entry<CashStateMulti, double[]>> iterator = cacheActions.entrySet().iterator();
+		double[][] arr = new double[cacheActions.size()][13]; // revise
+		int i = 0;
+		Map.Entry<CashStateMulti, double[]> entry;
+		while (iterator.hasNext()) {
+			entry = iterator.next();
+			int period = entry.getKey().period;
+			double R = entry.getKey().getIniR(variCost);
+			CashStateR stateR = new CashStateR(period, R);
+			double[] yStars = cacheYStar.get(stateR);
+			double y1 = entry.getValue()[0]; double y2 = entry.getValue()[1];
+			
+			double cashConstrained = 0;
+			double alpha = 10000;
+			double x1 = entry.getKey().iniInventory1; double x2 = entry.getKey().iniInventory2;
+			double w = entry.getKey().getIniCash(); 
+			double[] yHeads = new double[] {0, 0};
+			if (x1 < yStars[0]+0.1 && x2 < yStars[1]
+					&& variCost[0] * yStars[0] + variCost[1] * yStars[1] < stateR.iniR+0.1) {
+				yHeads[0] = yStars[0]; yHeads[1] = yStars[1];
+				cashConstrained = 1;
+			}
+			else if (x1 > yStars[0]-0.1 && x2 > yStars[1]-0.1) {
+				yHeads[0] = x1; yHeads[1] = x2;
+				cashConstrained = 5;
+			}
+			else if (x1 > yStars[0]-0.1 && x2 < yStars[1]+0.1) {
+				yHeads[0] = x1; yHeads[1] = Math.min(yStars[1], (stateR.iniR - x1*variCost[0]) / variCost[1]);
+				cashConstrained = 4;
+			}
+			else if (x1 < yStars[0]+0.1 && x2 > yStars[1]-0.1){
+				yHeads[0] = Math.min(yStars[0], (stateR.iniR -  x2*variCost[1]) / variCost[0]); yHeads[1] = x2;
+				cashConstrained = 3;
+			}
+			else if (x1 < yStars[0]+0.1 && x2 < yStars[1]+0.1
+					&& variCost[0] * yStars[0] + variCost[1] * yStars[1] > stateR.iniR-0.1) {
+				alpha = cacheAlpha.get(stateR);
+				yHeads[0] = alpha * stateR.iniR / variCost[0]; 
+				yHeads[1] = (1 - alpha) * stateR.iniR / variCost[1];	
+				cashConstrained = 2;
+			}				
+
+			arr[i++] = new double[]{mean[0], mean[1], variance[0], variance[1], period, x1, x2, w, price[0], price[1], variCost[0], variCost[1], R, yStars[0], yStars[1], cashConstrained, alpha, yHeads[0], yHeads[1]};					
+		}
+		return arr;
+	}
 
 		
 	
