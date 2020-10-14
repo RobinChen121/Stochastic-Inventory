@@ -53,13 +53,13 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {4.08, 12.16, 37.36, 21.44, 39.12, 35.68, 19.84, 22.48, 29.04, 12.4};
+		double[] meanDemand = {50, 50, 50};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 18;
-		double fixOrderCost = 15;
+		double iniCash = 1000;
+		double fixOrderCost = 1;
 		double variCost = 1;
-		double price = 7;
+		double price = 5;
 		double depositeRate = 0;
 		double salvageValue = 0.5;
 		double holdingCost = 0;	
@@ -170,16 +170,16 @@ public class CashConstraint {
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-		//double[][] optsC12S = findsCS.getsC12S(optTable, overheadCost, criteria);
+		double[][] optsC12S = findsCS.getsC12S(optTable, overheadCost, criteria);
 		Map<State, Double> cacheC1Values = new TreeMap<>();
-//		Map<State, Double> cacheC2Values = new TreeMap<>();
+		Map<State, Double> cacheC2Values = new TreeMap<>();
  		
 		
-//		double simsCSFinalValue = simuation.simulatesCS(initialState, optsC12S, cacheC1Values, cacheC2Values,
-//				overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
-//		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;
-//		System.out.printf("Optimality gap for (s, C1, C2 S) is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
+		double simsCSFinalValue = simuation.simulatesCS(initialState, optsC12S, cacheC1Values, cacheC2Values,
+				overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
+		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;
+		System.out.printf("Optimality gap for (s, C1, C2 S) is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 
 		/*******************************************************************
 		 * Find (s, C1, S) by SDP and simulate
@@ -188,26 +188,26 @@ public class CashConstraint {
 		System.out.println("************************************************");
 		double[][] optsCS = findsCS.getsCS(optTable, overheadCost, criteria);
 		cacheC1Values = findsCS.cacheC1Values;
-		double simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
+		simsCSFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
 				overheadCost, maxOrderQuantity, fixOrderCost, variCost);
 		double gap21 = (finalValue -simsCSFinalValue)/finalValue;
 		double gap22 = (simFinalValue -simsCSFinalValue)/simFinalValue;
 		System.out.printf("Optimality gap for (s, C1, S) is: %.2f%% or %.2f%%\n", gap21 * 100, gap22 * 100);
-//		double[][] numFrequency = findsCS.getMaxSFrequency(optTable, overheadCost, criteria);
-//		System.out.println("most frequent S in each period");
-//		System.out.println(Arrays.deepToString(numFrequency));
+		//double[][] numFrequency = findsCS.getMaxSFrequency(optTable, overheadCost, criteria);
+		//System.out.println("most frequent S in each period");
+		//System.out.println(Arrays.deepToString(numFrequency));
 		
 		
 		/*******************************************************************
 		 * Find (s, meanC, S) by SDP and simulate
 		 */
-//		System.out.println("");
-//		System.out.println("************************************************");
-//		optsCS = findsCS.getsCS(optTable, overheadCost, FindCCrieria.AVG);
-//		simsCSFinalValue = simuation.simulatesMeanCS(initialState, optsCS, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//		double gap31 = (finalValue -simsCSFinalValue)/finalValue;
-//		double gap32 = (simFinalValue -simsCSFinalValue)/simFinalValue;
-//		System.out.printf("Optimality gap for (s, meanC, S) is: %.2f%% or %.2f%%\n", gap31 * 100, gap32 * 100);
+		System.out.println("");
+		System.out.println("************************************************");
+		optsCS = findsCS.getsCS(optTable, overheadCost, FindCCrieria.AVG);
+		simsCSFinalValue = simuation.simulatesMeanCS(initialState, optsCS, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+		double gap31 = (finalValue -simsCSFinalValue)/finalValue;
+		double gap32 = (simFinalValue -simsCSFinalValue)/simFinalValue;
+		System.out.printf("Optimality gap for (s, meanC, S) is: %.2f%% or %.2f%%\n", gap31 * 100, gap32 * 100);
 
 		/*******************************************************************
 		 * Check (s, C1, C2, S) policy, 
@@ -228,8 +228,8 @@ public class CashConstraint {
  		Map<State, Double> cacheCValues = new TreeMap<>();
  		cacheCValues = mipHeuristic.cacheC1Values;
  		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheCValues, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-		double gap1 = (finalValue - simsCSMIPValue)/finalValue;
-		double gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
+		gap1 = (finalValue - simsCSMIPValue)/finalValue;
+		gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
 		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 		
  		

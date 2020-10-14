@@ -95,6 +95,8 @@ public class CashRecursion {
 //					.sum() == val).findAny().getAsDouble();			
 			
 			double[] feasibleActions = getFeasibleActions.apply(initialState);
+			if (initialState.getPeriod() > 1)
+				feasibleActions = new double[] {0};
 			double[][] dAndP = pmf[s.getPeriod() - 1]; // demandAndPossibility
 			double[] QValues = new double[feasibleActions.length];
 			double val = optDirection == OptDirection.MIN ? Double.MAX_VALUE

@@ -28,7 +28,7 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CheckFG {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {2, 3, 8};
+		double[] meanDemand = {8, 8, 8};
 		double iniCash = 13;
 		double iniInventory = 0;
 		double fixOrderCost = 10;

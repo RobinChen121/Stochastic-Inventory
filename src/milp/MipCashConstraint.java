@@ -252,7 +252,6 @@ public class MipCashConstraint {
 				S = Math.min(S, cashS);
 				sCS[t][2] = S;	
 
-
 				// ascertain s
 				for (int i = 0; i <= (int) S; i++) {
 					if (Ly(S, t, distribution) - Ly(i, t, distribution) < fixOrderCost + 0.1) {
@@ -278,7 +277,7 @@ public class MipCashConstraint {
 						break;
 					}				
 				}
-				S = distributions[t].inverseF((price - variCost) / (holdingCost  + price));
+				//S = distributions[t].inverseF((price - variCost) / (holdingCost  + price));
 				if (Ly(S, t, distributions[t]) < fixOrderCost) { // choose a large value for C, since expected profit is too small
 					sCS[t][1] = fixOrderCost * 20;
 					cacheC1Values.put(new State(t + 1, j), sCS[t][1]);
@@ -409,6 +408,7 @@ public class MipCashConstraint {
 				
 		double S = sCS[T - 1][2];
 		double s = sCS[T - 1][1];
+		// ascertain s for the last period
 		for (int j = (int) S; j >= 0; j--) {
 			if (Ly(j, T - 1, distributions[T - 1]) < Ly(S, T - 1, distributions[T - 1]) - fixOrderCost) {
 				sCS[T - 1][0] = j + 1;
@@ -442,14 +442,14 @@ public class MipCashConstraint {
 			double sigmaSqureSum = IntStream.range(t, orderLastTo + 1).mapToObj(i -> distributions[i].getStandardDeviation())
 					.reduce(0.0, (x, y) -> Math.pow(x.doubleValue(), 2) + Math.pow(y.doubleValue(), 2));
 			double sigmaSum = Math.sqrt(sigmaSqureSum);
-			Distribution distribution;
+			Distribution distribution; // distribution of an ordering cycle
 			if (distributions[0] instanceof ContinuousDistribution) // normal distribution
 				distribution = new NormalDist(demandSum, sigmaSum);
 			else
 				distribution = new PoissonDist(demandSum);
 			S = distribution.inverseF((price - variCost) / (holdingCost  + price));
 			
-			// try a different S
+			// try a different S, this S is obtained by optimal value of G()
 			int orderLastTo2 = T - 1;
 			double demandSum2 = IntStream.range(t, orderLastTo2 + 1).mapToObj(i -> distributions[i].getMean())
 					.reduce(0.0, (x, y) -> x.doubleValue() + y.doubleValue());
@@ -465,7 +465,7 @@ public class MipCashConstraint {
 			double cashS = t == 0 ? iniInventory + maxQ : varI[t - 1] + maxQ;
 			S = Math.min(S, cashS);
 			sCS[t][2] = S;		
-			sCS[t][2] = S2;
+			//sCS[t][2] = S2;
 			
 			// ascertain s
 			for (int i = 0; i <= (int) S; i++) {
@@ -692,7 +692,7 @@ public class MipCashConstraint {
 			double cashS = t == 0 ? iniInventory + maxQ : varI[t - 1] + maxQ;
 			S = Math.min(S, cashS);
 			sCS[t][2] = S;		
-			sCS[t][2] = S2;
+			//sCS[t][2] = S2;
 			
 			// ascertain s
 			for (int i = 0; i <= (int) S; i++) {
@@ -722,7 +722,7 @@ public class MipCashConstraint {
 				}				
 				//System.out.println(Ly(onePeriodS, t, distributions[t]));
 				if (Ly(S, t, distributions[t]) < fixOrderCost 
-						||Ly(S, t, distributions[t]) - Ly(j, t, distributions[t]) < fixOrderCost
+						||Ly(S, t, distributions[t]) - Ly(j, t, distributions[t]) < fixOrderCost // sometimes it is better to not use this condition
 						)
 				{ // choose a large value for C, since expected profit is too small
 					sCS[t][1] = fixOrderCost * 20;
@@ -731,7 +731,8 @@ public class MipCashConstraint {
 			}
 
 		}
-		//sCS[2][2] = 10; sCS[2][2] = 35; sCS[3][2] = 68;
+		//sCS[0][2] = 7; 
+		//sCS[2][2] = 35; sCS[3][2] = 68;
 		System.out.println("(s, C, S) from MIP are: " + Arrays.deepToString(sCS));
 		return sCS;
 	}
@@ -762,7 +763,8 @@ public class MipCashConstraint {
 
 		for (i = t + 1; i < x.length; i++) {
 			if (x[i] > 0.1) {
-				i =  i - 1; 
+				//i =  i - 1; 
+				i = x[0]== 0 && t== 0 ? i : i-1;
 				break;
 			}
 //			double S = distributions[i].inverseF((price - variCost) / (holdingCost  + price));

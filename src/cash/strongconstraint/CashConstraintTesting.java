@@ -44,6 +44,7 @@ public class CashConstraintTesting {
 	public static void main(String[] args) {
 		String headString = "K, v, h, I0, price, salvageValue, B0, DemandPatt, OptValue, Time(sec), simValue, "
 				+ "totalStates, "
+				+ "simsC1C2SValue, gap1, gap2, "
 				+ "simsC1SValue, gap1, gap2, "
 				+ "simsMeanCSValue, gap1, gap2, "
 				+ "firstQ, capacity, mipValue, gap11, gap22, time2";
@@ -60,7 +61,7 @@ public class CashConstraintTesting {
 		double[] v = {1};
 		double[] B0 = { 3, 5, 7}; // ini cash can order 4 or 6 items
 		double[] p = { 5, 6, 7};  // margin is 4, 5, 6
-		double[] h = {0};
+		double[] h = {0.5, 1};
 		double salvageValue = 0.5;	
 		
 		FindCCrieria criteria = FindCCrieria.XRELATE;
@@ -85,7 +86,7 @@ public class CashConstraintTesting {
 			}
 		
 		 
-		for (int idemand = 0; idemand < meanDemands.length; idemand++)
+		for (int idemand = 6; idemand < meanDemands.length; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
@@ -177,16 +178,16 @@ public class CashConstraintTesting {
 								System.out.println("************************************************");
 								double[][] optTable = recursion.getOptTable();
 								FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-//								double[][] optsCS = findsCS.getsC12S(optTable, overheadCost, criteria);
+								double[][] optsCS = findsCS.getsC12S(optTable, overheadCost, criteria);
 								Map<State, Double> cacheC1Values = new TreeMap<>();
-//								Map<State, Double> cacheC2Values = new TreeMap<>();
-//								cacheC1Values = findsCS.cacheC1Values;
-//								cacheC2Values = findsCS.cacheC2Values;
-//								double simsC1C2SFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values,
-//										overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//								double gapsC1C2S1 = (finalValue - simsC1C2SFinalValue) / finalValue;
-//								double gapsC1C2S2 = (simFinalValue - simsC1C2SFinalValue) / simFinalValue;
-//								System.out.printf("Optimality gap for (s, C1, C2, S) is: %.2f%% or %.2f%%\n", gapsC1C2S1 * 100, gapsC1C2S2 * 100);
+								Map<State, Double> cacheC2Values = new TreeMap<>();
+								cacheC1Values = findsCS.cacheC1Values;
+								cacheC2Values = findsCS.cacheC2Values;
+								double simsC1C2SFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values, cacheC2Values,
+										overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+								double gapsC1C2S1 = (finalValue - simsC1C2SFinalValue) / finalValue;
+								double gapsC1C2S2 = (simFinalValue - simsC1C2SFinalValue) / simFinalValue;
+								System.out.printf("Optimality gap for (s, C1, C2, S) is: %.2f%% or %.2f%%\n", gapsC1C2S1 * 100, gapsC1C2S2 * 100);
 																
 								
 								/*******************************************************************
@@ -194,7 +195,7 @@ public class CashConstraintTesting {
 								 */
 								System.out.println("");
 								System.out.println("************************************************");
-								double[][] optsCS = findsCS.getsCS(optTable, overheadCost, criteria);
+								optsCS = findsCS.getsCS(optTable, overheadCost, criteria);
 								cacheC1Values = findsCS.cacheC1Values;
 								double simsC1SFinalValue = simuation.simulatesCS(initialState, optsCS, cacheC1Values,
 										overheadCost, maxOrderQuantity, fixOrderCost, variCost);
@@ -232,7 +233,7 @@ public class CashConstraintTesting {
 								double time2 = 0;
 								currTime = System.currentTimeMillis();
 						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
-						 		double[][] sCS = mipHeuristic.findsCS(); 					 		
+						 		double[][] sCS = mipHeuristic.findsCSNew(); 					 		
 						 		time2 = (System.currentTimeMillis() - currTime) / 1000.0;
 								System.out.println("running time is " + time2 + "s");
 						 		cacheC1Values = mipHeuristic.cacheC1Values;
@@ -261,8 +262,9 @@ public class CashConstraintTesting {
 								long totalStates = optTable.length;
 								String out = fixOrderCost + ",\t" + variCost + ",\t" + holdingCost + ",\t"
 										+ iniInventory + ",\t" + price + ",\t" + salvageValue + ",\t" + iniCash + ",\t" + (idemand + 1) + ",\t"
-										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t"
-										+ totalStates + ",\t"+ simsC1SFinalValue +",\t" + gapsC1S1 + ",\t" + gapsC1S2 + ",\t" 
+										+ finalValue + ",\t" + time + ",\t" + simFinalValue + ",\t" + totalStates + ",\t"
+										+ simsC1C2SFinalValue +",\t" + gapsC1C2S1 + ",\t" + gapsC1C2S2 + ",\t" 
+										+ simsC1SFinalValue +",\t" + gapsC1S1 + ",\t" + gapsC1S2 + ",\t" 
 										+ simsMeanCSFinalValue +",\t" + gapsMeanCS1 + ",\t" + gapsMeanCS2 + ",\t" 
 										+ firstQ + ",\t" + B0[iB] + ",\t"+ 
 										simsCSMIPValue + ",\t" + gap11 + ",\t" + gap22+ ",\t" + time2;

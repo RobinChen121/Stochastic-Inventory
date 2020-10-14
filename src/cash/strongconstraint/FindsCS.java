@@ -125,6 +125,22 @@ public class FindsCS {
 					if (sHasRecorded == false) {
 						optimalsCS[t][0] = j + 1 < tOptTable.length ? tOptTable[j][1] + 1 
 																	    : tOptTable[j][1] + 1; // maximum not ordering inventory level as s
+						//optimalsCS[t][0] = tOptTable[j][1] < 1 ? 0 : tOptTable[j][1] + 1; // avoid large s, make s be 0
+						
+						// choose a most frequent s in this inventory level
+						int zeros = 0;
+						int nonZeros = 1;
+						for (int m = j; m >=0; m--) {
+							if (m < j) {
+								if (tOptTable[m][3] != 0)
+									nonZeros++;
+								else {
+									zeros++;
+								}
+							}
+						}
+						if (zeros>nonZeros)
+							optimalsCS[t][0] = 0;
 						sHasRecorded = true;
 					}
 					if (tOptTable[j][1] + tOptTable[j][3] > optimalsCS[t][3]) //  maximum order-up-to level as S
@@ -339,14 +355,30 @@ public class FindsCS {
 			ArrayList<Double> recordCash = new ArrayList<>();									
 			
 			// backward, the first inventory level that starts ordering is s - 1
-			boolean sHasRecorded = false; //backward, the first inventory level that starts ordering is s
+			boolean sHasRecorded = false; //backward, the first inventory level that starts ordering is s + 1
+			                              // or s is the minimum initial inventory level that results in not ordering
 			for (int j = tOptTable.length - 1; j >= 0; j--) {
 				if (tOptTable[j][3] != 0) {
 					if (sHasRecorded == false) {
 						optimalsCS[t][0] = j + 1 < tOptTable.length ? tOptTable[j][1] + 1 
 																	    : tOptTable[j][1] + 1; // maximum not ordering inventory level as s
+						// choose a most frequent s in this inventory level
+						int zeros = 0;
+						int nonZeros = 1;
+						for (int m = j; m >=0; m--) {
+							if (m < j) {
+								if (tOptTable[m][3] != 0)
+									nonZeros++;
+								else {
+									zeros++;
+								}
+							}
+						}
+						if (zeros>nonZeros)
+							optimalsCS[t][0] = 0;
 						sHasRecorded = true;
 					}
+					optimalsCS[2][0] =0;
 //					if (tOptTable[j][1] + tOptTable[j][3] > optimalsCS[t][3]) //  maximum order-up-to level as S
 //						optimalsCS[t][3] = tOptTable[j][1] + tOptTable[j][3];
 					double demandSum = IntStream.range(t, T).mapToObj(k -> distributions[k].getMean())
@@ -404,64 +436,65 @@ public class FindsCS {
 			//Comparator<Map.Entry<Double, Integer>> comparator = (o1, o2) -> o1.getValue() > o2.getValue() ? 1
 			//																: o1.getValue() == o2.getValue() ?
 			//																  o1.getKey() > o2.getKey() ? 1 : -1 : -1;
-//			Map<Double, Integer> recordS = new HashMap<>();
-//			double S = 0;
-//			boolean lastOrderFullCapacity = false;
-//			for (int j = tOptTable.length - 1; j >= 0; j--) {
-//				if (tOptTable[j][1] < optimalsCS[t][0] && tOptTable[j][3] > 0) {
-//					int maxQ = (int) Math.max(0, (tOptTable[j][2] - overheadCost - fixOrderCost) / variOrderCost);
-//					if (tOptTable[j][2] >= fixOrderCost + variOrderCost * tOptTable[j][3] + overheadCost) {														
-//						if (recordS.size() != 0) {
-//							S = (double) recordS.keySet().toArray()[recordS.size() - 1];
-//							if (tOptTable[j][1] + tOptTable[j][3] >= S) { // order at full capacity, real S may not be increasing
-//								if (lastOrderFullCapacity == true) {
-//									int num = recordS.get(S) + 1;          
-//									recordS.remove(S);
-//									S = tOptTable[j][1] + tOptTable[j][3];									
-//									recordS.putIfAbsent(S, num);
-//								}
-//								else {
-//									int num = recordS.get(S) + 1; 
-//									recordS.remove(S);
-//									S = tOptTable[j][1] + tOptTable[j][3];	// change 1  to num
-//									recordS.putIfAbsent(S, num);
-//									lastOrderFullCapacity = tOptTable[j][3] > maxQ - 0.1 ? true : false;										
-//								}									
-//							}
-//							else {
-//								if (tOptTable[j][3] < maxQ - 0.1 && tOptTable[j][1] + tOptTable[j][3] < S - 0.1) { //new S
-//
-//									recordS.putIfAbsent(tOptTable[j][1] + tOptTable[j][3], 1);
-//									lastOrderFullCapacity = false;
-//								} 										
-//								else // order at full capacity or same S
-//									recordS.replace(S, recordS.get(S) + 1);
-//							}
-//						}
-//						else {
-//							S = tOptTable[j][1] + tOptTable[j][3];
-//							recordS.putIfAbsent(S, 1);
-//							if (tOptTable[j][3] > maxQ - 0.1)
-//								lastOrderFullCapacity = true;
-//						}
-//					}	
-//				}
-//			}			
-//			if (recordS.size() != 0) 
-//				optimalsCS[t][3] = recordS.entrySet().stream()
-//				.max((o1,o2)-> o1.getValue() > o2.getValue() ? 1 :
-//					o1.getValue() == o2.getValue() ?  
-//							o1.getKey() > o2.getKey() ? 1 : -1 : -1).get().getKey();
-//			if (recordS.size() == 0 && optimalsCS[t][0] != 0)
-//				optimalsCS[t][3] = M; // a large number when ordering quantity is always full capacity
-		}		
+			Map<Double, Integer> recordS = new HashMap<>();
+			double S = 0;
+			boolean lastOrderFullCapacity = false;
+			for (int j = tOptTable.length - 1; j >= 0; j--) {
+				if (tOptTable[j][1] < optimalsCS[t][0] && tOptTable[j][3] > 0) {
+					int maxQ = (int) Math.max(0, (tOptTable[j][2] - overheadCost - fixOrderCost) / variOrderCost);
+					if (tOptTable[j][2] >= fixOrderCost + variOrderCost * tOptTable[j][3] + overheadCost) {														
+						if (recordS.size() != 0) {
+							S = (double) recordS.keySet().toArray()[recordS.size() - 1];
+							if (tOptTable[j][1] + tOptTable[j][3] >= S) { // order at full capacity, real S may not be increasing
+								if (lastOrderFullCapacity == true) {
+									int num = recordS.get(S) + 1;          
+									recordS.remove(S);
+									S = tOptTable[j][1] + tOptTable[j][3];									
+									recordS.putIfAbsent(S, num);
+								}
+								else {
+									int num = recordS.get(S) + 1; 
+									recordS.remove(S);
+									S = tOptTable[j][1] + tOptTable[j][3];	// change 1  to num
+									recordS.putIfAbsent(S, num);
+									lastOrderFullCapacity = tOptTable[j][3] > maxQ - 0.1 ? true : false;										
+								}									
+							}
+							else {
+								if (tOptTable[j][3] < maxQ - 0.1 && tOptTable[j][1] + tOptTable[j][3] < S - 0.1) { //new S
 
+									recordS.putIfAbsent(tOptTable[j][1] + tOptTable[j][3], 1);
+									lastOrderFullCapacity = false;
+								} 										
+								else // order at full capacity or same S
+									recordS.replace(S, recordS.get(S) + 1);
+							}
+						}
+						else {
+							S = tOptTable[j][1] + tOptTable[j][3];
+							recordS.putIfAbsent(S, 1);
+							if (tOptTable[j][3] > maxQ - 0.1)
+								lastOrderFullCapacity = true;
+						}
+					}	
+				}
+			}			
+			if (recordS.size() != 0) 
+				optimalsCS[t][3] = recordS.entrySet().stream()
+				.max((o1,o2)-> o1.getValue() > o2.getValue() ? 1 :
+					o1.getValue() == o2.getValue() ?  
+							o1.getKey() > o2.getKey() ? 1 : -1 : -1).get().getKey();
+			if (recordS.size() == 0 && optimalsCS[t][0] != 0)
+				optimalsCS[t][3] = M; // a large number when ordering quantity is always full capacity
+		}		
+		
+		
 		double[][] sCS = new double[T][3];
 		for (int t = 0; t < T; t++) {
 			sCS[t][0] = optimalsCS[t][0];
 			sCS[t][1] = optimalsCS[t][1];
 			sCS[t][2] = optimalsCS[t][3];
-		}		
+		}	
   		System.out.println("(s, C, S) are: " + Arrays.deepToString(sCS));
 		return sCS;
 	}
@@ -615,7 +648,7 @@ public class FindsCS {
 					totalNum += entry.getValue();
 				}
 				numFrequency[t][1] = maxFre * 100 / totalNum;
-				if (recordS.size() > 1)
+				if (recordS.size() > 1) // without holding cost, there will only be one S
 					System.out.println(recordS.toString());
 			}
 			if (recordS.size() == 0 && optimalsCS[t][0] != 0) { // when ordering quantity is always full capacity
