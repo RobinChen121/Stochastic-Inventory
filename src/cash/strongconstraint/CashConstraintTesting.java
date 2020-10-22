@@ -62,6 +62,7 @@ public class CashConstraintTesting {
 		double[] B0 = { 3, 5, 7}; // ini cash can order 4 or 6 items
 		double[] p = { 5, 6, 7};  // margin is 4, 5, 6
 		double[] h = {0.5, 1};
+		double penaltyCost = 10000;
 		double salvageValue = 0.5;	
 		
 		FindCCrieria criteria = FindCCrieria.XRELATE;
@@ -86,7 +87,7 @@ public class CashConstraintTesting {
 			}
 		
 		 
-		for (int idemand = 6; idemand < meanDemands.length; idemand++)
+		for (int idemand = 0; idemand < meanDemands.length; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
@@ -127,6 +128,10 @@ public class CashConstraintTesting {
 									double cashIncrement = revenue - fixedCost - variableCost - holdCosts - overheadCost;
 									double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
 									cashIncrement += salValue;
+									double endCash = state.getIniCash() + cashIncrement;
+									if (endCash < 0) {
+										cashIncrement += penaltyCost * endCash;
+									}	
 									return cashIncrement;
 								};
 

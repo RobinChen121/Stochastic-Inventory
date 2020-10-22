@@ -56,13 +56,13 @@ public class CashConstraint {
 		double[] meanDemand = {50, 50, 50};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 1000;
-		double fixOrderCost = 1;
+		double iniCash = 50;
+		double fixOrderCost = 20;
 		double variCost = 1;
 		double price = 5;
 		double depositeRate = 0;
 		double salvageValue = 0.5;
-		double holdingCost = 0;	
+		double holdingCost = 0.5;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
 		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
@@ -74,6 +74,7 @@ public class CashConstraint {
 		double maxInventoryState = 500;
 		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
 		double maxCashState = 2000;
+		double penaltyCost = 10000;
 		
 		double discountFactor = 1;
 
@@ -117,6 +118,10 @@ public class CashConstraint {
 			double cashIncrement = (1 - overheadRate)*revenue + deposite - holdCosts - overheadCost - state.getIniCash();
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
 			cashIncrement += salValue;
+			double endCash = state.getIniCash() + cashIncrement;
+			if (endCash < 0) {
+				cashIncrement += penaltyCost * endCash;
+			}	
 			return cashIncrement;
 		};
 

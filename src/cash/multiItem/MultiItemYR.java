@@ -39,7 +39,7 @@ public class MultiItemYR {
 	
 	public static void main(String[] args) {
 		double[] price = {2, 10};
-		double[] variCost = {1, 8};  // higher margin vs lower margin
+		double[] variCost = {1, 2};  // higher margin vs lower margin
 		double depositeRate = 0;
 		double[] salPrice = variCost;
 		
@@ -52,7 +52,7 @@ public class MultiItemYR {
 		// shape = demand * scale
 		// variance = demand / scale
 		double[][] demand = {{10, 10, 10, 10}, {3, 3, 3, 3}}; // higher average demand vs lower average demand
-		double[] scale = {10, 1}; // higher variance vs lower variance
+		double[] scale = {40, 0.33333}; // higher variance vs lower variance
 			
 		int T = demand[0].length; // horizon length
 		int m = demand.length; // number of products
