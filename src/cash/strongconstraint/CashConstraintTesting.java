@@ -87,7 +87,7 @@ public class CashConstraintTesting {
 			}
 		
 		 
-		for (int idemand = 0; idemand < meanDemands.length; idemand++)
+		for (int idemand = 4; idemand < 6; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)

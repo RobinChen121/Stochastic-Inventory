@@ -99,7 +99,10 @@ public class CashSimulation {
 				recursion.getExpectedValue(state);
 				double optQ = recursion.getAction(state);
 				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
-				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, optQ, randomDemand);
+				double thisValue = immediateValue.apply(state, optQ, randomDemand);
+//				if (thisValue < -500) // for debuging
+//					System.out.println(thisValue);
+				sum += Math.pow(discountFactor, t) * thisValue;
 				state = stateTransition.apply(state, optQ, randomDemand);
 			}
 			simuValues[i] = sum;

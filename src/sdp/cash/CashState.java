@@ -11,7 +11,6 @@ import sdp.inventory.State;
 
 public class CashState extends State{
 	double iniCash = 0;
-	int iniCashInteger = 0;
 
 	public CashState(int period, double initialInventory, double iniCash) {
 		super(period, initialInventory);
@@ -24,21 +23,14 @@ public class CashState extends State{
 	}
 	
 	public double getIniCash() {
-		if (iniCash > 0)
-			return this.iniCash;
-		else {
-			return this.iniCashInteger;
-		}
+		return this.iniCash;
 	}
 	
-	public double getIniCashInteger() {
-		return this.iniCashInteger;
-	}
 	
 	@Override
 	public int hashCode(){
 		String hash = "";
-		hash = hash + period + initialInventory + iniCash + iniCashInteger;
+		hash = hash + period + initialInventory + iniCash;
 		return hash.hashCode();
 	}
 	
@@ -47,15 +39,14 @@ public class CashState extends State{
 		if (o instanceof CashState)
 			return ((CashState) o).period == this.period &&
 					((CashState) o).initialInventory == this.initialInventory &&
-							((CashState) o).iniCash == this.iniCash &&
-									((CashState) o).iniCashInteger == this.iniCashInteger;
+							((CashState) o).iniCash == this.iniCash;
 		else
 			return false;
 	}
 	
 	@Override
 	public String toString() {
-		return "period = " + period +", "+"iniInventory = " + initialInventory + ", iniCash = " + iniCash + ", iniCashInteger = " + iniCashInteger; 
+		return "period = " + period +", "+"iniInventory = " + initialInventory + ", iniCash = " + iniCash; 
 	}
 	
 }

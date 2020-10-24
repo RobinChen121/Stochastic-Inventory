@@ -106,14 +106,20 @@ public class CashRecursion {
 			for (int i = 0; i < feasibleActions.length; i++) {
 				double orderQty = feasibleActions[i];
 				
-//				if (s.getPeriod() == 1) { // for debugging
-//					orderQty = 0;
+//				if (s.getPeriod() == 1) { // only for debugging
+//					System.out.println(orderQty);
 //				}
 				
 				double thisQValue = 0;								
 				for (int j = 0; j < dAndP.length; j++) {
-					double thisValue = immediateValue.apply(s, orderQty, dAndP[j][0]);
-					thisQValue += dAndP[j][1] * immediateValue.apply(s, orderQty, dAndP[j][0]);
+					double randomDemand = dAndP[j][0];
+					double thisDValue = immediateValue.apply(s, orderQty, randomDemand);
+					
+//					if (thisDValue < -10000 && dAndP[j][1] > 0.001)
+//						System.out.println(thisDValue);
+					
+					double dProb = dAndP[j][1];
+					thisQValue += dProb * thisDValue;
 					if (s.getPeriod() < pmf.length) {
 						CashState newState = stateTransition.apply(s, orderQty, dAndP[j][0]);
 						thisQValue += dAndP[j][1] * discountFactor * getExpectedValue(newState);

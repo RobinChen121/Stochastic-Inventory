@@ -53,7 +53,7 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {15, 15, 15, 15};
+		double[] meanDemand = {3, 3};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
 		double iniCash = 13;
@@ -72,9 +72,9 @@ public class CashConstraint {
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
-		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
+		double minCashState = -100000; // can affect results, should be smaller than minus fixedOrderCost
 		double maxCashState = 2000;
-		double penaltyCost = 10000;
+		double penaltyCost = 5000;
 		
 		double discountFactor = 1;
 

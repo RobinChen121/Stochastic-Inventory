@@ -1,6 +1,7 @@
 package sdp.inventory;
 
 import umontreal.ssj.probdist.DiscreteDistribution;
+import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
 
@@ -50,10 +51,11 @@ public class GetPmf {
 			for (int j = 0; j < demandLength; j++) {
 				pmf[i][j] = new double[2];
 				pmf[i][j][0] = supportLB[i] + j * stepSize;
-				if (distributions[0] instanceof DiscreteDistribution) { // may be something wrong, poisson[] can't be (casted) delivered
+				if (distributions[0] instanceof DiscreteDistributionInt ||
+						distributions[0] instanceof PoissonDist) { // may be something wrong, poisson[] can't be (casted) delivered
 					                                                    // but the results are correct
 					double probilitySum = distributions[i].cdf(supportUB[i]) - distributions[i].cdf(supportLB[i] - 1);
-					pmf[i][j][1] = ((DiscreteDistribution) distributions[i]).prob(j) / probilitySum;
+					pmf[i][j][1] = ((DiscreteDistributionInt) distributions[i]).prob(j) / probilitySum;
 				} else {
 					double probilitySum = distributions[i].cdf(supportUB[i] + 0.5 * stepSize)
 							- distributions[i].cdf(supportLB[i] - 0.5 * stepSize);
