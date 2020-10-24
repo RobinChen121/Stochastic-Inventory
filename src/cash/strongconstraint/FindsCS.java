@@ -144,13 +144,13 @@ public class FindsCS {
 						sHasRecorded = true;
 					}
 					if (tOptTable[j][1] + tOptTable[j][3] > optimalsCS[t][3]) //  maximum order-up-to level as S
-						optimalsCS[t][3] = tOptTable[j][1] + tOptTable[j][3];
+						optimalsCS[t][3] = tOptTable[j][1] + tOptTable[j][3]; // a template value for S
 						//if (tOptTable[j][2] > fixOrderCost + variOrderCost * tOptTable[j][3])
 							//recordS.add(tOptTable[j][1] + tOptTable[j][3]); // average order-up-to level as S, is worse than choosing maximum S
 					sHasRecorded = true; // 
 				}
 								
-				if (tOptTable[j][3] == 0 && sHasRecorded == true) 
+				if (tOptTable[j][3] == 0 && sHasRecorded == true) // for computing C(x)
 					recordCash.add(tOptTable[j][2]);					
 			}
 			
@@ -362,6 +362,7 @@ public class FindsCS {
 					if (sHasRecorded == false) {
 						optimalsCS[t][0] = j + 1 < tOptTable.length ? tOptTable[j][1] + 1 
 																	    : tOptTable[j][1] + 1; // maximum not ordering inventory level as s
+						
 						// choose a most frequent s in this inventory level
 						int zeros = 0;
 						int nonZeros = 1;
@@ -378,9 +379,10 @@ public class FindsCS {
 							optimalsCS[t][0] = 0;
 						sHasRecorded = true;
 					}
-					optimalsCS[2][0] =0;
+//					optimalsCS[2][0] =0;
 //					if (tOptTable[j][1] + tOptTable[j][3] > optimalsCS[t][3]) //  maximum order-up-to level as S
 //						optimalsCS[t][3] = tOptTable[j][1] + tOptTable[j][3];
+					// the following codes to compute S when h is 0. It can also be a temperate value of S
 					double demandSum = IntStream.range(t, T).mapToObj(k -> distributions[k].getMean())
 							.reduce(0.0, (x, y) -> x.doubleValue() + y.doubleValue());
 					Distribution distribution = new PoissonDist(demandSum);
@@ -436,6 +438,7 @@ public class FindsCS {
 			//Comparator<Map.Entry<Double, Integer>> comparator = (o1, o2) -> o1.getValue() > o2.getValue() ? 1
 			//																: o1.getValue() == o2.getValue() ?
 			//																  o1.getKey() > o2.getKey() ? 1 : -1 : -1;
+			// this is used when having positive holding cost h
 			Map<Double, Integer> recordS = new HashMap<>();
 			double S = 0;
 			boolean lastOrderFullCapacity = false;

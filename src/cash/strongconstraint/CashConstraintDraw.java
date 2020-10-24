@@ -7,7 +7,6 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import cash.strongconstraint.FindsCS.FindCCrieria;
-import gurobi.GRB.DoubleParam;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
