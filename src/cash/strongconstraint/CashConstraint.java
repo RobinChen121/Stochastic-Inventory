@@ -53,7 +53,7 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {3, 3};
+		double[] meanDemand = {5, 5};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
 		double iniCash = 13;
@@ -68,13 +68,13 @@ public class CashConstraint {
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
-		double truncationQuantile = 0.999;
+		double truncationQuantile = 0.99;
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
 		double minCashState = -100000; // can affect results, should be smaller than minus fixedOrderCost
 		double maxCashState = 2000;
-		double penaltyCost = 5000;
+		double penaltyCost = 5000; // large penalty cost cause big gaps for simulation results, since may generate zero demand
 		
 		double discountFactor = 1;
 
