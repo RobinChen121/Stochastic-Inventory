@@ -7,7 +7,7 @@ package cash.risk;
  * @author: Zhen Chen
  * @email: 15011074486@163.com
  * @date: Nov 21, 2020
- * @Desc:
+ * @Desc: stochastic dynamic programming model to maximize the survival probability
  *
  */
 public class cashSurvival {
