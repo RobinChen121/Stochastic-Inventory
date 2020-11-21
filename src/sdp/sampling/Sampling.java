@@ -89,7 +89,7 @@ public class Sampling {
 				for (int t = 0; t < T; t++)
 				 {
 					double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
-					double lowBound = (double) i/ (double) sampleNum;
+					double lowBound = (double) i / (double) sampleNum;
 					double ppf = lowBound + randomNum;
 					samples[i][j + t * itemNum] = Math.round(distributions[j][t].inverseF(ppf) * 1.0) / 1.0;
 				}

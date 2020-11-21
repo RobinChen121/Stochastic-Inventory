@@ -91,6 +91,15 @@ public class CashSimulation {
 		Sampling.resetStartStream();
 		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
 		
+		double mean[] = new double[distributions.length];
+		for (int i = 0; i < distributions.length; i++) {
+			double sum = 0;
+			for (int j = 0; j < sampleNum; j++) {
+				sum += samples[j][i];
+			}
+			mean[i] = sum / sampleNum;
+		}
+		
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; CashState state = iniState;

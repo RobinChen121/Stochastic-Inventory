@@ -39,6 +39,8 @@ public class GetPmf {
 		double[] supportUB = new double[T];
 		for (int i = 0; i < T; i++) {
 			supportLB[i] = (int) distributions[i].inverseF(1 - truncationQuantile);
+			if (distributions[0] instanceof DiscreteDistributionInt)
+				supportLB[i] = 0;
 			supportUB[i] = (int) distributions[i].inverseF(truncationQuantile);
 		}
 

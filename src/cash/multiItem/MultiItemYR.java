@@ -51,8 +51,8 @@ public class MultiItemYR {
 		// rate = 1 / scale
 		// shape = demand * scale
 		// variance = demand / scale
-		double[][] demand = {{50, 50, 50, 50}, {3, 3, 3, 3}}; // higher average demand vs lower average demand
-		double[] scale = {50, 0.33333}; // higher variance vs lower variance
+		double[][] demand = {{10, 10, 10, 10}, {3, 3, 3, 3}}; // higher average demand vs lower average demand
+		double[] scale = {10, 0.33333}; // higher variance vs lower variance
 			
 		int T = demand[0].length; // horizon length
 		int m = demand.length; // number of products

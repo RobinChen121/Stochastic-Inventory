@@ -176,6 +176,19 @@ ComplementaryFirstOrderLossFunction {
 			}
 		}
 	}
+	
+	private static double[] toPrimitive(Double[] array) {
+		   if (array == null) {
+		     return null;
+		   } else if (array.length == 0) {
+		     return new double[0];
+		   }
+		   final double[] result = new double[array.length];
+		   for (int i = 0; i < array.length; i++) {
+		     result[i] = array[i].doubleValue();
+		   }
+		   return result;
+		 }
 
 	/**
 	 * @param probabilityMasses
@@ -213,9 +226,16 @@ ComplementaryFirstOrderLossFunction {
 		distributions[0] = new PoissonDist(20);
 		//distributions[1] = new ExponentialDist(0.1);
 		PiecewiseComplementaryFirstOrderLossFunction pwcfolf = new PiecewiseComplementaryFirstOrderLossFunction(distributions, seed);
-		double[] probabilityMasses = {0.5,0.5};
+		double[] probabilityMasses = new double[10];
+		Arrays.fill(probabilityMasses, 0.1); // assume all p_i are equal
+		System.out.println("probability p_i for each segment: ");
+		System.out.println(Arrays.toString(probabilityMasses));
 		int nbSamples = 1000;
 		double[] approximationErrors = pwcfolf.getApproximationErrors(probabilityMasses, nbSamples);
+		System.out.println("conditional expectations in each segement: ");
+		double[] conditionExpects = pwcfolf.getConditionalExpectations(probabilityMasses, nbSamples);
+		System.out.println(Arrays.toString(conditionExpects));
+		System.out.println("approximation error for each segment: ");
 		for(int i = 0; i < probabilityMasses.length; i++){
 			System.out.print(approximationErrors[i]+"\t");
 		}
@@ -228,26 +248,15 @@ ComplementaryFirstOrderLossFunction {
 		//distributions[1] = new ExponentialDist(0.1);
 		distributions[0] = new PoissonDist(20);
 		PiecewiseComplementaryFirstOrderLossFunction pwcfolf = new PiecewiseComplementaryFirstOrderLossFunction(distributions, seed);
-		double[] probabilityMasses = {0.5,0.5};
+		double[] probabilityMasses = {0.2, 0.2, 0.2, 0.2, 0.2};
 		int nbSamples = 1000;
 		pwcfolf.plotPiecewiseLossFunction(-2, 2, -1, probabilityMasses, nbSamples, 0.1, false);
 	}
 	
-	private static double[] toPrimitive(Double[] array) {
-	   if (array == null) {
-	     return null;
-	   } else if (array.length == 0) {
-	     return new double[0];
-	   }
-	   final double[] result = new double[array.length];
-	   for (int i = 0; i < array.length; i++) {
-	     result[i] = array[i].doubleValue();
-	   }
-	   return result;
-	 }
+
 
 	public static void main(String[] args){
-		testPiecewiseLossFunction();
+		//testPiecewiseLossFunction();
 		testApproximationErrors();
 	}
 }

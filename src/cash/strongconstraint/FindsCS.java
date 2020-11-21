@@ -128,19 +128,19 @@ public class FindsCS {
 						//optimalsCS[t][0] = tOptTable[j][1] < 1 ? 0 : tOptTable[j][1] + 1; // avoid large s, make s be 0
 						
 						// choose a most frequent s in this inventory level
-						int zeros = 0;
-						int nonZeros = 1;
-						for (int m = j; m >=0; m--) {
-							if (m < j) {
-								if (tOptTable[m][3] != 0)
-									nonZeros++;
-								else {
-									zeros++;
-								}
-							}
-						}
-						if (zeros>nonZeros)
-							optimalsCS[t][0] = 0;
+//						int zeros = 0;
+//						int nonZeros = 1;
+//						for (int m = j; m >=0; m--) {
+//							if (m < j) {
+//								if (tOptTable[m][3] != 0)
+//									nonZeros++;
+//								else {
+//									zeros++;
+//								}
+//							}
+//						}
+//						if (zeros>nonZeros)
+//							optimalsCS[t][0] = 0;
 						sHasRecorded = true;
 					}
 					if (tOptTable[j][1] + tOptTable[j][3] > optimalsCS[t][3]) //  maximum order-up-to level as S
@@ -364,19 +364,20 @@ public class FindsCS {
 																	    : tOptTable[j][1] + 1; // maximum not ordering inventory level as s
 						
 						// choose a most frequent s in this inventory level
-						int zeros = 0;
-						int nonZeros = 1;
-						for (int m = j; m >=0; m--) {
-							if (m < j) {
-								if (tOptTable[m][3] != 0)
-									nonZeros++;
-								else {
-									zeros++;
-								}
-							}
-						}
-						if (zeros>nonZeros)
-							optimalsCS[t][0] = 0;
+//						int zeros = 0;
+//						int nonZeros = 1;
+//						for (int m = j; m >=0; m--) {
+//							if (m < j) {
+//								if (tOptTable[m][3] != 0)
+//									nonZeros++;
+//								else {
+//									zeros++;
+//								}
+//							}
+//						}
+//						if (zeros>nonZeros)
+//							optimalsCS[t][0] = 0;
+						
 						sHasRecorded = true;
 					}
 //					optimalsCS[2][0] =0;

@@ -61,8 +61,8 @@ public class CashConstraintTesting {
 		double[] v = {1};
 		double[] B0 = { 3, 5, 7}; // ini cash can order 4 or 6 items
 		double[] p = { 5, 6, 7};  // margin is 4, 5, 6
-		double[] h = {0.5, 1};
-		double penaltyCost = 10000;
+		double[] h = {0};
+		double penaltyCost = 0;
 		double salvageValue = 0.5;	
 		
 		FindCCrieria criteria = FindCCrieria.XRELATE;
@@ -87,7 +87,7 @@ public class CashConstraintTesting {
 			}
 		
 		 
-		for (int idemand = 4; idemand < 6; idemand++)
+		for (int idemand = 0; idemand < iniMeanDemands.length; idemand++)
 			for (int iK = 0; iK < K.length; iK++)
 				for (int iv = 0; iv < v.length; iv++)
 					for (int ip = 0; ip < p.length; ip++)
@@ -238,7 +238,7 @@ public class CashConstraintTesting {
 								double time2 = 0;
 								currTime = System.currentTimeMillis();
 						 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
-						 		double[][] sCS = mipHeuristic.findsCSNew(); 					 		
+						 		double[][] sCS = mipHeuristic.findsCSPieceWise(); 					 		
 						 		time2 = (System.currentTimeMillis() - currTime) / 1000.0;
 								System.out.println("running time is " + time2 + "s");
 						 		cacheC1Values = mipHeuristic.cacheC1Values;

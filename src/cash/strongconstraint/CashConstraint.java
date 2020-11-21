@@ -53,28 +53,28 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {5, 5};
+		double[] meanDemand = {15.7,10,4.3,2,4.3,10,15.7,18,15.7,10};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 13;
-		double fixOrderCost = 10;
+		double iniCash = 25;
+		double fixOrderCost = 20;
 		double variCost = 1;
-		double price = 5;
+		double price = 6;
 		double depositeRate = 0;
 		double salvageValue = 0.5;
-		double holdingCost = 0.5;	
+		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
 		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
-		double truncationQuantile = 0.99;
+		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
-		double minCashState = -100000; // can affect results, should be smaller than minus fixedOrderCost
+		double minCashState = -1000; // can affect results, should be smaller than minus fixedOrderCost
 		double maxCashState = 2000;
-		double penaltyCost = 5000; // large penalty cost cause big gaps for simulation results, since may generate zero demand
+		double penaltyCost = 0; // large penalty cost cause big gaps for simulation results, since may generate zero demand
 		
 		double discountFactor = 1;
 
@@ -229,7 +229,7 @@ public class CashConstraint {
 		 */
 		System.out.println("************************************************");
  		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
- 		double[][] sCS = mipHeuristic.findsCSNew(); 
+ 		double[][] sCS = mipHeuristic.findsCSPieceWise(); 
  		Map<State, Double> cacheCValues = new TreeMap<>();
  		cacheCValues = mipHeuristic.cacheC1Values;
  		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheCValues, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
