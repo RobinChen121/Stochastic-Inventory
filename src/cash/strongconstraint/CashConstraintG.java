@@ -29,24 +29,30 @@ import umontreal.ssj.probdist.PoissonDist;
 
 public class CashConstraintG {
 	public static void main(String[] args) {
-		double[] meanDemand = {8, 8, 8};
+		double[] meanDemand = {10, 10, 10, 10};
 
-		double variCost = 2;
-		double price = 8;
+		double variCost = 1;
+		double price = 2;
 		double depositeRate = 0;
-		double salvageValue = 1;
+		double salvageValue = variCost;
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 
 		double coe = 1;
+		double rate = 10;
 		
 		
 		// get demand possibilities for each period
+		// gamma distribution:mean demand is shape / scale and variance is shape / scale^2
+		// rate = 1 / scale
+		// shape = demand * rate
+		// variance = demand / rate
+		// gamma in ssj: alpha is alpha, and lambda is beta(rate)
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 				//.mapToObj(i -> new PoissonDist(meanDemand[i]))			
 				//.mapToObj(i -> new NormalDist(meanDemand[i], coe * Math.sqrt(meanDemand[i]))) // can be changed to other distributions				
-				.mapToObj(i -> new GammaDist(meanDemand[i] * 4, 4))
+				.mapToObj(i -> new GammaDist(meanDemand[i] * rate, rate))
 				.toArray(Distribution[]::new);
 				
 		
@@ -60,7 +66,8 @@ public class CashConstraintG {
 				price, variCost, depositeRate, salvageValue);
 		long currTime = System.currentTimeMillis();	
 		double[] optY = recursion.getOptY();
-		System.out.println("a* in each period: [");
+		System.out.println("a* in each period:");
+		System.out.print("[");
 		DecimalFormat df = new DecimalFormat("0.00");
 	    Arrays.stream(optY).forEach(e -> System.out.print(df.format(e) + " " ));
 	    System.out.println("]");

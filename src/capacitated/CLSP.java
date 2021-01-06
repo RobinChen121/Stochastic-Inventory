@@ -7,10 +7,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
@@ -76,12 +77,13 @@ public class CLSP {
 	}
 	ImmediateValueFunction<State, Double, Double, Double> immediateValue;
 		
+
 	
 	Comparator<State> keyComparator = (o1, o2) -> o1.period > o2.period ? 1 : 
 		o1.period == o2.period ? o1.initialInventory > o2.initialInventory ? 1 : 
 			(o1.initialInventory == o2.initialInventory ? 0 : -1) : -1;
-	SortedMap<State, Double> cacheActions = new TreeMap<>(keyComparator);
-	SortedMap<State, Double> cacheValues = new TreeMap<>(keyComparator);
+	ConcurrentSkipListMap<State, Double> cacheActions = new ConcurrentSkipListMap<>(keyComparator);
+	ConcurrentSkipListMap<State, Double> cacheValues = new ConcurrentSkipListMap<>(keyComparator);
 	
 	double f(State state){
 	      return cacheValues.computeIfAbsent(state, s -> {
@@ -130,7 +132,7 @@ public class CLSP {
 		
 		  
 	      double initialInventory = 0; 
-	      double[] meanDemand = {50,50,50,50,50,50,50,50,50,50};
+	      double[] meanDemand = {50,50};
 	      
 	      double truncationQuantile = 0.9999;  // 置信度稍微改一下，泊松分布特殊
 	      double stepSize = 1; 

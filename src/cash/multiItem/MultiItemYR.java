@@ -47,12 +47,13 @@ public class MultiItemYR {
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 			
-		// gamma distribution:mean demand is shape / scale and variance is shape / scale^2
+		// gamma distribution:mean demand is shape / rate and variance is shape / rate^2
 		// rate = 1 / scale
-		// shape = demand * scale
-		// variance = demand / scale
+		// shape = demand * rate
+		// variance = demand / rate
+		// gamma in ssj: alpha is alpha, and lambda is beta(rate)
 		double[][] demand = {{10, 10, 10, 10}, {3, 3, 3, 3}}; // higher average demand vs lower average demand
-		double[] scale = {10, 0.33333}; // higher variance vs lower variance
+		double[] rate = {10, 0.33333}; // higher variance vs lower variance
 			
 		int T = demand[0].length; // horizon length
 		int m = demand.length; // number of products
@@ -76,7 +77,7 @@ public class MultiItemYR {
 		//Distribution[][] distributions =  new NormalDist[m][T];
 		for (int i = 0; i < m; i++)
 			for (int t = 0; t < T; t++) {
-				distributions[i][t] = new GammaDist(demand[i][t]* scale[i], scale[i]);
+				distributions[i][t] = new GammaDist(demand[i][t]* rate[i], rate[i]);
 				//distributions[i][t] = new PoissonDist(demand[i][t]);
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
 			}
@@ -182,7 +183,7 @@ public class MultiItemYR {
 	double[] optY = recursion.getYStar(iniState2);
 	System.out.println("optimal order quantity y* in the first priod is : " + Arrays.toString(optY));
 	double[] mean = new double[] {demand[0][0], demand[1][0]};
-	double[] variance = new double[] {demand[0][0] / scale[0], demand[1][0] / scale[1]};
+	double[] variance = new double[] {demand[0][0] / rate[0], demand[1][0] / rate[1]};
 	double[][] optTable = recursion.getOptTableDetail2(mean, variance, price);
 	
 	
