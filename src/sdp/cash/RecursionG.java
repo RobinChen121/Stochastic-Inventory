@@ -51,7 +51,7 @@ public class RecursionG {
 		Comparator<StateY> keyComparator = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
 			o1.getPeriod() == o2.getPeriod() ? o1.getIniY() > o2.getIniY() ? 1 : 
 				o1.getIniY() == o2.getIniY() ? 0 : -1 : -1;
-		Comparator<StateP> keyComparator2 = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
+ 		Comparator<StateP> keyComparator2 = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
 			o1.getPeriod() == o2.getPeriod() ? 0 : -1;
 		this.cachePeriodBestY = new TreeMap<>(keyComparator2);
 		this.cacheGValues = new TreeMap<>(keyComparator);
@@ -62,7 +62,13 @@ public class RecursionG {
 		this.variCost = variCost;
 		this.depositeRate = depositeRate;
 		this.salvageValue = salvageValue;
-		this.aNStar = distributions[distributions.length - 1].inverseF((price - (1 + depositeRate) * variCost) / (price - salvageValue));
+		// avoid infinity
+		if (salvageValue < variCost)
+			this.aNStar = distributions[distributions.length - 1].inverseF((price - (1 + depositeRate) * variCost) / (price - salvageValue));
+		else {
+			this.aNStar = distributions[distributions.length - 1].inverseF(0.999);
+		}
+		
 	}
 	
 
@@ -133,7 +139,7 @@ public class RecursionG {
 			for (double y  = 0; y < maxY; y=y+1) {
 				StateY newStateY = new StateY(s.getPeriod(), y);
 				double thisYValue = G(newStateY); // optimal y in the next period
-				if (thisYValue - optYValue > 0.5) {
+				if (thisYValue - optYValue > 0.1) {
 					optYValue = thisYValue;
 					optY = y;
 				}

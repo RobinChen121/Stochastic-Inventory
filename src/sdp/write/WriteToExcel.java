@@ -2,6 +2,7 @@ package sdp.write;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 
 /**
@@ -90,8 +91,35 @@ public class WriteToExcel {
 		}
 		catch (IOException e){
 			e.printStackTrace();
+		}	
+	}
+	
+	
+	public void writeArrayToExcel2(double[][] data, String string, String head, double[] gaps) {
+		int rowNum = data.length + 1;
+		int columnNum = data[0].length;
+		try {
+			FileWriter fw = new FileWriter(string);
+			for (int i = 0; i < rowNum; i++) {
+				if (i == 0) {
+					fw.write(head);
+					fw.write("\n");
+				}
+				else {
+					for (int j = 0; j < columnNum; j++)
+						fw.write(data[i - 1][j] + "\t");
+					DecimalFormat df = new DecimalFormat("0.0000");
+					if (i == 1)
+						for (int m =0; m < gaps.length; m++)
+							fw.write(df.format(gaps[m]) + "\t");
+					fw.write("\n");
+				}
+			}
+			fw.close();
 		}
-		
+		catch (IOException e){
+			e.printStackTrace();
+		}	
 	}
 	
 	

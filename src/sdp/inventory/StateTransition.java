@@ -17,13 +17,11 @@ public class StateTransition {
 	 * @param <S2> output state
 	 */
 	
-	@FunctionalInterface
 	public interface StateTransitionFunction<S, A, R, S2> {
 		public S2 apply(S s, A a, R r);
 	}
 	
 	
-	@FunctionalInterface
 	public interface StateTransitionFunctionV <S, R, S2>{
 		public S2 apply (S s, R r);
 	}

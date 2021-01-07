@@ -34,12 +34,12 @@ public class CashConstraintG {
 		double variCost = 1;
 		double price = 2;
 		double depositeRate = 0;
-		double salvageValue = variCost;
+		double salvageValue = variCost * 0.5;
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 
 		double coe = 1;
-		double rate = 10;
+		double beta = 1;
 		
 		
 		// get demand possibilities for each period
@@ -47,12 +47,12 @@ public class CashConstraintG {
 		// rate = 1 / scale
 		// shape = demand * rate
 		// variance = demand / rate
-		// gamma in ssj: alpha is alpha, and lambda is beta(rate)
+		// gamma in ssj: alpha is shape, and lambda is beta(rate)
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 				//.mapToObj(i -> new PoissonDist(meanDemand[i]))			
 				//.mapToObj(i -> new NormalDist(meanDemand[i], coe * Math.sqrt(meanDemand[i]))) // can be changed to other distributions				
-				.mapToObj(i -> new GammaDist(meanDemand[i] * rate, rate))
+				.mapToObj(i -> new GammaDist(meanDemand[i] * beta, beta))
 				.toArray(Distribution[]::new);
 				
 		

@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jfree.ui.LengthAdjustmentType;
 
 /**
  * @author: Zhen Chen
@@ -85,13 +84,13 @@ public class ScenarioReduction {
 			int minDIndex = 0;	
 			index = 0;
 			for (int i = 0; i < scenarioNum; i++) {
-				if (!indexRecord.contains(new Integer(i))) {
+				if (!indexRecord.contains(i)) {
 					double upperWeightD = 0;
 					double lowerWeightD = 0;
 					double[] scenarioIndexP1 = new double[T + 1];
 					double[] scenarioIndexP2 = new double[T + 1];
 					for (int j1 = 0; j1 < i; j1 ++) {
-						if (!indexRecord.contains(new Integer(j1))) {
+						if (!indexRecord.contains(i)) {
 							scenarioIndexP1 = scenarioIndexP[j1]; 
 							scenarioIndexP2 = scenarioIndexP[i]; 
 							double thisDistance = euclDistance(demandRealizations, scenarioIndexP1, scenarioIndexP2);
@@ -105,7 +104,7 @@ public class ScenarioReduction {
 						}
 					}
 					for (int j2 = i + 1; j2 < scenarioNum; j2++) {
-						if (!indexRecord.contains(new Integer(j2))) {
+						if (!indexRecord.contains(j2)) {
 							scenarioIndexP1 = scenarioIndexP[i]; 
 							scenarioIndexP2 = scenarioIndexP[j2]; 
 							double thisDistance = euclDistance(demandRealizations, scenarioIndexP1, scenarioIndexP2);
@@ -137,7 +136,7 @@ public class ScenarioReduction {
 		
 		// add possibilities
 		for (int i = 0; i < scenarioNum; i++) {
-			if (!indexRecord.contains(new Integer(i))) {
+			if (!indexRecord.contains(i)) {
 				double[] scenarioIndexP1 = new double[T + 1];
 				double[] scenarioIndexP2 = new double[T + 1];
 				double minDistance = 100000;

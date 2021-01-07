@@ -47,7 +47,7 @@ public class WriteToCsv {
 			for (int i = 0; i < rowNum; i++) {
 				for (int j = 0; j < columnNum; j++) {
 					 bg = new BigDecimal(data[i][j]);
-					 fw.write(bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue() + ","); // tab 间隔 \t 或 ，间隔
+					 fw.write(bg.setScale(2).doubleValue() + ","); // tab 间隔 \t 或 ，间隔
 				}
 				fw.write("\n"); // 换行
 			}
@@ -83,11 +83,11 @@ public class WriteToCsv {
 					else {
 						if (j == 0) {
 							bg = new BigDecimal(minCash + i - 1);
-							fw.write(bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue() + ",");
+							fw.write(bg.setScale(2).doubleValue() + ",");
 						}
 						else {
 							bg = new BigDecimal(data[i - 1][j - 1]);
-							 fw.write(bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue() + ","); // tab 间隔 \t 或 ，间隔
+							 fw.write(bg.setScale(2).doubleValue() + ","); // tab 间隔 \t 或 ，间隔
 						}
 					}				 
 				}

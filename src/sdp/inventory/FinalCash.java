@@ -12,7 +12,7 @@ package sdp.inventory;
  */
 public class FinalCash {
 	
-	@FunctionalInterface
+
 	public interface BoundaryFuncton<S, V> {
 		public V apply(S s);
 	} 

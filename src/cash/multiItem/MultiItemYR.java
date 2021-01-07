@@ -3,10 +3,12 @@
  */
 package cash.multiItem;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Function;
 
+import sdp.cash.RecursionG;
 import sdp.cash.multiItem.CashRecursionV;
 import sdp.cash.multiItem.CashSimulationMultiXR;
 import sdp.cash.multiItem.CashSimulationY;
@@ -14,6 +16,7 @@ import sdp.cash.multiItem.CashStateMulti;
 import sdp.cash.multiItem.CashStateMultiYR;
 import sdp.cash.multiItem.CashStateR;
 import sdp.cash.multiItem.GetPmfMulti;
+import sdp.inventory.GetPmf;
 import sdp.inventory.FinalCash.BoundaryFuncton;
 import sdp.inventory.ImmediateValue.ImmediateValueFunctionV;
 import sdp.inventory.StateTransition.StateTransitionFunctionV;
@@ -40,21 +43,28 @@ public class MultiItemYR {
 	public static void main(String[] args) {
 		double[] price = {2, 10};
 		double[] variCost = {1, 2};  // higher margin vs lower margin
-		double depositeRate = 0;
-		double[] salPrice = variCost;
+		double depositebeta = 0;
+		double[] salPrice = Arrays.stream(variCost).map(a -> a*0.5).toArray();
 		
 		double iniCash = 10;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 			
-		// gamma distribution:mean demand is shape / rate and variance is shape / rate^2
-		// rate = 1 / scale
-		// shape = demand * rate
-		// variance = demand / rate
-		// gamma in ssj: alpha is alpha, and lambda is beta(rate)
-		double[][] demand = {{10, 10, 10, 10}, {3, 3, 3, 3}}; // higher average demand vs lower average demand
-		double[] rate = {10, 0.33333}; // higher variance vs lower variance
-			
+		// gamma distribution:mean demand is shape / beta and variance is shape / beta^2
+		// beta = 1 / scale
+		// shape = demand * beta
+		// variance = demand / beta
+		// gamma in ssj: alpha is alpha, and lambda is beta(beta)
+		double[][] demand = {{10, 10, 10}, {3, 3, 3}}; // higher average demand vs lower average demand
+		double[] beta = {10, 1}; // higher variance vs lower variance
+		
+		
+		// read parameter settings from excel files
+		
+		
+		
+		
+		
 		int T = demand[0].length; // horizon length
 		int m = demand.length; // number of products
 		
@@ -77,7 +87,7 @@ public class MultiItemYR {
 		//Distribution[][] distributions =  new NormalDist[m][T];
 		for (int i = 0; i < m; i++)
 			for (int t = 0; t < T; t++) {
-				distributions[i][t] = new GammaDist(demand[i][t]* rate[i], rate[i]);
+				distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
 				//distributions[i][t] = new PoissonDist(demand[i][t]);
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
 			}
@@ -129,7 +139,7 @@ public class MultiItemYR {
 			if (IniState.getPeriod() == T) {
 				salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
 			}
-			return revenue + (1 - depositeRate) * (IniState.getIniR() - orderingCostsY) - IniState.getIniR() + salValue;
+			return revenue + (1 - depositebeta) * (IniState.getIniR() - orderingCostsY) - IniState.getIniR() + salValue;
 		};
 	
 		BoundaryFuncton<CashStateMulti, Double> boundFinalCash
@@ -146,7 +156,7 @@ public class MultiItemYR {
 		endInventory2 = Math.max(0, endInventory2);
 		double revenue1 = price[0] * Math.min(IniState.getIniInventory1(), RandomDemands[0]);
 		double revenue2 = price[1] * Math.min(IniState.getIniInventory2(), RandomDemands[1]);
-		double nextW = revenue1 + revenue2 + (1 + depositeRate) * (IniState.getIniR() - variCost[0] * IniState.getIniInventory1()
+		double nextW = revenue1 + revenue2 + (1 + depositebeta) * (IniState.getIniR() - variCost[0] * IniState.getIniInventory1()
 									- variCost[1] * IniState.getIniInventory2());  // revise
 		
 		endInventory1 = Math.round(endInventory1);
@@ -183,14 +193,14 @@ public class MultiItemYR {
 	double[] optY = recursion.getYStar(iniState2);
 	System.out.println("optimal order quantity y* in the first priod is : " + Arrays.toString(optY));
 	double[] mean = new double[] {demand[0][0], demand[1][0]};
-	double[] variance = new double[] {demand[0][0] / rate[0], demand[1][0] / rate[1]};
-	double[][] optTable = recursion.getOptTableDetail2(mean, variance, price);
+	double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
 	
 	
 	/*******************************************************************
 	 * Simulate
 	 * 
-	 * 
+	 * basically, this simulation is testing for Theorem 1: 
+	 * optimal ordering decisions depend on y*(R)
 	 */
 	int sampleNum = 10000;	
 	currTime = System.currentTimeMillis();
@@ -198,11 +208,37 @@ public class MultiItemYR {
 			 recursion, stateTransition);
 	double simFinalValue = simulation.simulateSDPGivenSamplNum(iniState, variCost);
 	double gap = (simFinalValue - finalValue) / finalValue;
-	System.out.printf("optimality gap for this policy is %.2f%%\n", gap * 100);
+	System.out.printf("optimality gap for this policy y* is %.2f%%\n", gap * 100);
 	time = (System.currentTimeMillis() - currTime) / 1000.0;
 	System.out.println("running time is " + time + "s");
 	
 	
+	/*******************************************************************
+	 * Compute a1* and a2*
+	 * 
+	 * and simulate their results to test Theorem 2
+	 * 
+	*/
+	double[][][] pmf1 = new GetPmf(distributions[0], truncationQuantile, stepSize).getpmf();
+	Distribution[] distributions1 = distributions[0];
+	double[][][] pmf2 = new GetPmf(distributions[1], truncationQuantile, stepSize).getpmf();
+	Distribution[] distributions2 = distributions[1];
+	RecursionG recursionG1 = new RecursionG(pmf1, distributions1, price[0], variCost[0], 0, salPrice[0]);
+	RecursionG recursionG2 = new RecursionG(pmf2, distributions2, price[1], variCost[1], 0, salPrice[1]);
+	double[] opta1 = recursionG1.getOptY();
+	double[] opta2 = recursionG2.getOptY();
+	System.out.println("a1* in each period:");
+	DecimalFormat df = new DecimalFormat("0.00");
+	Arrays.stream(opta1).forEach(e -> System.out.print(df.format(e) + " " ));
+	System.out.println("");
+	System.out.println("a2* in each period:");
+	Arrays.stream(opta2).forEach(e -> System.out.print(df.format(e) + " " ));
+	double simFinalValue2 = simulation.simulateSDPGivenSamplNuma1a2(iniState, variCost, opta1, opta2);
+	double gap2 = (simFinalValue2 - finalValue) / finalValue;
+	System.out.printf("optimality gap for this policy a* is %.2f%%\n", gap2 * 100);
+	double[][] optTable = recursion.getOptTableDetail2(mean, variance, price, opta1, opta2);
+	
+	double[] gaps = new double[] {gap, gap2};
 	WriteToExcel wr = new WriteToExcel();
 	String fileName = "run" + ".xls";
 	String headString =  
@@ -210,8 +246,9 @@ public class MultiItemYR {
 	         "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
 			"p1" + "\t" + "p2" + "\t" +
 	          "c1" + "\t" + "c2" + "\t" + "R" + "\t" + "y1*"+ "\t" + "y2*" + "\t" + 
-			   "cashSituation" + "\t" + "alpha" + "\t" + "yHead1"  + "\t" + "yHead2";
-	wr.writeArrayToExcel(optTable, fileName, headString);
+			   "cashSituation" + "\t" + "alpha" + "\t" + "yHead1"  + "\t" + "yHead2"  + "\t" + "a1*"  + "\t" + "a2*" +
+			   "\t" + "Theorem1Gap" + "Theorem2Gap";
+	wr.writeArrayToExcel2(optTable, fileName, headString, gaps);
 	
 //	System.out.println("alpha in the first period: " + optTable[0][10]);
 //	System.out.println("*******************************");

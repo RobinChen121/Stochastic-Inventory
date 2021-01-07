@@ -7,7 +7,6 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
-import cash.strongconstraint.FindsCS.FindCCrieria;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashState;
 import sdp.cash.CashRecursion.OptDirection;

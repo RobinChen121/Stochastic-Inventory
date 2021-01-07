@@ -65,13 +65,12 @@ public class CLSP {
 	Function<State, double[]> actionGenerator;
 	
     
-	@FunctionalInterface
 	interface StateTransitionFunction <S, A, R, S2>{
 		public S2 apply (S s, A a, R r);
 	}
 	StateTransitionFunction <State, Double, Double, State>  stateTransition;
 	
-	@FunctionalInterface
+
 	interface ImmediateValueFunction <S, A, R, V>{
 		public V apply (S s, A a, R r);
 	}

@@ -10,6 +10,11 @@
 package sdp.cash;
 
 
+/**
+ * @author chen
+ * 
+ * @Description only has period as state
+ */
 public class StateP {
 	protected int period;
 	

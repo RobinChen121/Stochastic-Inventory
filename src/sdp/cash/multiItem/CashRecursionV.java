@@ -156,11 +156,18 @@ public class CashRecursionV {
 			double[] thisActions = yHeads.get(i);
 			CashStateMultiYR thisState = new CashStateMultiYR(s.getPeriod(), thisActions[0], thisActions[1], s.iniR);
 			double thisActionsValue = getExpectedValuePai(thisState);
-			if (thisActionsValue > val + 0.1) {
+			
+			if (thisActionsValue > val + 0.2) {
 				val = thisActionsValue;
 				bestYs = thisActions;
 			}
+			if ((int)thisActions[0] == 11 && (int)thisActions[1] == 7 && s.period == 1)
+				System.out.println(thisActionsValue);
+			
+			
 		}
+		if (s.period == 1)
+			System.out.println(val);
 		if (variCost[0] * bestYs[0] + variCost[1] * bestYs[1] >= s.iniR + 0.1) {
 			getAlpha(s); // revise to save computation time
 		}
@@ -275,7 +282,7 @@ public class CashRecursionV {
 	 * 
 	 * @return more detailed optimal decision table
 	 */
-	public double[][] getOptTableDetail2(double[] mean, double[] variance, double[] price){
+	public double[][] getOptTableDetail2(double[] mean, double[] variance, double[] price, double[] a1, double[] a2){
 		Iterator<Map.Entry<CashStateMulti, double[]>> iterator = cacheActions.entrySet().iterator();
 		double[][] arr = new double[cacheActions.size()][13]; // revise
 		int i = 0;
@@ -287,6 +294,7 @@ public class CashRecursionV {
 			CashStateR stateR = new CashStateR(period, R);
 			double[] yStars = cacheYStar.get(stateR);
 			double y1 = entry.getValue()[0]; double y2 = entry.getValue()[1];
+			
 			
 			double cashConstrained = 0;
 			double alpha = 10000;
@@ -318,7 +326,7 @@ public class CashRecursionV {
 				cashConstrained = 2;
 			}				
 
-			arr[i++] = new double[]{mean[0], mean[1], variance[0], variance[1], period, x1, x2, w, price[0], price[1], variCost[0], variCost[1], R, yStars[0], yStars[1], cashConstrained, alpha, yHeads[0], yHeads[1]};					
+			arr[i++] = new double[]{mean[0], mean[1], variance[0], variance[1], period, x1, x2, w, price[0], price[1], variCost[0], variCost[1], R, yStars[0], yStars[1], cashConstrained, alpha, yHeads[0], yHeads[1], a1[period-1], a2[period-1]};					
 		}
 		return arr;
 	}

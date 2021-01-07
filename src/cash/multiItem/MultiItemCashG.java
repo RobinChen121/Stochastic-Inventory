@@ -53,7 +53,7 @@ public class MultiItemCashG {
 		double truncationQuantile = 0.99;
 		int stepSize = 1;			
 		int maxInventoryState = 200;
-		int Qbound = 80;
+		int Qbound = 20;
 		double discountFactor = 1;
 		
 
