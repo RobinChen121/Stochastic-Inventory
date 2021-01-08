@@ -34,8 +34,10 @@ import umontreal.ssj.probdist.PoissonDist;
  * @Desc: recode the dynamic programming of two-product problem by new states: (y1, y2, R) and two functional
  *        equations: V(y1, y2, R) and Pi(y1, y2, R)
  *
+ *			testing for parameter variations
+ *
  */
-public class MultiItemYR {
+public class MultiItemYRTesting {
 	
 	
 	
@@ -56,12 +58,21 @@ public class MultiItemYR {
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj: alpha is alpha, and lambda is beta(beta)
-		int T = 2; // horizon length
-		double[] meanDemands = new double[] {10, 3};
-		
+		int T = 4; // horizon length
+		double[] meanDemands = new double[2];
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
 		double[] beta = {10, 1}; // higher variance vs lower variance
 		
+		
+		// read parameter settings from excel files
+		ReadExcel re = new ReadExcel();
+		double[][] paraSettings = re.readExcelXLSX("Numerical experiments-settings.xlsx", 2);		
+		for (int runTime = 37; runTime < paraSettings.length; runTime++) {
+			price = new double[] {paraSettings[runTime][2], paraSettings[runTime][8]};
+			variCost = new double[] {paraSettings[runTime][1], paraSettings[runTime][7]};
+			beta = new double[] {paraSettings[runTime][6], paraSettings[runTime][12]};
+			meanDemands = new double[] {paraSettings[runTime][3], paraSettings[runTime][9]};
+			
 		double d1 = meanDemands[0];
 		double d2 = meanDemands[1];
 		double v1 = variCost[0]; double v2 = variCost[1];
@@ -71,14 +82,8 @@ public class MultiItemYR {
 			demand[1][t] = d2;
 		}
 		
-		
-		
 		double[] salPrice = Arrays.stream(variCost).map(a -> a*0.5).toArray();
-		int m = demand.length; // number of products
-		
-//		for (int index = 5; index <= 10; index++) {
-//			price[1] = index;
-		
+		int m = demand.length; // number of products		
 		
 		double truncationQuantile = 0.9999; // may affect poisson results
 		int stepSize = 1;
@@ -86,7 +91,7 @@ public class MultiItemYR {
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
 		int maxInventoryState = 200;
-		int Qbound = 20;
+		int Qbound = 40;
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
@@ -126,11 +131,12 @@ public class MultiItemYR {
 					}					
 				}
 			return actions;
-		};		
+		};
+
 
 	
-		BoundaryFuncton<CashStateMulti, Double> boundFinalCash
-		= (IniState) -> {
+	BoundaryFuncton<CashStateMulti, Double> boundFinalCash
+	= (IniState) -> {
 			return IniState.getIniCash() + salPrice[0] * IniState.getIniInventory1() + salPrice[1] * IniState.getIniInventory2();
 		};
 	
@@ -227,7 +233,7 @@ public class MultiItemYR {
 	
 	double[] gaps = new double[] {gap, gap2};
 	WriteToExcel wr = new WriteToExcel();
-	String fileName = "run" + ".xls";
+	String fileName = "run" + (int) paraSettings[runTime][0] + ".xls";
 	String headString =  
 			"meanD1" + "\t" + "meanD2" + "\t" + "variance1" + "\t" + "variance2" + "\t" +
 	         "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
@@ -242,6 +248,7 @@ public class MultiItemYR {
 	
 		}	
 	
+	}
 	
 	
 

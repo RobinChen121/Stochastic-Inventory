@@ -161,13 +161,13 @@ public class CashRecursionV {
 				val = thisActionsValue;
 				bestYs = thisActions;
 			}
-			if ((int)thisActions[0] == 11 && (int)thisActions[1] == 7 && s.period == 1)
-				System.out.println(thisActionsValue);
+//			if ((int)thisActions[0] == 11 && (int)thisActions[1] == 7 && s.period == 1)
+//				System.out.println(thisActionsValue);
 			
 			
 		}
-		if (s.period == 1)
-			System.out.println(val);
+//		if (s.period == 1)
+//			System.out.println(val);
 		if (variCost[0] * bestYs[0] + variCost[1] * bestYs[1] >= s.iniR + 0.1) {
 			getAlpha(s); // revise to save computation time
 		}
