@@ -56,7 +56,7 @@ public class MultiItemYR {
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj: alpha is alpha, and lambda is beta(beta)
-		int T = 2; // horizon length
+		int T = 4; // horizon length
 		double[] meanDemands = new double[] {10, 3};
 		
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
@@ -86,7 +86,7 @@ public class MultiItemYR {
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
 		int maxInventoryState = 200;
-		int Qbound = 20;
+		int Qbound = 22;
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
@@ -104,8 +104,8 @@ public class MultiItemYR {
 		Function<CashStateMultiYR, ArrayList<double[]>> buildActionListPai = s -> {
 			ArrayList<double[]> actions = new ArrayList<>();
 			double Ybound = Qbound;
-			for (double i = 0; i < Ybound; i++)
-				for (double j = 0; j < Ybound; j++) {
+			for (double i = 0; i < Ybound; i=i+1)
+				for (double j = 0; j < Ybound; j=j+1) {
 					double[] thisActions = {i, j};
 					actions.add(thisActions);	
 				}
@@ -118,8 +118,8 @@ public class MultiItemYR {
 			int miny1 = (int) s.getIniInventory1();
 			int miny2 = (int) s.getIniInventory2();
 			double iniR = s.getIniCash() + v1 * s.getIniInventory1() + v2 * s.getIniInventory2();
-			for (int i = miny1; i < miny1 + Qbound; i++)
-				for (int j = miny2; j < miny2 + Qbound; j++) {				
+			for (double i = miny1; i < miny1 + Qbound; i = i + 1)
+				for (double j = miny2; j < miny2 + Qbound; j = j + 1) {				
 					if (v1 * i + v2 * j < iniR + 0.1) {
 						double[] thisActions = {i, j};
 						actions.add(thisActions);
@@ -146,9 +146,9 @@ public class MultiItemYR {
 		double nextW = revenue1 + revenue2 + (1 + depositebeta) * (IniState.getIniR() - v1 * IniState.getIniInventory1()
 									- v2 * IniState.getIniInventory2());  // revise
 		
-		endInventory1 = Math.round(endInventory1);
-		endInventory2 = Math.round(endInventory2);
-		nextW = Math.round(nextW);
+		endInventory1 = Math.round(endInventory1 * 10) / 10;
+		endInventory2 = Math.round(endInventory2 * 10) / 10;
+		nextW = Math.round(nextW * 10) / 10;
 		nextW = nextW > maxCashState ? maxCashState : nextW;
 		nextW = nextW < minCashState ? minCashState : nextW;
 		endInventory1 = endInventory1 > maxInventoryState ? maxInventoryState : endInventory1;

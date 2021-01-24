@@ -136,10 +136,14 @@ public class RecursionG {
 			int maxY = 200;
 			double optY = 0;
 			double optYValue = -1000;
-			for (double y  = 0; y < maxY; y=y+1) {
+			for (double y  = 0; y < maxY; y = y + 0.1) {  // step size
 				StateY newStateY = new StateY(s.getPeriod(), y);
 				double thisYValue = G(newStateY); // optimal y in the next period
-				if (thisYValue - optYValue > 0.1) {
+//				if (s.period == 1 && (int) y == 21 || (int) y == 14)
+//					System.out.println(thisYValue);
+//				if (s.period == 1 && (int) y == 21 || (int) y == 9)
+//					System.out.println(thisYValue);
+				if (thisYValue - optYValue > 0.01) {
 					optYValue = thisYValue;
 					optY = y;
 				}

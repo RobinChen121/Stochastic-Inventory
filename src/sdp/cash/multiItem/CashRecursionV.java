@@ -157,16 +157,16 @@ public class CashRecursionV {
 			CashStateMultiYR thisState = new CashStateMultiYR(s.getPeriod(), thisActions[0], thisActions[1], s.iniR);
 			double thisActionsValue = getExpectedValuePai(thisState);
 			
-			if (thisActionsValue > val + 0.2) {
+			if (thisActionsValue > val + 0.01) {
 				val = thisActionsValue;
 				bestYs = thisActions;
 			}
-//			if ((int)thisActions[0] == 11 && (int)thisActions[1] == 7 && s.period == 1)
+//			if ((int)thisActions[0] == 21 && (int)thisActions[1] == 8 && s.period == 2 && (int) s.getIniR() == 26)
 //				System.out.println(thisActionsValue);
 			
 			
 		}
-//		if (s.period == 1)
+//		if (s.period == 2 && (int) s.getIniR() == 26)
 //			System.out.println(val);
 		if (variCost[0] * bestYs[0] + variCost[1] * bestYs[1] >= s.iniR + 0.1) {
 			getAlpha(s); // revise to save computation time
@@ -182,8 +182,8 @@ public class CashRecursionV {
 			double bestAlpha = 0;
 			double bestValue = -Double.MAX_VALUE;
 			for (double alpha = 0; alpha <= 1; alpha = alpha + 0.01) {  // stepsize of alpha
-				if (initialState.period == 1 && alpha > 0.89)
-					System.out.print("");
+//				if (initialState.period == 1 && alpha > 0.89)
+//					System.out.print("");
 				double y1 = alpha * s.iniR / variCost[0];
 				double y2 = (1 - alpha) * s.iniR / variCost[1];
 				CashStateMultiYR state = new CashStateMultiYR(s.period, y1, y2, s.iniR);
