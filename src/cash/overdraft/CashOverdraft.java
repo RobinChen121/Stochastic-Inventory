@@ -136,7 +136,7 @@ public class CashOverdraft {
 //		System.out.println("(s, S) are: ");
 //		System.out.println(Arrays.deepToString(optsS));
 		double simsSFinalValue = simuation.simulatesSOD(initialState, optsS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
-		System.out.printf("Optimality gap is: %.2f%%\n", (finalCash -simsSFinalValue)/finalCash*100);
+		System.out.printf("Optimality gap for policy (s, S) is: %.2f%%\n", (finalCash -simsSFinalValue)/finalCash*100);
 		
 		
 		/*******************************************************************
@@ -144,7 +144,8 @@ public class CashOverdraft {
 		 * 
 		 */
 		double[][] optsCS1S2 = findsS.getsCS1S2(optTable);
-		
+		double simsSFinalValue2 = simuation.simulatesSOD2(initialState, optsCS1S2);
+		System.out.printf("Optimality gap for policy (s, C, S1, S2) is: %.2f%%\n", (finalCash -simsSFinalValue2)/finalCash*100);
 		
 		
 		

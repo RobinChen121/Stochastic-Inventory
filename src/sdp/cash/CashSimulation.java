@@ -378,6 +378,44 @@ public class CashSimulation {
 		System.out.println("\nfinal simulated (s, S) policy expected value in " + df2.format(sampleNum) + " samples is: " + simFinalValue);
 		return simFinalValue;
 	}
+	
+	/**
+	 * 
+	 * @param 
+	 * @return simulate (s, C, S1, S2) policy in overdraft
+	 */
+	public double simulatesSOD2(CashState iniState, double[][] optsCS) {
+		Sampling.resetStartStream();
+
+		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		double[] simuValues = new double[samples.length];		
+		for (int i = 0; i < samples.length; i++) {
+			double sum = 0; CashState state = iniState;
+			for (int t = 0; t < samples[0].length; t++)
+			{
+				double optQ;
+				if ( t== 0) 
+					optQ = optsCS[t][2] - iniState.getIniInventory();
+				else {
+					if (state.getIniInventory() < optsCS[t][0])
+						if (state.getIniCash() <= optsCS[t][1] + 0.1)
+							optQ = optsCS[t][2] - state.getIniInventory();
+						else 
+							optQ = optsCS[t][3] - state.getIniInventory();
+					else
+						optQ = 0;
+				}
+				double randomDemand = samples[i][t];
+				sum += Math.pow(discountFactor, t) * immediateValue.apply(state, optQ, randomDemand);
+				state = stateTransition.apply(state, optQ, randomDemand);
+			}
+			simuValues[i] = sum;
+		}
+		DecimalFormat df2 = new DecimalFormat("###,###");
+		double simFinalValue = Arrays.stream(simuValues).sum()/samples.length + iniState.iniCash;
+		System.out.println("\nfinal simulated (s, C, S1, S2) policy expected value in " + df2.format(sampleNum) + " samples is: " + simFinalValue);
+		return simFinalValue;
+	}
 
 	/**
 	 * compute L(y)
