@@ -143,7 +143,7 @@ public class CashOverdraft {
 		 * Find (s, C, S1, S2) and simulate
 		 * 
 		 */
-		
+		double[][] optsCS1S2 = findsS.getsCS1S2(optTable);
 		
 		
 		
