@@ -33,27 +33,34 @@ public class MultiItemCashG {
 
 
 	public static void main(String[] args) {
-		double[] price = {10, 5};
-		double[] variCost = {4, 2};  // higher margin vs lower margin
+		double[] price = {2, 10};
+		double[] variCost = {1, 2};  // higher margin vs lower margin
 		
-		double iniCash = 250;  // initial cash
+		double iniCash = 10;  // initial cash
 		int[] iniInventory = {0, 0};  // initial inventory
 		
-		int d = 2; // compute G(d)
+		int d = 1; // compute G(d)
+		int T = 4;
 		
 		// mean demand is shape * scale and variance is shape * scale^2
-		double[][] shape = {{ 6, 6, 6, 6}, {15, 15, 15, 15}}; // higher average shape vs lower average shape
-		double[] scale = {0.5, 0.25}; // higher variance vs lower variance
+		double[] meanDemands = new double[] {10, 3};
+		
+		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
+		double[] beta = {10, 1}; // higher variance vs lower variance	
+		double d1 = meanDemands[0];
+		double d2 = meanDemands[1];
+		for (int t = 0; t < T; t++) {
+			demand[0][t] = d1;
+			demand[1][t] = d2;
+		}
 		
 		
-		double[] salvagePrice = {2, 1};
-		
-		int T = shape[0].length; // horizon length
+		double[] salPrice = Arrays.stream(variCost).map(a -> a*0.5).toArray();
 		
 		double truncationQuantile = 0.99;
 		int stepSize = 1;			
 		int maxInventoryState = 200;
-		int Qbound = 20;
+		int Qbound = 40;
 		double discountFactor = 1;
 		
 
@@ -61,8 +68,7 @@ public class MultiItemCashG {
 		// get shape possibilities for a product in each period
 		GammaDist[] distributions =  new GammaDist[T]; // normal dist for one product
 		for (int t = 0; t < T; t++)
-			distributions[t] = new GammaDist(shape[d - 1][t], scale[d - 1] * shape[d - 1][t]);
-		
+			distributions[t] = new GammaDist(demand[d-1][t]* beta[d-1], beta[d-1]);
 
 		
 		// build action list for this item
@@ -76,7 +82,7 @@ public class MultiItemCashG {
 			double revenue = 0;
 			revenue = (price[d - 1] - variCost[d -1]) * Math.min(IniState.getIniInventory() + action, randomDemand);
 			if (IniState.getPeriod() == T) {
-				revenue += (salvagePrice[d - 1] - variCost[d -1]) * Math.max(IniState.getIniInventory() + action - randomDemand, 0);
+				revenue += (salPrice[d - 1] - variCost[d -1]) * Math.max(IniState.getIniInventory() + action - randomDemand, 0);
 			}
 			return revenue;
 		};
@@ -107,6 +113,7 @@ public class MultiItemCashG {
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
 		
+		System.out.println("a* in each period:");
 		double[] optY = recursion.getOptY();
 		optY[0] = iniState.getIniInventory() + recursion.getAction(iniState);
 		System.out.println(Arrays.toString(optY));

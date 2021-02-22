@@ -86,7 +86,7 @@ public class MultiItemYR {
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
 		int maxInventoryState = 200;
-		int Qbound = 22;
+		int Qbound = 40;
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period

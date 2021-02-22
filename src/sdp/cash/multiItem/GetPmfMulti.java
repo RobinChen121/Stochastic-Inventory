@@ -12,10 +12,12 @@ package sdp.cash.multiItem;
 
 
 import umontreal.ssj.probdist.DiscreteDistribution;
+import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
+import umontreal.ssj.probdist.UniformIntDist;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 
 /**
@@ -133,17 +135,17 @@ public class GetPmfMulti {
 			return pmf;
 		}
 		
-		if(distributionGeneral[t][0] instanceof DiscreteDistribution) {
-			DiscreteDistribution distribution1 = (DiscreteDistribution) distributionGeneral[t][0];
-			DiscreteDistribution distribution2 = (DiscreteDistribution) distributionGeneral[t][1];
-			int demandLength1 = distribution1.getN();
-			int demandLength2 = distribution2.getN();
+		if(distributionGeneral[0][t] instanceof UniformIntDist) {
+			UniformIntDist distribution1 = (UniformIntDist) distributionGeneral[0][t];
+			UniformIntDist distribution2 = (UniformIntDist) distributionGeneral[1][t];
+			int demandLength1 = distribution1.getJ() - distribution1.getI() + 1;
+			int demandLength2 = distribution2.getJ() - distribution2.getI() + 1;
 			double[][] pmf = new double[demandLength1 * demandLength2][3];
 			int index = 0;
-			for (int i = 0; i< demandLength1; i++)
-				for (int j = 0; j < demandLength2; j++) {	
-					pmf[index][0] = distribution1.getValue(i);
-					pmf[index][1] = distribution2.getValue(j);
+			for (int i = distribution1.getXinf(); i<= distribution1.getXsup(); i++)
+				for (int j = distribution2.getXinf(); j <= distribution2.getXsup(); j++) {	
+					pmf[index][0] = i;
+					pmf[index][1] = j;
 					pmf[index][2] = distribution1.prob(i) * distribution2.prob(j);
 					index++;
 				}

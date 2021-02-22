@@ -26,6 +26,8 @@ import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
+import umontreal.ssj.probdist.UniformDist;
+import umontreal.ssj.probdist.UniformIntDist;
 
 /**
  * @author: Zhen Chen
@@ -62,15 +64,18 @@ public class MultiItemYRTesting {
 		double[] meanDemands = new double[2];
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
 		double[] beta = {10, 1}; // higher variance vs lower variance
-		
+		int[] b = new int[2];
+		int[] a = new int[2];
 		
 		// read parameter settings from excel files
 		ReadExcel re = new ReadExcel();
-		double[][] paraSettings = re.readExcelXLSX("Numerical experiments-settings.xlsx", 2);		
-		for (int runTime = 37; runTime < paraSettings.length; runTime++) {
+		double[][] paraSettings = re.readExcelXLSX("Numerical experiments-settings.xlsx", 2);	
+		
+		for (int runTime = 3; runTime < 16; runTime=runTime+2) {
 			price = new double[] {paraSettings[runTime][2], paraSettings[runTime][8]};
 			variCost = new double[] {paraSettings[runTime][1], paraSettings[runTime][7]};
-			beta = new double[] {paraSettings[runTime][6], paraSettings[runTime][12]};
+			b = new int[] {(int)paraSettings[runTime][6], (int)paraSettings[runTime][12]};
+			a = new int[] {(int)paraSettings[runTime][5], (int)paraSettings[runTime][11]};
 			meanDemands = new double[] {paraSettings[runTime][3], paraSettings[runTime][9]};
 			
 		double d1 = meanDemands[0];
@@ -82,7 +87,8 @@ public class MultiItemYRTesting {
 			demand[1][t] = d2;
 		}
 		
-		double[] salPrice = Arrays.stream(variCost).map(a -> a*0.5).toArray();
+		// unit salvage value is half of the unit variable cost
+		double[] salPrice = Arrays.stream(variCost).map(s -> s*0.5).toArray();
 		int m = demand.length; // number of products		
 		
 		double truncationQuantile = 0.9999; // may affect poisson results
@@ -91,15 +97,18 @@ public class MultiItemYRTesting {
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
 		int maxInventoryState = 200;
-		int Qbound = 40;
+		int Qbound1 = 20;
+		int Qbound2 = 10;
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
 		Distribution[][] distributions =  new GammaDist[m][T];
+		//Distribution[][] distributions =  new UniformIntDist[m][T];
 		//Distribution[][] distributions =  new PoissonDist[m][T];
 		//Distribution[][] distributions =  new NormalDist[m][T];
 		for (int i = 0; i < m; i++)
 			for (int t = 0; t < T; t++) {
+				//distributions[i][t] = new UniformIntDist(a[i], b[i]);
 				distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
 				//distributions[i][t] = new PoissonDist(demand[i][t]);
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
@@ -108,9 +117,8 @@ public class MultiItemYRTesting {
 		// build action list (y1, y2) for V(x1, x2, R)
 		Function<CashStateMultiYR, ArrayList<double[]>> buildActionListPai = s -> {
 			ArrayList<double[]> actions = new ArrayList<>();
-			double Ybound = Qbound;
-			for (double i = 0; i < Ybound; i++)
-				for (double j = 0; j < Ybound; j++) {
+			for (double i = 0; i < Qbound1; i++)
+				for (double j = 0; j < Qbound2; j++) {
 					double[] thisActions = {i, j};
 					actions.add(thisActions);	
 				}
@@ -123,8 +131,8 @@ public class MultiItemYRTesting {
 			int miny1 = (int) s.getIniInventory1();
 			int miny2 = (int) s.getIniInventory2();
 			double iniR = s.getIniCash() + v1 * s.getIniInventory1() + v2 * s.getIniInventory2();
-			for (int i = miny1; i < miny1 + Qbound; i++)
-				for (int j = miny2; j < miny2 + Qbound; j++) {				
+			for (int i = miny1; i < miny1 + Qbound1; i++)
+				for (int j = miny2; j < miny2 + Qbound2; j++) {				
 					if (v1 * i + v2 * j < iniR + 0.1) {
 						double[] thisActions = {i, j};
 						actions.add(thisActions);
@@ -231,7 +239,7 @@ public class MultiItemYRTesting {
 	System.out.printf("optimality gap for this policy a* is %.2f%%\n", gap2 * 100);
 	double[][] optTable = recursion.getOptTableDetail2(mean, variance, price, opta1, opta2);
 	
-	double[] gaps = new double[] {gap, gap2};
+    double[] gaps = new double[] {gap, gap2};
 	WriteToExcel wr = new WriteToExcel();
 	String fileName = "run" + (int) paraSettings[runTime][0] + ".xls";
 	String headString =  
