@@ -77,9 +77,7 @@ public class CashRecursionV {
 		this.cacheYStar = new TreeMap<>(keyComparator2);
 		this.cacheAlpha = new TreeMap<>(keyComparator2);
 	}
-	
-	
-	
+			
 	
 	public double getExpectedValuePai(CashStateMultiYR initialState) {
 		return this.cacheValuesPai.computeIfAbsent(initialState, s -> {
@@ -119,7 +117,7 @@ public class CashRecursionV {
 				}
 				double iniR = s.iniCash + variCost[0] * s.iniInventory1 + variCost[1] * s.iniInventory2;
 				CashStateR  stateR = new CashStateR(s.getPeriod(), iniR);
-				getYStar(stateR);
+				getYStar(stateR); // for cacheing y stars
 				this.cacheActions.putIfAbsent(s, bestYs);
 			}
 			else {
@@ -134,7 +132,7 @@ public class CashRecursionV {
 	* @Description: return the optimal yHeads for a given state
 	* @param @param state
 	* @param @return    
-	* @return optimal y1, y2  for state (x1, x2, R)
+	* @return optimal y1, y2  for state (x1, x2, w)
 	*/
 	public double[] getAction(CashStateMulti state) {
 		return cacheActions.get(state);

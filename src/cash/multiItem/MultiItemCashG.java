@@ -57,7 +57,7 @@ public class MultiItemCashG {
 		
 		double[] salPrice = Arrays.stream(variCost).map(a -> a*0.5).toArray();
 		
-		double truncationQuantile = 0.99;
+		double truncationQuantile = 0.9999;
 		int stepSize = 1;			
 		int maxInventoryState = 200;
 		int Qbound = 40;

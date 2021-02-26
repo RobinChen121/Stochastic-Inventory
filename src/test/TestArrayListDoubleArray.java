@@ -22,6 +22,9 @@ public class TestArrayListDoubleArray {
 		ArrayList<double[]> list = new ArrayList<>();
 		list.add(new double[] {1, 2});
 		System.out.println(list.get(0)[0]);
+		
+		double a = Math.round(3.56 * 10) / 10.0;
+		System.out.println(a);
 
 	}
 

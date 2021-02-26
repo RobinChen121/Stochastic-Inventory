@@ -53,15 +53,15 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {15.7,10,4.3,2,4.3};
+		double[] meanDemand = {5, 5, 5, 5, 5, 5};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 25;
-		double fixOrderCost = 20;
-		double variCost = 1;
+		double iniCash = 100;
+		double fixOrderCost = 0;
+		double variCost = 2;
 		double price = 6;
 		double depositeRate = 0;
-		double salvageValue = 0.5;
+		double salvageValue = 1;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
 		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
@@ -104,6 +104,8 @@ public class CashConstraint {
 		Function<CashState, double[]> getFeasibleAction = s -> {
 			double maxQ = (int) Math.min(maxOrderQuantity,
 					Math.max(0, (s.getIniCash() - overheadCost - fixOrderCost) / variCost));
+//			if (s.getPeriod() == 1)
+//				return new double[]{200.0};
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -135,7 +137,7 @@ public class CashConstraint {
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			// cash is integer or not
-			nextCash = Math.round(nextCash * 1) / 1; 
+			nextCash = Math.round(nextCash * 10) / 10.0; // the right should be a decimal
 			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 		};
 

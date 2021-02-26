@@ -44,7 +44,7 @@ public class MultiItemYR {
 	public static void main(String[] args) {
 		double[] price = {2, 10};
 		double[] variCost = {1, 2};  // higher margin vs lower margin
-		double depositebeta = 0;
+		double depositeRate = 0;
 		
 		
 		double iniCash = 10;  // initial cash
@@ -100,7 +100,7 @@ public class MultiItemYR {
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
 			}
 		
-		// build action list (y1, y2) for V(x1, x2, R)
+		// build action list (y1, y2) for pai(y1, y2, R)
 		Function<CashStateMultiYR, ArrayList<double[]>> buildActionListPai = s -> {
 			ArrayList<double[]> actions = new ArrayList<>();
 			double Ybound = Qbound;
@@ -112,7 +112,7 @@ public class MultiItemYR {
 			return actions;
 		};
 		
-		// build action list (y1, y2) for Pai(x1, x2, R)
+		// build action list (y1, y2) for V(x1, x2, w)
 		Function<CashStateMulti, ArrayList<double[]>> buildActionListV = s -> {
 			ArrayList<double[]> actions = new ArrayList<>();
 			int miny1 = (int) s.getIniInventory1();
@@ -134,7 +134,7 @@ public class MultiItemYR {
 			return IniState.getIniCash() + salPrice[0] * IniState.getIniInventory1() + salPrice[1] * IniState.getIniInventory2();
 		};
 	
-	// State Transition Function
+	// State Transition Function: from pai^n(y1, y2, R) to V^{n+1}(x1, x2, w)
 	StateTransitionFunctionV<CashStateMultiYR, double[], CashStateMulti> stateTransition
 	= (IniState, RandomDemands) -> {
 		double endInventory1 = IniState.getIniInventory1() - RandomDemands[0];
@@ -143,7 +143,7 @@ public class MultiItemYR {
 		endInventory2 = Math.max(0, endInventory2);
 		double revenue1 = p1 * Math.min(IniState.getIniInventory1(), RandomDemands[0]);
 		double revenue2 = p2 * Math.min(IniState.getIniInventory2(), RandomDemands[1]);
-		double nextW = revenue1 + revenue2 + (1 + depositebeta) * (IniState.getIniR() - v1 * IniState.getIniInventory1()
+		double nextW = revenue1 + revenue2 + (1 + depositeRate) * (IniState.getIniR() - v1 * IniState.getIniInventory1()
 									- v2 * IniState.getIniInventory2());  // revise
 		
 		endInventory1 = Math.round(endInventory1 * 10) / 10;
@@ -179,8 +179,6 @@ public class MultiItemYR {
 	CashStateR iniState2 = new CashStateR(period, iniCash);
 	double[] optY = recursion.getYStar(iniState2);
 	System.out.println("optimal order quantity y* in the first priod is : " + Arrays.toString(optY));
-	double[] mean = new double[] {demand[0][0], demand[1][0]};
-	double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
 	
 	
 	/*******************************************************************
@@ -223,6 +221,8 @@ public class MultiItemYR {
 	double simFinalValue2 = simulation.simulateSDPGivenSamplNuma1a2(iniState, variCost, opta1, opta2);
 	double gap2 = (simFinalValue2 - finalValue) / finalValue;
 	System.out.printf("optimality gap for this policy a* is %.2f%%\n", gap2 * 100);
+	double[] mean = new double[] {demand[0][0], demand[1][0]};
+	double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
 	double[][] optTable = recursion.getOptTableDetail2(mean, variance, price, opta1, opta2);
 	
 	double[] gaps = new double[] {gap, gap2};
