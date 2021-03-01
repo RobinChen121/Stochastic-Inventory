@@ -110,7 +110,7 @@ public class CashRecursionV {
 //					CashStateR  stateR = new CashStateR(s.getPeriod(), iniR);
 //					getYStar(stateR);
 
-					if (thisActionsValue > val + 0.1) {
+					if (thisActionsValue > val + 0.01) {
 						val = thisActionsValue;
 						bestYs = thisActions;
 					}
@@ -118,6 +118,7 @@ public class CashRecursionV {
 				double iniR = s.iniCash + variCost[0] * s.iniInventory1 + variCost[1] * s.iniInventory2;
 				CashStateR  stateR = new CashStateR(s.getPeriod(), iniR);
 				getYStar(stateR); // for cacheing y stars
+				// getYStar2(stateR, s); // for cacheing y stars, computing new alpha
 				this.cacheActions.putIfAbsent(s, bestYs);
 			}
 			else {
@@ -151,21 +152,17 @@ public class CashRecursionV {
 		double val = -Double.MAX_VALUE;
 		double[] bestYs = new double[] {0, 0};
 		for (int i = 0; i < yHeads.size(); i++) {
+			// double[] thisActions = {17, 7}; //actions.get(i);
 			double[] thisActions = yHeads.get(i);
 			CashStateMultiYR thisState = new CashStateMultiYR(s.getPeriod(), thisActions[0], thisActions[1], s.iniR);
 			double thisActionsValue = getExpectedValuePai(thisState);
 			
-			if (thisActionsValue > val + 0.01) {
+			if (thisActionsValue > val + 0.1) {
 				val = thisActionsValue;
 				bestYs = thisActions;
-			}
-//			if ((int)thisActions[0] == 21 && (int)thisActions[1] == 8 && s.period == 2 && (int) s.getIniR() == 26)
-//				System.out.println(thisActionsValue);
-			
-			
+			}		
 		}
-//		if (s.period == 2 && (int) s.getIniR() == 26)
-//			System.out.println(val);
+		
 		if (variCost[0] * bestYs[0] + variCost[1] * bestYs[1] >= s.iniR + 0.1) {
 			getAlpha(s); // revise to save computation time
 		}
@@ -184,6 +181,57 @@ public class CashRecursionV {
 //					System.out.print("");
 				double y1 = alpha * s.iniR / variCost[0];
 				double y2 = (1 - alpha) * s.iniR / variCost[1];
+				CashStateMultiYR state = new CashStateMultiYR(s.period, y1, y2, s.iniR);
+				double expectValue = getExpectedValuePai(state);
+				if (expectValue > bestValue + 0.1) {
+					bestValue = expectValue;
+					bestAlpha = alpha;
+				}
+			}
+		return bestAlpha;
+		});
+	}
+	
+	public double[] getYStar2(CashStateR initialState, CashStateMulti ss) { // revise
+		return this.cacheYStar.computeIfAbsent(initialState, s -> {
+		CashStateMultiYR state = new CashStateMultiYR(s.getPeriod(), 0, 0, s.iniR);
+		ArrayList<double[]> yHeads = buildActionListPai.apply(state);
+		double val = -Double.MAX_VALUE;
+		double[] bestYs = new double[] {0, 0};
+		for (int i = 0; i < yHeads.size(); i++) {
+			// double[] thisActions = {17, 7}; //actions.get(i);
+			double[] thisActions = yHeads.get(i);
+			CashStateMultiYR thisState = new CashStateMultiYR(s.getPeriod(), thisActions[0], thisActions[1], s.iniR);
+			double thisActionsValue = getExpectedValuePai(thisState);
+			
+			if (thisActionsValue > val + 0.1) {
+				val = thisActionsValue;
+				bestYs = thisActions;
+			}		
+		}
+		
+		if (variCost[0] * bestYs[0] + variCost[1] * bestYs[1] >= s.iniR + 0.1) {
+			getAlpha2(s, ss); // revise to save computation time
+		}
+			
+		return bestYs;			
+		});
+	}
+	
+	/**
+	 * @param initialState
+	 * @return
+	 *  a new computation for alpha
+	 */
+	public double getAlpha2(CashStateR initialState, CashStateMulti stateXW) {
+		return this.cacheAlpha.computeIfAbsent(initialState, s -> {
+			double bestAlpha = 0;
+			double bestValue = -Double.MAX_VALUE;
+			for (double alpha = 0; alpha <= 1; alpha = alpha + 0.01) {  // stepsize of alpha
+				double y1 = alpha * stateXW.iniCash / variCost[0] + stateXW.iniInventory1;
+				double y2 = (1 - alpha) * stateXW.iniCash / variCost[1] + stateXW.iniInventory2;
+//				double y1 = alpha * s.iniR / variCost[0];
+//				double y2 = (1 - alpha) * s.iniR / variCost[1];
 				CashStateMultiYR state = new CashStateMultiYR(s.period, y1, y2, s.iniR);
 				double expectValue = getExpectedValuePai(state);
 				if (expectValue > bestValue - 0.1) {

@@ -7,8 +7,11 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 
+import org.apache.commons.math3.geometry.spherical.twod.S2Point;
+
 import sdp.inventory.FinalCash.BoundaryFuncton;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.inventory.StateTransition.StateTransitionFunctionV;
 
 /**
  * @author chen
@@ -27,7 +30,7 @@ public class CashRecursionV2 {
 	Map<CashStateMulti, double[]> cacheYStar = new TreeMap<>();	
 	Map<CashStateMulti, Double> cacheAlpha = new TreeMap<>();	
 	Map<CashStateMulti, Double> cacheValuesV = new TreeMap<>();
-	Map<CashStateMulti, Double> cacheValuesPai = new TreeMap<>();
+	Map<CashStateMultiXYW, Double> cacheValuesPai = new TreeMap<>();
 	
 	Function<CashStateMulti, ArrayList<double[]>> buildActionListV;
 	Function<CashStateMulti, ArrayList<double[]>> buildActionListPai;
@@ -35,7 +38,7 @@ public class CashRecursionV2 {
 	BoundaryFuncton<CashStateMulti, Double> boundFinalCash;
 	
 	public CashRecursionV2(double discountFactor, GetPmfMulti Pmf, Function<CashStateMulti, ArrayList<double[]>> buildActionListV,
-			Function<CashStateMulti, ArrayList<double[]>> buildActionListPai, StateTransitionFunction<CashStateMulti, double[], double[],CashStateMulti> stateTransition, 
+			Function<CashStateMulti, ArrayList<double[]>> buildActionListPai, StateTransitionFunction<CashStateMulti, double[], double[], CashStateMulti> stateTransition, 
 			BoundaryFuncton<CashStateMulti, Double> boundFinalCash, int T, double[] variCost) {
 		this.discountFactor = discountFactor;
 		this.Pmf = Pmf;
@@ -52,57 +55,107 @@ public class CashRecursionV2 {
 					o1.getIniInventory2() == o2.getIniInventory2() ? o1.iniCash > o2.iniCash  ? 1 :
 						o1.iniCash == o2.iniCash ? 0 : -1: -1 : -1 : -1;
 					
+		Comparator<CashStateMultiXYW> keyComparator2 = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
+				o1.getPeriod() == o2.getPeriod() ? o1.getIniInventory1() > o2.getIniInventory1() ? 1 : 
+					o1.getIniInventory1() == o2.getIniInventory1() ? o1.getIniInventory2() > o2.getIniInventory2() ? 1 :
+						o1.getIniInventory2() == o2.getIniInventory2() ? o1.getY1() > o2.getY1() ? 1 :
+								o1.getY1() == o2.getY1() ? o1.getY2() > o2.getY2() ? 1 :
+								o1.getY2() == o2.getY2() ? o1.iniW > o2.iniW ? 1 :
+									o1.iniW == o2.iniW ? 0 : -1: -1 : -1 : -1 : -1 : -1;
+					
 		this.cacheActions = new TreeMap<>(keyComparator1);
 		this.cacheValuesV = new TreeMap<>(keyComparator1);		
-		this.cacheValuesPai = new TreeMap<>(keyComparator1);	
+		this.cacheValuesPai = new TreeMap<>(keyComparator2);	
 		this.cacheYStar = new TreeMap<>(keyComparator1);
 		this.cacheAlpha = new TreeMap<>(keyComparator1);		
 	}
 	
 	
 	public double getExpectedValuePai(CashStateMulti initialState, double[] actions) {
-		return this.cacheValuesPai.computeIfAbsent(initialState, s -> {
+		CashStateMultiXYW state = new CashStateMultiXYW(initialState.period, initialState.iniInventory1, initialState.iniInventory2, actions[0], actions[1], initialState.iniCash);
+		return this.cacheValuesPai.computeIfAbsent(state, s -> {
 			int n = s.getPeriod();
 			double[][] dAndP = Pmf.getPmf(n - 1); // demandAndPossibility
 			double expectValue = 0;
 			for (int j = 0; j < dAndP.length; j++) {
 				double[] thisDemands = new double[] {dAndP[j][0],  dAndP[j][1]};
-				CashStateMulti newState = stateTransition.apply(s, actions, thisDemands);
-				//double thisProfit = immediateValue.apply(newState, thisDemands);
+				//double[] actions = new double[] {s.y1, s.y2};
+				//CashStateMulti state = new CashStateMulti(s.period, s.iniInventory1, s.iniInventory2, s.iniW);
+				CashStateMulti newState = stateTransition.apply(initialState, actions, thisDemands);
 				double thisDemandValue = getExpectedValueV(newState);
 				expectValue += dAndP[j][2] * thisDemandValue;
 			}	
 			return expectValue;
 		});
 	}
-
 	
 	public double getExpectedValueV(CashStateMulti initialState) {
 		return this.cacheValuesV.computeIfAbsent(initialState, s -> {
-			ArrayList<double[]> yHeads = buildActionListV.apply(s);
 			double val = -Double.MAX_VALUE;
-			double[] bestYs = new double[] {initialState.getIniInventory1(), initialState.getIniInventory2()};
-			if (initialState.getPeriod() <= T) {
-				for (int i = 0; i < yHeads.size(); i++) {
-					double[] thisActions = yHeads.get(i);
-					CashStateMulti thisState = new CashStateMulti(s.getPeriod(), s.iniInventory1, s.iniInventory2, s.iniCash);
-					double thisActionsValue = getExpectedValuePai(thisState, thisActions);
+			double valYstar = -Double.MAX_VALUE;
+			ArrayList<double[]> yHeads = buildActionListV.apply(s);
+			ArrayList<double[]> ystars = buildActionListPai.apply(s);
+			double[][] dAndP = Pmf.getPmf(s.getPeriod() - 1);
+			double[] bestYheads = new double[] { s.iniInventory1, s.iniInventory2 };			
+			double[] bestYStars = new double[] { s.iniInventory1, s.iniInventory2 };		
 
-					if (thisActionsValue > val + 0.1) {
+			for (int i = 0; i < ystars.size(); i++) {
+				double[] thisActions = ystars.get(i);
+				double thisActionsValue = 0;
+				for (int j = 0; j < dAndP.length; j++) {
+					double[] thisDemands = new double[] { dAndP[j][0], dAndP[j][1] };
+					CashStateMulti newState = stateTransition.apply(s, thisActions, thisDemands);
+					if (s.getPeriod() < T)
+						thisActionsValue += dAndP[j][2] * discountFactor * getExpectedValueV(newState);
+					else
+						thisActionsValue += dAndP[j][2] * discountFactor * boundFinalCash.apply(newState);
+				}
+				if (variCost[0] * thisActions[0] + variCost[1] * thisActions[1] < s.iniCash + 0.1) {
+					if (thisActionsValue > val + 0.01) {
 						val = thisActionsValue;
-						bestYs = thisActions;
+						bestYheads = thisActions;
+						valYstar = thisActionsValue;
+						bestYStars = thisActions;
+					}		
+				}
+				if (variCost[0] * thisActions[0] + variCost[1] * thisActions[1] >= s.iniCash + 0.1) {
+					if (thisActionsValue > valYstar + 0.01) {
+						valYstar = thisActionsValue;
+						bestYStars = thisActions;
+					}		
+				}	
+			}		
+			
+			if (variCost[0] * (bestYStars[0] - s.iniInventory1) + variCost[1] * (bestYStars[1] - s.iniInventory2) >= s.iniCash + 0.1) {
+				double bestAlpha = 0;
+				double bestValue = -Double.MAX_VALUE;
+				for (double alpha = 0; alpha <= 1; alpha = alpha + 0.1) {  // stepsize of alpha
+					double y1 = alpha * s.iniCash / variCost[0] + s.iniInventory1;
+					double y2 = (1 - alpha) * s.iniCash / variCost[1] + s.iniInventory2;
+					double[] thisActions =  new double[] {y1, y2};
+					double thisActionsValue = 0;
+					for (int j = 0; j < dAndP.length; j++) {
+						double[] thisDemands = new double[] { dAndP[j][0], dAndP[j][1] };
+						CashStateMulti newState = stateTransition.apply(s, thisActions, thisDemands);
+						if (s.getPeriod() < T)
+							thisActionsValue += dAndP[j][2] * discountFactor * getExpectedValueV(newState);
+						else
+							thisActionsValue += dAndP[j][2] * discountFactor * boundFinalCash.apply(newState);
+					}
+					if (thisActionsValue > bestValue - 0.1) {
+						bestValue = thisActionsValue;
+						bestAlpha = alpha;
 					}
 				}
-				getYStar(initialState); // for cacheing y stars
-				this.cacheActions.putIfAbsent(s, bestYs);
+				cacheAlpha.putIfAbsent(initialState, bestAlpha);
 			}
-			else {
-				double finalValue = boundFinalCash.apply(initialState);		
-				return finalValue;
-			}	
+			
+			this.cacheYStar.putIfAbsent(s, bestYStars);
+			this.cacheActions.putIfAbsent(s, bestYheads);	
 			return val;
 		});
 	}
+
 	
 	/**
 	* @Description: return the optimal yHeads for a given state
@@ -122,43 +175,52 @@ public class CashRecursionV2 {
 	 */
 	public double[] getYStar(CashStateMulti initialState) { 
 		return this.cacheYStar.computeIfAbsent(initialState, s -> {
-		ArrayList<double[]> actions = buildActionListPai.apply(initialState);
-		double val = -Double.MAX_VALUE;
-		double[] bestYs = new double[] {0, 0};
-		for (int i = 0; i < actions.size(); i++) {
-			double[] thisActions = actions.get(i);
-			double thisActionsValue = getExpectedValuePai(initialState, thisActions);
-			
-			if (thisActionsValue > val + 0.01) {
-				val = thisActionsValue;
-				bestYs = thisActions;
-			}					
-		}
-
-		if (variCost[0] * (bestYs[0] - s.iniInventory1) + variCost[1] * (bestYs[1] - s.iniInventory2) >= s.iniCash + 0.1) {
-			getAlpha(s); // revise to save computation time
-		}
-			
-		return bestYs;			
-		});
-	}
-	
-
-	public double getAlpha(CashStateMulti initialState) {
-		return this.cacheAlpha.computeIfAbsent(initialState, s -> {
-			double bestAlpha = 0;
-			double bestValue = -Double.MAX_VALUE;
-			for (double alpha = 0; alpha <= 1; alpha = alpha + 0.01) {  // stepsize of alpha
-				double y1 = alpha * s.iniCash / variCost[0] + s.iniInventory1;
-				double y2 = (1 - alpha) * s.iniCash / variCost[1] + s.iniInventory2;
-				double[] actions =  new double[] {y1, y2};
-				double expectValue = getExpectedValuePai(initialState, actions);
-				if (expectValue > bestValue - 0.1) {
-					bestValue = expectValue;
-					bestAlpha = alpha;
+			ArrayList<double[]> actions = buildActionListPai.apply(initialState);
+			double val = -Double.MAX_VALUE;
+			double[][] dAndP = Pmf.getPmf(s.getPeriod() - 1);
+			double[] bestYStar = new double[] { s.iniInventory1, s.iniInventory2 };
+			for (int i = 0; i < actions.size(); i++) {
+				double[] thisActions = actions.get(i);
+				double thisActionsValue = 0;
+				for (int j = 0; j < dAndP.length; j++) {
+					double[] thisDemands = new double[] { dAndP[j][0], dAndP[j][1] };
+					CashStateMulti newState = stateTransition.apply(s, thisActions, thisDemands);
+					if (s.getPeriod() < T)
+						thisActionsValue += dAndP[j][2] * discountFactor * getExpectedValueV(newState);
+					else
+						thisActionsValue += dAndP[j][2] * discountFactor * boundFinalCash.apply(newState);
+				}
+				if (thisActionsValue > val + 0.1) {
+					val = thisActionsValue;
+					bestYStar = thisActions;
 				}
 			}
-		return bestAlpha;
+
+			if (variCost[0] * (bestYStar[0] - s.iniInventory1) + variCost[1] * (bestYStar[1] - s.iniInventory2) >= s.iniCash + 0.1) {
+				double bestAlpha = 0;
+				double bestValue = -Double.MAX_VALUE;
+				for (double alpha = 0; alpha <= 1; alpha = alpha + 0.01) {  // stepsize of alpha
+					double y1 = alpha * s.iniCash / variCost[0] + s.iniInventory1;
+					double y2 = (1 - alpha) * s.iniCash / variCost[1] + s.iniInventory2;
+					double[] thisActions =  new double[] {y1, y2};
+					double thisActionsValue = 0;
+					for (int j = 0; j < dAndP.length; j++) {
+						double[] thisDemands = new double[] { dAndP[j][0], dAndP[j][1] };
+						CashStateMulti newState = stateTransition.apply(s, thisActions, thisDemands);
+						if (s.getPeriod() < T)
+							thisActionsValue += dAndP[j][2] * discountFactor * getExpectedValueV(newState);
+						else
+							thisActionsValue += dAndP[j][2] * discountFactor * boundFinalCash.apply(newState);
+					}
+					if (thisActionsValue > bestValue - 0.1) {
+						bestValue = thisActionsValue;
+						bestAlpha = alpha;
+					}
+				}
+				cacheAlpha.putIfAbsent(initialState, bestAlpha);
+			}
+
+			return bestYStar;	
 		});
 	}
 	

@@ -49,7 +49,7 @@ public class MultiItemCashXR {
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj: alpha is alpha, and lambda is beta(beta)
-		int T = 4; // horizon length
+		int T = 2; // horizon length
 		double[] meanDemands = new double[] {10, 3};	
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
 		double[] beta = {10, 1}; // higher variance vs lower variance
@@ -64,13 +64,13 @@ public class MultiItemCashXR {
 			demand[1][t] = d2;
 		}
 		
-		double truncationQuantile = 0.9999; // may affect poisson results
+		double truncationQuantile = 0.99; // may affect poisson results
 		int stepSize = 1;
 		double minCashState = 0;
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
 		int maxInventoryState = 200;
-		int Qbound = 40;
+		int Qbound = 20;
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
@@ -159,33 +159,33 @@ public class MultiItemCashXR {
 		double time = (System.currentTimeMillis() - currTime) / 1000.0;
 		System.out.println("running time is " + time + "s");
 		
-		
-		
-		/*******************************************************************
-		 * Simulating sdp results
-		 * 
-		 * simulating results a little lower than SDP
-		 */
-		int sampleNum = 10000;		
-		CashSimulationMultiXR simuation = new CashSimulationMultiXR(sampleNum, distributions, discountFactor, 
-				 recursion, stateTransition, immediateValue);
-		double simFinalValue = simuation.simulateSDPGivenSamplNum(iniState);
-		System.out.println(simFinalValue);
-		
-		
-		/*******************************************************************
-		 * try to find some ordering patters from optTable
-		 * 
-		 * output results to excel
-		 */
-		System.out.println("");
-		double[][] optTable = recursion.getOptTable(variCost);
-		WriteToExcel wr = new WriteToExcel();
-		String fileName = "optTable" + "_c1=" + variCost[0] + "c2=" + variCost[1] + ".xls";
-		String headString =  "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w"+ "\t" + "R" + "\t" + "is limited cash and both ordering" + "\t" + "alpha"
-				 				+ "\t" + "y1"+ "\t" + "y2" + "\t" + "c1" + "\t" + "c2";
-		wr.writeArrayToExcel(optTable, fileName, headString);
-		
+//		
+//		
+//		/*******************************************************************
+//		 * Simulating sdp results
+//		 * 
+//		 * simulating results a little lower than SDP
+//		 */
+//		int sampleNum = 10000;		
+//		CashSimulationMultiXR simuation = new CashSimulationMultiXR(sampleNum, distributions, discountFactor, 
+//				 recursion, stateTransition, immediateValue);
+//		double simFinalValue = simuation.simulateSDPGivenSamplNum(iniState);
+//		System.out.println(simFinalValue);
+//		
+//		
+//		/*******************************************************************
+//		 * try to find some ordering patters from optTable
+//		 * 
+//		 * output results to excel
+//		 */
+//		System.out.println("");
+//		double[][] optTable = recursion.getOptTable(variCost);
+//		WriteToExcel wr = new WriteToExcel();
+//		String fileName = "optTable" + "_c1=" + variCost[0] + "c2=" + variCost[1] + ".xls";
+//		String headString =  "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w"+ "\t" + "R" + "\t" + "is limited cash and both ordering" + "\t" + "alpha"
+//				 				+ "\t" + "y1"+ "\t" + "y2" + "\t" + "c1" + "\t" + "c2";
+//		wr.writeArrayToExcel(optTable, fileName, headString);
+//		
 	}
 
 }

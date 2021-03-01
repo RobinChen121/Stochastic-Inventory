@@ -86,7 +86,7 @@ public class MultiItemYR {
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
 		int maxInventoryState = 200;
-		int Qbound = 40;
+		int Qbound = 20;
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
@@ -197,45 +197,46 @@ public class MultiItemYR {
 	time = (System.currentTimeMillis() - currTime) / 1000.0;
 	System.out.println("running time is " + time + "s");
 	
-	
-	/*******************************************************************
-	 * Compute a1* and a2*
-	 * 
-	 * and simulate their results to test Theorem 2
-	 * 
-	*/
-	double[][][] pmf1 = new GetPmf(distributions[0], truncationQuantile, stepSize).getpmf();
-	Distribution[] distributions1 = distributions[0];
-	double[][][] pmf2 = new GetPmf(distributions[1], truncationQuantile, stepSize).getpmf();
-	Distribution[] distributions2 = distributions[1];
-	RecursionG recursionG1 = new RecursionG(pmf1, distributions1, price[0], variCost[0], 0, salPrice[0]);
-	RecursionG recursionG2 = new RecursionG(pmf2, distributions2, price[1], variCost[1], 0, salPrice[1]);
-	double[] opta1 = recursionG1.getOptY();
-	double[] opta2 = recursionG2.getOptY();
-	System.out.println("a1* in each period:");
-	DecimalFormat df = new DecimalFormat("0.00");
-	Arrays.stream(opta1).forEach(e -> System.out.print(df.format(e) + " " ));
-	System.out.println("");
-	System.out.println("a2* in each period:");
-	Arrays.stream(opta2).forEach(e -> System.out.print(df.format(e) + " " ));
-	double simFinalValue2 = simulation.simulateSDPGivenSamplNuma1a2(iniState, variCost, opta1, opta2);
-	double gap2 = (simFinalValue2 - finalValue) / finalValue;
-	System.out.printf("optimality gap for this policy a* is %.2f%%\n", gap2 * 100);
-	double[] mean = new double[] {demand[0][0], demand[1][0]};
-	double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
-	double[][] optTable = recursion.getOptTableDetail2(mean, variance, price, opta1, opta2);
-	
-	double[] gaps = new double[] {gap, gap2};
-	WriteToExcel wr = new WriteToExcel();
-	String fileName = "run" + ".xls";
-	String headString =  
-			"meanD1" + "\t" + "meanD2" + "\t" + "variance1" + "\t" + "variance2" + "\t" +
-	         "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
-			"p1" + "\t" + "p2" + "\t" +
-	          "c1" + "\t" + "c2" + "\t" + "R" + "\t" + "y1*"+ "\t" + "y2*" + "\t" + 
-			   "cashSituation" + "\t" + "alpha" + "\t" + "yHead1"  + "\t" + "yHead2"  + "\t" + "a1*"  + "\t" + "a2*" +
-			   "\t" + "Theorem1Gap" + "Theorem2Gap";
-	wr.writeArrayToExcel2(optTable, fileName, headString, gaps);
+//	
+//	/*******************************************************************
+//	 * Compute a1* and a2*
+//	 * 
+//	 * and simulate their results to test Theorem 2
+//	 * 
+//	*/
+//	double[][][] pmf1 = new GetPmf(distributions[0], truncationQuantile, stepSize).getpmf();
+//	Distribution[] distributions1 = distributions[0];
+//	double[][][] pmf2 = new GetPmf(distributions[1], truncationQuantile, stepSize).getpmf();
+//	Distribution[] distributions2 = distributions[1];
+//	RecursionG recursionG1 = new RecursionG(pmf1, distributions1, price[0], variCost[0], 0, salPrice[0]);
+//	RecursionG recursionG2 = new RecursionG(pmf2, distributions2, price[1], variCost[1], 0, salPrice[1]);
+//	double[] opta1 = recursionG1.getOptY();
+//	double[] opta2 = recursionG2.getOptY();
+//	System.out.println("a1* in each period:");
+//	DecimalFormat df = new DecimalFormat("0.00");
+//	Arrays.stream(opta1).forEach(e -> System.out.print(df.format(e) + " " ));
+//	System.out.println("");
+//	System.out.println("a2* in each period:");
+//	Arrays.stream(opta2).forEach(e -> System.out.print(df.format(e) + " " ));
+//	double simFinalValue2 = simulation.simulateSDPGivenSamplNuma1a2(iniState, variCost, opta1, opta2);
+//	double gap2 = (simFinalValue2 - finalValue) / finalValue;
+//	System.out.printf("optimality gap for this policy a* is %.2f%%\n", gap2 * 100);
+//	
+//	double[] mean = new double[] {demand[0][0], demand[1][0]};
+//	double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
+//	double[][] optTable = recursion.getOptTableDetail2(mean, variance, price, opta1, opta2);
+//	
+//	double[] gaps = new double[] {gap, gap2};
+//	WriteToExcel wr = new WriteToExcel();
+//	String fileName = "run" + ".xls";
+//	String headString =  
+//			"meanD1" + "\t" + "meanD2" + "\t" + "variance1" + "\t" + "variance2" + "\t" +
+//	         "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
+//			"p1" + "\t" + "p2" + "\t" +
+//	          "c1" + "\t" + "c2" + "\t" + "R" + "\t" + "y1*"+ "\t" + "y2*" + "\t" + 
+//			   "cashSituation" + "\t" + "alpha" + "\t" + "yHead1"  + "\t" + "yHead2"  + "\t" + "a1*"  + "\t" + "a2*" +
+//			   "\t" + "Theorem1Gap" + "Theorem2Gap";
+//	wr.writeArrayToExcel2(optTable, fileName, headString, gaps);
 	
 //	System.out.println("alpha in the first period: " + optTable[0][10]);
 //	System.out.println("*******************************");

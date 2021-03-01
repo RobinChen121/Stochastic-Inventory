@@ -7,27 +7,25 @@ import java.util.function.Function;
 
 import sdp.cash.RecursionG;
 import sdp.cash.multiItem.CashRecursionV2;
-import sdp.cash.multiItem.CashRecursionVTest;
 import sdp.cash.multiItem.CashSimulationY;
 import sdp.cash.multiItem.CashStateMulti;
-import sdp.cash.multiItem.CashStateMultiXYW;
 import sdp.cash.multiItem.GetPmfMulti;
-import sdp.inventory.GetPmf;
 import sdp.inventory.FinalCash.BoundaryFuncton;
+import sdp.inventory.GetPmf;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.inventory.StateTransition.StateTransitionFunctionV;
+import sdp.write.ReadExcel;
+import sdp.write.WriteToExcel;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
 
 /**
  * @author chen
  * @email: 15011074486@163.com
- * @Date: 2021 Feb 25, 19:48:25
- * @Description: multi item cash constrained problem for states (x1, x2, w)
+ * @Date: 2021 Mar 1, 10:36:23
+ * @Description: TODO 
  * 
  */
-public class MultiItemCashXW {
-
+public class MultiItemCashXWTesting {
 	public static void main(String[] args) {
 		double[] price = {2, 10};
 		double[] variCost = {1, 2};  // higher margin vs lower margin
@@ -42,11 +40,21 @@ public class MultiItemCashXW {
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj: alpha is alpha, and lambda is beta(beta)
-		int T = 3; // horizon length
+		int T = 4; // horizon length
 		double[] meanDemands = new double[] {10, 3};
 		
+		// read parameter settings from excel files
+		ReadExcel re = new ReadExcel();
+		double[][] paraSettings = re.readExcelXLSX("Numerical experiments-2021-02-06.xlsx", 2);	
+		
+		for (int runTime = 19; runTime < 20; runTime=runTime+1) {
+			price = new double[] {paraSettings[runTime][2], paraSettings[runTime][8]};
+			variCost = new double[] {paraSettings[runTime][1], paraSettings[runTime][7]};
+			double[] beta = new double[] {paraSettings[runTime][6], paraSettings[runTime][12]};
+			// a = new int[] {(int)paraSettings[runTime][5], (int)paraSettings[runTime][11]}; // integer for uniform
+			meanDemands = new double[] {paraSettings[runTime][3], paraSettings[runTime][9]};
+		
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
-		double[] beta = {10, 1}; // higher variance vs lower variance
 		
 		double d1 = meanDemands[0];
 		double d2 = meanDemands[1];
@@ -206,12 +214,23 @@ public class MultiItemCashXW {
 //		double gap2 = (simFinalValue2 - finalValue) / finalValue;
 //		System.out.printf("optimality gap for this policy a* is %.2f%%\n", gap2 * 100);
 		
-//		double[] mean = new double[] {demand[0][0], demand[1][0]};
-//		double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
-//		double[][] optTable = recursion.getOptTableDetail(mean, variance, price, opta1, opta2);
+		double[] mean = new double[] {demand[0][0], demand[1][0]};
+		double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
+		double[][] optTable = recursion.getOptTableDetail(mean, variance, price, opta1, opta2);
 		
-
-
+		 double[] gaps = new double[] {gap};
+		WriteToExcel wr = new WriteToExcel();
+		String fileName = "run" + (int) paraSettings[runTime][0] + ".xls";
+		String headString =  
+					"meanD1" + "\t" + "meanD2" + "\t" + "variance1" + "\t" + "variance2" + "\t" +
+			         "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
+					"p1" + "\t" + "p2" + "\t" +
+			          "c1" + "\t" + "c2" + "\t" + "R" + "\t" + "y1*"+ "\t" + "y2*" + "\t" + 
+					   "cashSituation" + "\t" + "alpha" + "\t" + "yHead1"  + "\t" + "yHead2"  + "\t" + "a1*"  + "\t" + "a2*" +
+					   "\t" + "Theorem1Gap";
+			wr.writeArrayToExcel2(optTable, fileName, headString, gaps);
+		
 	}
-
+		
+	}
 }
