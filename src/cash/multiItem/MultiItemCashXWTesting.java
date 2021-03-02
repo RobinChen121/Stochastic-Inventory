@@ -47,7 +47,7 @@ public class MultiItemCashXWTesting {
 		ReadExcel re = new ReadExcel();
 		double[][] paraSettings = re.readExcelXLSX("Numerical experiments-2021-02-06.xlsx", 2);	
 		
-		for (int runTime = 19; runTime < 20; runTime=runTime+1) {
+		for (int runTime = 18; runTime < 20; runTime=runTime+1) {
 			price = new double[] {paraSettings[runTime][2], paraSettings[runTime][8]};
 			variCost = new double[] {paraSettings[runTime][1], paraSettings[runTime][7]};
 			double[] beta = new double[] {paraSettings[runTime][6], paraSettings[runTime][12]};
@@ -141,9 +141,9 @@ public class MultiItemCashXWTesting {
 			double nextW = revenue1 + revenue2 + (1 + depositeRate) * (IniState.getIniCash() - v1 * (y1-x1)
 										- v2 * (y2-x2));  // revise
 			
-			endInventory1 = Math.round(endInventory1 * 10) / 10;  // rounding the states to one decimal 10.0
-			endInventory2 = Math.round(endInventory2 * 10) / 10;
-			nextW = Math.round(nextW * 10) / 10;
+			endInventory1 = Math.round(endInventory1 * 1) / 1;  // rounding the states to one decimal 10.0
+			endInventory2 = Math.round(endInventory2 * 1) / 1;  // very slow when decimal
+			nextW = Math.round(nextW * 1) / 1;
 			
 			nextW = nextW > maxCashState ? maxCashState : nextW;
 			nextW = nextW < minCashState ? minCashState : nextW;

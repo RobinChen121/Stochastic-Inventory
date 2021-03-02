@@ -167,6 +167,10 @@ public class CashRecursionV2 {
 		return cacheActions.get(state);
 	}
 	
+	public double getAlpha(CashStateMulti state) {
+		return cacheAlpha.get(state);
+	}
+	
 	/**
 	 * @param period
 	 * @param state(x1, x2, w)
