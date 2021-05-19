@@ -149,6 +149,51 @@ public class CashRecursion {
 		});
 	}
 	
+	
+	public double getSurvProb(CashState initialState) {
+		return this.cacheValues.computeIfAbsent(initialState, s -> {			
+			double[] feasibleActions = getFeasibleActions.apply(initialState);
+			double[][] dAndP = pmf[s.getPeriod() - 1]; // demandAndPossibility
+			double[] QValues = new double[feasibleActions.length];
+			double val = optDirection == OptDirection.MIN ? Double.MAX_VALUE
+														  : -Double.MAX_VALUE;
+		
+			double bestOrderQty = 0;
+			for (int i = 0; i < feasibleActions.length; i++) {
+				double orderQty = feasibleActions[i];
+				
+				double thisQProb = 0;								
+				for (int j = 0; j < dAndP.length; j++) {
+					double randomDemand = dAndP[j][0];
+					double dProb = dAndP[j][1];
+					if (s.getPeriod() == pmf.length) {
+						double thisDFinalCash = s.iniCash + immediateValue.apply(s, orderQty, randomDemand);
+						double thisDProb = thisDFinalCash >= 0 ? 1 : 0;	
+						thisQProb += dProb * thisDProb;
+					}
+					if (s.getPeriod() < pmf.length) { // 
+						CashState newState = stateTransition.apply(s, orderQty, dAndP[j][0]);
+						thisQProb += dAndP[j][1] * discountFactor * getSurvProb(newState);
+					}
+				}
+				QValues[i] = thisQProb;
+
+				if (QValues[i] > val) {
+					val = QValues[i];
+					bestOrderQty = orderQty;
+				}
+			}
+			try {
+				this.cacheActions.putIfAbsent(s, bestOrderQty);
+			}
+			catch (Exception e) {
+				System.out.println("error");
+			}
+			return val;
+		});
+	}
+	
+	
 	public double getAction(CashState state) {
 		return cacheActions.get(state);
 	}
