@@ -101,6 +101,8 @@ public class CashRecursionV2 {
 
 			for (int i = 0; i < ystars.size(); i++) {
 				double[] thisActions = ystars.get(i);
+//				if (s.getPeriod() == 2 && s.iniCash > 51)
+//					thisActions = new double[] {11, 11};
 				double thisActionsValue = 0;
 				for (int j = 0; j < dAndP.length; j++) {
 					double[] thisDemands = new double[] { dAndP[j][0], dAndP[j][1] };
@@ -110,20 +112,22 @@ public class CashRecursionV2 {
 					else
 						thisActionsValue += dAndP[j][2] * discountFactor * boundFinalCash.apply(newState);
 				}
-				if (variCost[0] * thisActions[0] + variCost[1] * thisActions[1] < s.iniCash + 0.1) {
-					if (thisActionsValue > val + 0.01) {
+				if (variCost[0] * thisActions[0] + variCost[1] * thisActions[1] < s.iniCash + 0.1) { // for computing y heads
+					if (thisActionsValue > val ) {
 						val = thisActionsValue;
 						bestYheads = thisActions;
 						valYstar = thisActionsValue;
 						bestYStars = thisActions;
 					}		
 				}
-				if (variCost[0] * thisActions[0] + variCost[1] * thisActions[1] >= s.iniCash + 0.1) {
-					if (thisActionsValue > valYstar + 0.01) {
+				if (variCost[0] * thisActions[0] + variCost[1] * thisActions[1] >= s.iniCash + 0.1) { // for computing y stars
+					if (thisActionsValue > valYstar ) {
 						valYstar = thisActionsValue;
 						bestYStars = thisActions;
 					}		
-				}	
+				}
+//				if (s.getPeriod() == 2 && s.iniCash > 51)
+//					System.out.println(thisActionsValue);
 			}		
 			
 			if (variCost[0] * (bestYStars[0] - s.iniInventory1) + variCost[1] * (bestYStars[1] - s.iniInventory2) >= s.iniCash + 0.1) {
@@ -185,6 +189,7 @@ public class CashRecursionV2 {
 			double[] bestYStar = new double[] { s.iniInventory1, s.iniInventory2 };
 			for (int i = 0; i < actions.size(); i++) {
 				double[] thisActions = actions.get(i);
+				
 				double thisActionsValue = 0;
 				for (int j = 0; j < dAndP.length; j++) {
 					double[] thisDemands = new double[] { dAndP[j][0], dAndP[j][1] };
@@ -198,6 +203,7 @@ public class CashRecursionV2 {
 					val = thisActionsValue;
 					bestYStar = thisActions;
 				}
+
 			}
 
 			if (variCost[0] * (bestYStar[0] - s.iniInventory1) + variCost[1] * (bestYStar[1] - s.iniInventory2) >= s.iniCash + 0.1) {
@@ -262,7 +268,7 @@ public class CashRecursionV2 {
 				cashConstrained = 4;
 			}
 			else if (x1 < yStars[0]+0.1 && x2 > yStars[1]-0.1){
-				yHeads[0] = Math.min(yStars[0], (s.iniCash -  x1*variCost[0]) / variCost[0]); yHeads[1] = x2;
+				yHeads[0] = Math.min(yStars[0], (s.iniCash + x1*variCost[0]) / variCost[0]); yHeads[1] = x2;
 				cashConstrained = 3;
 			}
 			else if (x1 < yStars[0]+0.1 && x2 < yStars[1]+0.1

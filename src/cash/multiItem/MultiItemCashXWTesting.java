@@ -17,6 +17,7 @@ import sdp.write.ReadExcel;
 import sdp.write.WriteToExcel;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.UniformIntDist;
 
 /**
  * @author chen
@@ -47,7 +48,7 @@ public class MultiItemCashXWTesting {
 		ReadExcel re = new ReadExcel();
 		double[][] paraSettings = re.readExcelXLSX("Numerical experiments-2021-02-06.xlsx", 2);	
 		
-		for (int runTime = 18; runTime < 20; runTime=runTime+1) {
+		for (int runTime = 1; runTime < 2; runTime=runTime+1) {
 			price = new double[] {paraSettings[runTime][2], paraSettings[runTime][8]};
 			variCost = new double[] {paraSettings[runTime][1], paraSettings[runTime][7]};
 			double[] beta = new double[] {paraSettings[runTime][6], paraSettings[runTime][12]};
@@ -69,7 +70,7 @@ public class MultiItemCashXWTesting {
 		int m = demand.length; // number of products		
 		
 		double truncationQuantile = 0.9999; // may affect poisson results
-		int stepSize = 1;
+		double stepSize = 1;
 		double minCashState = 0;
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
@@ -78,14 +79,17 @@ public class MultiItemCashXWTesting {
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
-		Distribution[][] distributions =  new GammaDist[m][T];
+		//Distribution[][] distributions =  new GammaDist[m][T];
 		//Distribution[][] distributions =  new PoissonDist[m][T];
 		//Distribution[][] distributions =  new NormalDist[m][T];
+		Distribution[][] distributions =  new UniformIntDist[m][T];
 		for (int i = 0; i < m; i++)
 			for (int t = 0; t < T; t++) {
-				distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
+				//distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
+				distributions[i][t] = new UniformIntDist((int)(demand[i][t] * 0.2), (int)(demand[i][t] * 1.8));
 				//distributions[i][t] = new PoissonDist(demand[i][t]);
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
+				// distributions[i][t] = new UniformIntDist(a[i], b[i]);
 			}
 		GetPmfMulti PmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);
 		
@@ -94,15 +98,15 @@ public class MultiItemCashXWTesting {
 		Function<CashStateMulti, ArrayList<double[]>> buildActionListPai = s -> {
 			ArrayList<double[]> actions = new ArrayList<>();
 			double Ybound = Qbound;
-			for (double i = 0; i < Ybound; i=i+1)
-				for (double j = 0; j < Ybound; j=j+1) {
+			for (double i = 0; i < Ybound; i = i + 1)
+				for (double j = 0; j < Ybound; j = j + 1) {
 					double[] thisActions = {i, j};
 					actions.add(thisActions);	
 				}
 			return actions;
 		};
 		
-		// build action list (y1, y2) for V(x1, x2, w)
+		// build action list (y1, y2) for V(x1, x2, w), no use in the recursion
 		Function<CashStateMulti, ArrayList<double[]>> buildActionListV = s -> {
 			ArrayList<double[]> actions = new ArrayList<>();
 			int miny1 = (int) s.getIniInventory1();
@@ -183,7 +187,7 @@ public class MultiItemCashXWTesting {
 		CashSimulationY simulation = new CashSimulationY(sampleNum, distributions, discountFactor, 
 				 recursion, stateTransition);
 		double simFinalValue = simulation.simulateSDPGivenSamplNum2(iniState, variCost);
-		double gap = (simFinalValue - finalValue) / finalValue;
+		double gap = (finalValue - simFinalValue) / finalValue;
 		System.out.printf("optimality gap for this policy y* is %.2f%%\n", gap * 100);
 		time = (System.currentTimeMillis() - currTime) / 1000.0;
 		System.out.println("running time is " + time + "s");
@@ -195,6 +199,7 @@ public class MultiItemCashXWTesting {
 		 * and simulate their results to test Theorem 2
 		 * 
 		*/
+		stepSize = 1; // can be changed
 		double[][][] pmf1 = new GetPmf(distributions[0], truncationQuantile, stepSize).getpmf();
 		Distribution[] distributions1 = distributions[0];
 		double[][][] pmf2 = new GetPmf(distributions[1], truncationQuantile, stepSize).getpmf();
@@ -213,12 +218,14 @@ public class MultiItemCashXWTesting {
 //		double simFinalValue2 = simulation.simulateSDPGivenSamplNuma1a22(iniState, variCost, opta1, opta2);
 //		double gap2 = (simFinalValue2 - finalValue) / finalValue;
 //		System.out.printf("optimality gap for this policy a* is %.2f%%\n", gap2 * 100);
+		System.out.println();
+		System.out.println("*****************************************");
 		
 		double[] mean = new double[] {demand[0][0], demand[1][0]};
 		double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
 		double[][] optTable = recursion.getOptTableDetail(mean, variance, price, opta1, opta2);
 		
-		 double[] gaps = new double[] {gap};
+		double[] gaps = new double[] {gap};
 		WriteToExcel wr = new WriteToExcel();
 		String fileName = "run" + (int) paraSettings[runTime][0] + ".xls";
 		String headString =  

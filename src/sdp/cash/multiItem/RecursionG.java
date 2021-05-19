@@ -102,8 +102,6 @@ public class RecursionG {
 		if (state.getPeriod() == pmf.length)
 			lastOptY = 0;
 		else {
-//			if (state.getPeriod() == 3)
-//				System.out.println();
 			if (tOptY[state.getPeriod()] < 0) {
 				double optValue = -Double.MAX_VALUE;
 				Iterator<Map.Entry<State, double[]>> iterator = this.cacheActionValues.entrySet().iterator();

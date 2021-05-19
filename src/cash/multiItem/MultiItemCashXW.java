@@ -16,8 +16,10 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.FinalCash.BoundaryFuncton;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.inventory.StateTransition.StateTransitionFunctionV;
+import sdp.write.WriteToExcel;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.UniformIntDist;
 
 /**
  * @author chen
@@ -30,7 +32,7 @@ public class MultiItemCashXW {
 
 	public static void main(String[] args) {
 		double[] price = {2, 10};
-		double[] variCost = {1, 2};  // higher margin vs lower margin
+		double[] variCost = {1, 1};  // higher margin vs lower margin
 		double depositeRate = 0;		
 		
 		double iniCash = 10;  // initial cash
@@ -42,7 +44,7 @@ public class MultiItemCashXW {
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj: alpha is alpha, and lambda is beta(beta)
-		int T = 3; // horizon length
+		int T = 4; // horizon length
 		double[] meanDemands = new double[] {10, 3};
 		
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
@@ -61,7 +63,7 @@ public class MultiItemCashXW {
 		int m = demand.length; // number of products		
 		
 		double truncationQuantile = 0.9999; // may affect poisson results
-		int stepSize = 1;
+		double stepSize = 1;
 		double minCashState = 0;
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
@@ -73,9 +75,11 @@ public class MultiItemCashXW {
 		Distribution[][] distributions =  new GammaDist[m][T];
 		//Distribution[][] distributions =  new PoissonDist[m][T];
 		//Distribution[][] distributions =  new NormalDist[m][T];
+		//Distribution[][] distributions =  new UniformIntDist[m][T];
 		for (int i = 0; i < m; i++)
 			for (int t = 0; t < T; t++) {
 				distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
+				//distributions[i][t] = new UniformIntDist((int)(demand[i][t] * 0.6), (int)(demand[i][t] * 1.4));
 				//distributions[i][t] = new PoissonDist(demand[i][t]);
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
 			}
@@ -175,7 +179,7 @@ public class MultiItemCashXW {
 		CashSimulationY simulation = new CashSimulationY(sampleNum, distributions, discountFactor, 
 				 recursion, stateTransition);
 		double simFinalValue = simulation.simulateSDPGivenSamplNum2(iniState, variCost);
-		double gap = (simFinalValue - finalValue) / finalValue;
+		double gap = (finalValue - simFinalValue) / finalValue;
 		System.out.printf("optimality gap for this policy y* is %.2f%%\n", gap * 100);
 		time = (System.currentTimeMillis() - currTime) / 1000.0;
 		System.out.println("running time is " + time + "s");
@@ -187,6 +191,7 @@ public class MultiItemCashXW {
 		 * and simulate their results to test Theorem 2
 		 * 
 		*/
+		stepSize = 0.1;
 		double[][][] pmf1 = new GetPmf(distributions[0], truncationQuantile, stepSize).getpmf();
 		Distribution[] distributions1 = distributions[0];
 		double[][][] pmf2 = new GetPmf(distributions[1], truncationQuantile, stepSize).getpmf();
@@ -206,9 +211,20 @@ public class MultiItemCashXW {
 //		double gap2 = (simFinalValue2 - finalValue) / finalValue;
 //		System.out.printf("optimality gap for this policy a* is %.2f%%\n", gap2 * 100);
 		
-//		double[] mean = new double[] {demand[0][0], demand[1][0]};
-//		double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
-//		double[][] optTable = recursion.getOptTableDetail(mean, variance, price, opta1, opta2);
+		double[] mean = new double[] {demand[0][0], demand[1][0]};
+		double[] variance = new double[] {demand[0][0] / beta[0], demand[1][0] / beta[1]};
+		double[][] optTable = recursion.getOptTableDetail(mean, variance, price, opta1, opta2);		
+		double[] gaps = new double[] {gap};
+		WriteToExcel wr = new WriteToExcel();
+		String fileName = "run"  + ".xls";
+		String headString =  
+					"meanD1" + "\t" + "meanD2" + "\t" + "variance1" + "\t" + "variance2" + "\t" +
+			         "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w" + "\t" + 
+					"p1" + "\t" + "p2" + "\t" +
+			          "c1" + "\t" + "c2" + "\t" + "R" + "\t" + "y1*"+ "\t" + "y2*" + "\t" + 
+					   "cashSituation" + "\t" + "alpha" + "\t" + "yHead1"  + "\t" + "yHead2"  + "\t" + "a1*"  + "\t" + "a2*" +
+					   "\t" + "Theorem1Gap";
+			wr.writeArrayToExcel2(optTable, fileName, headString, gaps);
 		
 
 

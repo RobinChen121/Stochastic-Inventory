@@ -4,6 +4,7 @@ import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
+import umontreal.ssj.probdist.UniformIntDist;
 
 /**
  * @author: Zhen Chen
@@ -33,6 +34,9 @@ public class GetPmf {
 		this.stepSize = stepSize;
 	}
 	
+	/**
+	 * @return
+	 */
 	public double[][][] getpmf() {
 		int T = distributions.length;
 		double[] supportLB = new double[T];
@@ -45,7 +49,25 @@ public class GetPmf {
 		}
 
 		double[][][] pmf = new double[T][][];
-
+		
+		
+		
+		if (distributions[0] instanceof UniformIntDist) {
+			for (int i = 0; i < T; i++) {
+				UniformIntDist distribution = (UniformIntDist) distributions[0];
+				int demandLength = distribution.getJ() - distribution.getI() + 1;
+				pmf[i] = new double[demandLength][];
+				int index = 0;
+				for (int j = distribution.getXinf(); j <= distribution.getXsup(); j++) {
+					pmf[i][index] = new double[2];
+					pmf[i][index][0] = j;
+					pmf[i][index][1] = distribution.prob(j);
+					index++;
+				}
+			}
+			return pmf;
+		}
+		
 		for (int i = 0; i < T; i++) {
 			int demandLength = (int) ((supportUB[i] - supportLB[i] + 1) / stepSize);
 			pmf[i] = new double[demandLength][];

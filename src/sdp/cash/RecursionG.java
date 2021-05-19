@@ -79,8 +79,8 @@ public class RecursionG {
 	 */	
 	public double[] getOptY() {
 		int T = distributions.length;
-		tOptY[T - 1] = aNStar;
-		for (int t = T - 2; t >= 0; t--) {
+		tOptY[T - 1] = aNStar;  
+		for (int t = T - 1; t >= 0; t--) {  // can change, whether computing aNStar by equation
 			StateP newStateP = new StateP(t + 1);
 			tOptY[t] = getAStar(newStateP);
 		}
@@ -100,7 +100,7 @@ public class RecursionG {
 			double y = s.getIniY();
 			double[][] dAndP = pmf[n - 1]; 
 			double expectValue = 0;
-			if (n == T) {
+			if (n == T) {      
 				for (int j = 0; j < dAndP.length; j++) {
 					double thisDValue = (price - variCost) * Math.min(dAndP[j][0], y) - depositeRate * variCost * y
 							+ (salvageValue - variCost) * Math.max(y - dAndP[j][0], 0);
@@ -131,12 +131,12 @@ public class RecursionG {
 		return this.cachePeriodBestY.computeIfAbsent(state, s ->{
 			int T = distributions.length;
 			int n = s.getPeriod();
-			if (n == T)
-				return aNStar;
+//			if (n == T)             // whether computing a* of last period in the 
+//				return aNStar;
 			int maxY = 200;
 			double optY = 0;
 			double optYValue = -1000;
-			for (double y  = 0; y < maxY; y = y + 0.1) {  // step size
+			for (double y  = 0; y < maxY; y = y + 1) {  // step size
 				StateY newStateY = new StateY(s.getPeriod(), y);
 				double thisYValue = G(newStateY); // optimal y in the next period
 //				if (s.period == 1 && (int) y == 21 || (int) y == 14)
