@@ -122,7 +122,7 @@ public class cashSurvival {
 		System.out.println("running time is " + time + "s");
 		
 		
-		
+		 
 		
 	}
 
