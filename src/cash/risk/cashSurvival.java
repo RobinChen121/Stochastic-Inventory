@@ -33,10 +33,10 @@ public class cashSurvival {
 	 * @date: Nov 21, 2020, 6:01:10 PM 
 	 */
 	public static void main(String[] args) {
-		double[] meanDemand = {8, 8, 3, 3};
+		double[] meanDemand = {3, 3, 4};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 5;
+		double iniCash = 1;
 		double fixOrderCost = 0;
 		double variCost = 2;
 		double price = 6;
@@ -44,7 +44,7 @@ public class cashSurvival {
 		double salvageValue = 1;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
-		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
+		double overheadCost = 5; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 		
@@ -115,7 +115,7 @@ public class cashSurvival {
 		CashState initialState = new CashState(period, iniInventory, iniCash);
 		long currTime = System.currentTimeMillis();
 		recursion.setTreeMapCacheAction();
-		double finalValue = iniCash + recursion.getSurvProb(initialState);
+		double finalValue = recursion.getSurvProb(initialState);
 		System.out.println("survival probability for this initial state is: " + finalValue);
 		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
 		double time = (System.currentTimeMillis() - currTime) / 1000;
