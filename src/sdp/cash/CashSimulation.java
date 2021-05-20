@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.State;
@@ -35,8 +36,8 @@ public class CashSimulation {
 	double salvageValue;
 	double overheadCost;
 	
-	Map<State, Double> cacheC1Values = new TreeMap<>();
-	Map<State, Double> cacheC2Values = new TreeMap<>();
+	Map<State, Double> cacheC1Values = new ConcurrentSkipListMap<>();
+	Map<State, Double> cacheC2Values = new ConcurrentSkipListMap<>();
 
 	/**
 	 * simulation for cash sdp problem

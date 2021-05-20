@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
-import org.apache.commons.math3.geometry.spherical.twod.S2Point;
 
 import sdp.inventory.FinalCash.BoundaryFuncton;
 import sdp.inventory.StateTransition.StateTransitionFunction;
@@ -26,11 +25,11 @@ public class CashRecursionV2 {
 	GetPmfMulti Pmf;
 	double[][][] pmf;
 	double[] variCost; 
-	Map<CashStateMulti, double[]> cacheActions = new TreeMap<>();	
-	Map<CashStateMulti, double[]> cacheYStar = new TreeMap<>();	
-	Map<CashStateMulti, Double> cacheAlpha = new TreeMap<>();	
-	Map<CashStateMulti, Double> cacheValuesV = new TreeMap<>();
-	Map<CashStateMultiXYW, Double> cacheValuesPai = new TreeMap<>();
+	Map<CashStateMulti, double[]> cacheActions = new ConcurrentSkipListMap<>();	
+	Map<CashStateMulti, double[]> cacheYStar = new ConcurrentSkipListMap<>();	
+	Map<CashStateMulti, Double> cacheAlpha = new ConcurrentSkipListMap<>();	
+	Map<CashStateMulti, Double> cacheValuesV = new ConcurrentSkipListMap<>();
+	Map<CashStateMultiXYW, Double> cacheValuesPai = new ConcurrentSkipListMap<>();
 	
 	Function<CashStateMulti, ArrayList<double[]>> buildActionListV;
 	Function<CashStateMulti, ArrayList<double[]>> buildActionListPai;
@@ -63,11 +62,11 @@ public class CashRecursionV2 {
 								o1.getY2() == o2.getY2() ? o1.iniW > o2.iniW ? 1 :
 									o1.iniW == o2.iniW ? 0 : -1: -1 : -1 : -1 : -1 : -1;
 					
-		this.cacheActions = new TreeMap<>(keyComparator1);
-		this.cacheValuesV = new TreeMap<>(keyComparator1);		
-		this.cacheValuesPai = new TreeMap<>(keyComparator2);	
-		this.cacheYStar = new TreeMap<>(keyComparator1);
-		this.cacheAlpha = new TreeMap<>(keyComparator1);		
+		this.cacheActions = new ConcurrentSkipListMap<>(keyComparator1);
+		this.cacheValuesV = new ConcurrentSkipListMap<>(keyComparator1);		
+		this.cacheValuesPai = new ConcurrentSkipListMap<>(keyComparator2);	
+		this.cacheYStar = new ConcurrentSkipListMap<>(keyComparator1);
+		this.cacheAlpha = new ConcurrentSkipListMap<>(keyComparator1);		
 	}
 	
 	

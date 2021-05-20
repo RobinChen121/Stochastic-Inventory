@@ -3,7 +3,7 @@ package sdp.cash.multiItem;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
 import sdp.inventory.FinalCash.BoundaryFuncton;
@@ -23,8 +23,8 @@ public class CashRecursionVTest {
 	GetPmfMulti Pmf;
 	double[][][] pmf;
 	double[] variCost; 
-	Map<CashStateMulti, double[]> cacheActions = new TreeMap<>();	
-	Map<CashStateMulti, Double> cacheValuesV = new TreeMap<>();
+	Map<CashStateMulti, double[]> cacheActions = new ConcurrentSkipListMap<>();	
+	Map<CashStateMulti, Double> cacheValuesV = new ConcurrentSkipListMap<>();
 	
 	Function<CashStateMulti, ArrayList<double[]>> buildActionListV;
 	StateTransitionFunction<CashStateMulti, double[], double[], CashStateMulti> stateTransition;
@@ -47,8 +47,8 @@ public class CashRecursionVTest {
 					o1.getIniInventory2() == o2.getIniInventory2() ? o1.iniCash > o2.iniCash  ? 1 :
 						o1.iniCash == o2.iniCash ? 0 : -1: -1 : -1 : -1;					
 					
-		this.cacheActions = new TreeMap<>(keyComparator1);
-		this.cacheValuesV = new TreeMap<>(keyComparator1);			
+		this.cacheActions = new ConcurrentSkipListMap<>(keyComparator1);
+		this.cacheValuesV = new ConcurrentSkipListMap<>(keyComparator1);			
 	}
 	
 	public double getExpectedValueV(CashStateMulti initialState) {

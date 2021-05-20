@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
@@ -20,8 +21,8 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 */
 
 public class CashRecursion {
-	Map<CashState, Double> cacheActions = new TreeMap<>();	
-	Map<CashState, Double> cacheValues = new TreeMap<>();
+	Map<CashState, Double> cacheActions = new  ConcurrentSkipListMap<>();	
+	Map<CashState, Double> cacheValues = new  ConcurrentSkipListMap<>();
 	
 	double[][][] pmf;	
 	OptDirection optDirection;	
@@ -49,8 +50,8 @@ public class CashRecursion {
 			o1.getPeriod() == o2.getPeriod() ? o1.getIniInventory() > o2.getIniInventory() ? 1 : 
 				o1.getIniInventory() == o2.getIniInventory() ? o1.iniCash > o2.iniCash  ? 1 :
 					o1.iniCash == o2.iniCash ? 0 : -1 : -1 : -1;
-		this.cacheActions = new TreeMap<>(keyComparator);
-		this.cacheValues = new TreeMap<>(keyComparator);
+		this.cacheActions = new  ConcurrentSkipListMap<>(keyComparator);
+		this.cacheValues = new  ConcurrentSkipListMap<>(keyComparator);
 		this.discountFactor = discountFactor;
 	}
 		

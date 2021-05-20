@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -27,8 +27,8 @@ import umontreal.ssj.probdist.Distribution;
 
 public class RecursionG {
 	
-	Map<StateP, Double> cachePeriodBestY = new TreeMap<>();	
-	Map<StateY, Double> cacheGValues = new TreeMap<>();
+	Map<StateP, Double> cachePeriodBestY = new ConcurrentSkipListMap<>();	
+	Map<StateY, Double> cacheGValues = new ConcurrentSkipListMap<>();
 	
 	
 	double[][][] pmf;
@@ -53,8 +53,8 @@ public class RecursionG {
 				o1.getIniY() == o2.getIniY() ? 0 : -1 : -1;
  		Comparator<StateP> keyComparator2 = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
 			o1.getPeriod() == o2.getPeriod() ? 0 : -1;
-		this.cachePeriodBestY = new TreeMap<>(keyComparator2);
-		this.cacheGValues = new TreeMap<>(keyComparator);
+		this.cachePeriodBestY = new ConcurrentSkipListMap<>(keyComparator2);
+		this.cacheGValues = new ConcurrentSkipListMap<>(keyComparator);
 		this.tOptY = new double[pmf.length];
 		Arrays.fill(tOptY, -100); // initialize tOptY
 		this.distributions = distributions;

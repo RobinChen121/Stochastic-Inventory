@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -31,8 +32,8 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 
 public class Recursion {
 	
-	Map<State, Double> cacheActions = new TreeMap<>();	
-	Map<State, Double> cacheValues = new TreeMap<>();
+	Map<State, Double> cacheActions = new ConcurrentSkipListMap<>();	
+	Map<State, Double> cacheValues = new ConcurrentSkipListMap<>();
 	
 	double[][][] pmf;	
 	OptDirection optDirection;	
@@ -57,8 +58,8 @@ public class Recursion {
 		Comparator<State> keyComparator = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
 			o1.getPeriod() == o2.getPeriod() ? o1.getIniInventory() > o2.getIniInventory() ? 1 : 
 				o1.getIniInventory() == o2.getIniInventory() ? 0 : -1 : -1;
-		this.cacheActions = new TreeMap<>(keyComparator);
-		this.cacheValues = new TreeMap<>(keyComparator);
+		this.cacheActions = new ConcurrentSkipListMap<>(keyComparator);
+		this.cacheValues = new ConcurrentSkipListMap<>(keyComparator);
 	}
 		
 

@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
 import sdp.inventory.State;
@@ -22,9 +22,9 @@ import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 
 
 public class RecursionG {
-	Map<State, Double> cacheActions = new TreeMap<>();	
-	Map<State, Double> cacheValues = new TreeMap<>();
-	Map<State, double[]> cacheActionValues = new TreeMap<>();
+	Map<State, Double> cacheActions = new ConcurrentSkipListMap<>();	
+	Map<State, Double> cacheValues = new ConcurrentSkipListMap<>();
+	Map<State, double[]> cacheActionValues = new ConcurrentSkipListMap<>();
 	
 	double[][][] pmf;		
 	Function<State, double[]> getFeasibleActions;
@@ -43,9 +43,9 @@ public class RecursionG {
 		Comparator<State> keyComparator = (o1, o2) -> o1.getPeriod() > o2.getPeriod() ? 1 : 
 			o1.getPeriod() == o2.getPeriod() ? o1.getIniInventory() > o2.getIniInventory() ? 1 : 
 				o1.getIniInventory() == o2.getIniInventory() ? 0 : -1 : -1;
-		this.cacheActions = new TreeMap<>(keyComparator);
-		this.cacheValues = new TreeMap<>(keyComparator);
-		this.cacheActionValues = new TreeMap<>(keyComparator);
+		this.cacheActions = new ConcurrentSkipListMap<>(keyComparator);
+		this.cacheValues = new ConcurrentSkipListMap<>(keyComparator);
+		this.cacheActionValues = new ConcurrentSkipListMap<>(keyComparator);
 		this.tOptY = new double[pmf.length + 1];
 		Arrays.fill(tOptY, -100); // initialize tOptY
 	}

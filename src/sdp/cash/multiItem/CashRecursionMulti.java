@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
@@ -28,8 +29,8 @@ public class CashRecursionMulti {
 	int TLength;
 	GetPmfMulti Pmf;
 	double[][][] pmf;
-	Map<CashStateMulti, Actions> cacheActions = new TreeMap<>();	
-	Map<CashStateMulti, Double> cacheValues = new TreeMap<>();
+	Map<CashStateMulti, Actions> cacheActions = new ConcurrentSkipListMap<>();	
+	Map<CashStateMulti, Double> cacheValues = new ConcurrentSkipListMap<>();
 	
 	Function<CashStateMulti, ArrayList<Actions>> buildActionList;
 	StateTransitionFunction<CashStateMulti, Actions, Demands, CashStateMulti> stateTransition;
@@ -51,8 +52,8 @@ public class CashRecursionMulti {
 				o1.getIniInventory1() == o2.getIniInventory1() ? o1.getIniInventory2() > o2.getIniInventory2() ? 1 :
 					o1.getIniInventory2() == o2.getIniInventory2() ? o1.iniCash > o2.iniCash  ? 1 :
 					o1.iniCash == o2.iniCash ? 0 : -1: -1 : -1 : -1;
-		this.cacheActions = new TreeMap<>(keyComparator);
-		this.cacheValues = new TreeMap<>(keyComparator);		
+		this.cacheActions = new ConcurrentSkipListMap<>(keyComparator);
+		this.cacheValues = new ConcurrentSkipListMap<>(keyComparator);		
 	}
 	
 	

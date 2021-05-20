@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
 import sdp.cash.StateP;
@@ -31,11 +32,11 @@ public class CashRecursionV {
 	GetPmfMulti Pmf;
 	double[][][] pmf;
 	double[] variCost; 
-	Map<CashStateMulti, double[]> cacheActions = new TreeMap<>();	
-	Map<CashStateR, double[]> cacheYStar = new TreeMap<>();	
-	Map<CashStateR, Double> cacheAlpha = new TreeMap<>();	
-	Map<CashStateMulti, Double> cacheValuesV = new TreeMap<>();
-	Map<CashStateMultiYR, Double> cacheValuesPai = new TreeMap<>();
+	Map<CashStateMulti, double[]> cacheActions = new ConcurrentSkipListMap<>();	
+	Map<CashStateR, double[]> cacheYStar = new ConcurrentSkipListMap<>();	
+	Map<CashStateR, Double> cacheAlpha = new ConcurrentSkipListMap<>();	
+	Map<CashStateMulti, Double> cacheValuesV = new ConcurrentSkipListMap<>();
+	Map<CashStateMultiYR, Double> cacheValuesPai = new ConcurrentSkipListMap<>();
 	
 	Function<CashStateMulti, ArrayList<double[]>> buildActionListV;
 	Function<CashStateMultiYR, ArrayList<double[]>> buildActionListPai;
@@ -71,11 +72,11 @@ public class CashRecursionV {
 				o1.getPeriod() == o2.getPeriod() ?  o1.iniR> o2.iniR  ? 1 :
 							o1.iniR == o2.iniR ? 0 : -1:  -1;
 				
-		this.cacheActions = new TreeMap<>(keyComparator1);
-		this.cacheValuesV = new TreeMap<>(keyComparator1);		
-		this.cacheValuesPai = new TreeMap<>(keyComparator);	
-		this.cacheYStar = new TreeMap<>(keyComparator2);
-		this.cacheAlpha = new TreeMap<>(keyComparator2);
+		this.cacheActions = new ConcurrentSkipListMap<>(keyComparator1);
+		this.cacheValuesV = new ConcurrentSkipListMap<>(keyComparator1);		
+		this.cacheValuesPai = new ConcurrentSkipListMap<>(keyComparator);	
+		this.cacheYStar = new ConcurrentSkipListMap<>(keyComparator2);
+		this.cacheAlpha = new ConcurrentSkipListMap<>(keyComparator2);
 	}
 			
 	
