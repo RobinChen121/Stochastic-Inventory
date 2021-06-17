@@ -13,6 +13,8 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
+import sdp.inventory.State;
+import sdp.inventory.Recursion.OptDirection;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.NormalDist;
@@ -86,24 +88,51 @@ public class CLSP {
 	
 	double f(State state){
 	      return cacheValues.computeIfAbsent(state, s -> {
-	    	  double val= Arrays.stream(s.getFeasibleActions())
-	    			  .map(orderQty -> Arrays.stream(pmf[s.period-1])
-	    					  .mapToDouble(p -> p[1]*immediateValue.apply(s, orderQty, p[0])+
-	    							  (s.period < pmf.length?
-	    									  p[1]*f(stateTransition.apply(s, orderQty, p[0])) : 0))
-	    					  .sum())
-	    			  .min()
-	    			  .getAsDouble(); 
-	    	  double bestOrderQty = Arrays.stream(s.getFeasibleActions())
-	    			  .filter(orderQty -> Arrays.stream(pmf[s.period-1])
-	    					  .mapToDouble(p -> p[1]*immediateValue.apply(s, orderQty, p[0])+
-	    							  (s.period < pmf.length ?
-	    									  p[1]*f(stateTransition.apply(s, orderQty, p[0])):0))
-	    					  .sum() == val)
-	    			  .findAny()
-	    			  .getAsDouble();
-	    	  cacheActions.putIfAbsent(s, bestOrderQty);
-	         return val;
+//	    	  double val= Arrays.stream(s.getFeasibleActions())
+//	    			  .map(orderQty -> Arrays.stream(pmf[s.period-1])
+//	    					  .mapToDouble(p -> p[1]*immediateValue.apply(s, orderQty, p[0])+
+//	    							  (s.period < pmf.length?
+//	    									  p[1]*f(stateTransition.apply(s, orderQty, p[0])) : 0))
+//	    					  .sum())
+//	    			  .min()
+//	    			  .getAsDouble(); 
+//	    	  double bestOrderQty = Arrays.stream(s.getFeasibleActions())
+//	    			  .filter(orderQty -> Arrays.stream(pmf[s.period-1])
+//	    					  .mapToDouble(p -> p[1]*immediateValue.apply(s, orderQty, p[0])+
+//	    							  (s.period < pmf.length ?
+//	    									  p[1]*f(stateTransition.apply(s, orderQty, p[0])):0))
+//	    					  .sum() == val)
+//	    			  .findAny()
+//	    			  .getAsDouble();
+//	    	  cacheActions.putIfAbsent(s, bestOrderQty);
+	    	 
+				double[] feasibleActions = s.getFeasibleActions();
+				double[][] dAndP = pmf[s.period - 1]; // demandAndPossibility
+				double[] QValues = new double[feasibleActions.length];
+				double val = Double.MAX_VALUE;
+
+				double bestOrderQty = 0;
+				for (int i = 0; i < feasibleActions.length; i++) {
+					double orderQty = feasibleActions[i];
+					double thisQValue = 0;
+					for (int j = 0; j < dAndP.length; j++) {
+						thisQValue += dAndP[j][1] * immediateValue.apply(s, orderQty, dAndP[j][0]);
+						if (s.period < pmf.length) {
+							State newState = stateTransition.apply(s, orderQty, dAndP[j][0]);
+							thisQValue += dAndP[j][1] * f(newState);
+						}
+					}
+					QValues[i] = thisQValue;
+
+					if (QValues[i] < val) {
+						val = QValues[i];
+						bestOrderQty = orderQty;
+					}
+
+				}
+
+				this.cacheActions.putIfAbsent(s, bestOrderQty);
+				return val;
 	      });
 	}
 	
@@ -131,7 +160,7 @@ public class CLSP {
 		
 		  
 	      double initialInventory = 0; 
-	      double[] meanDemand = {50,50};
+	      double[] meanDemand = {50, 50, 50};
 	      
 	      double truncationQuantile = 0.9999;  // 置信度稍微改一下，泊松分布特殊
 	      double stepSize = 1; 
@@ -144,12 +173,12 @@ public class CLSP {
 	      double holdingCost = 1;
 	      double penaltyCost = 10;
 	      
-	      int maxOrderQuantity = 200;
+	      int maxOrderQuantity = 100;
 	      
 	      Distribution[] distributions = IntStream.iterate(0, i -> i + 1)
 	                                              .limit(T)
-	                                              //.mapToObj(i -> new PoissonDist(meanDemand[i]))
-	                                              .mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i]))
+	                                              .mapToObj(i -> new PoissonDist(meanDemand[i]))
+	                                              //.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i]))
 	                                              .toArray(Distribution[]::new); // replace for loop
 	      double[] supportLB = IntStream.iterate(0, i -> i + 1)
 	                                    .limit(T)
@@ -225,7 +254,7 @@ public class CLSP {
 	      }
 	      
 	      
-	      double time = (System.currentTimeMillis()-currTime2)/1000;
+	      double time = (System.currentTimeMillis()-currTime2)/1000.000;
 	      System.out.println("running time is " + time + " s"); 
 	       
 	}
