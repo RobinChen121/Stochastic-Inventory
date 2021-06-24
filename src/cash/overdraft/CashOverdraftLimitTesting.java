@@ -150,8 +150,7 @@ public class CashOverdraftLimitTesting{
 									 * Find (s, C, S) and simulate
 									 */
 									int sampleNum = 10000;
-									CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
-											fixOrderCost, price, variCost, holdingCost, salvageValue);
+									CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor);
 									System.out.println("");
 									double[][] optTable = recursion.getOptTable();
 									FindsSOverDraft findsCS = new FindsSOverDraft(T, iniCash);

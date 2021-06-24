@@ -173,7 +173,7 @@ public class CashConstraintTesting {
 								 */
 								int sampleNum = 100000;
 								CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion,
-										discountFactor, fixOrderCost, price, variCost, holdingCost, salvageValue);
+										discountFactor);
 								double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
 								
 								/*******************************************************************

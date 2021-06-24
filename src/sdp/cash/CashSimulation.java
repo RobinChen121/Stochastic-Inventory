@@ -29,12 +29,6 @@ public class CashSimulation {
 	protected StateTransitionFunction<CashState, Double, Double, CashState> stateTransition; 
 	protected ImmediateValueFunction<CashState, Double, Double, Double> immediateValue; 
 	double discountFactor;
-	double fixOrderCost;
-	double price;
-	double variOrderCost;
-	double holdCost;
-	double salvageValue;
-	double overheadCost;
 	
 	Map<State, Double> cacheC1Values = new ConcurrentSkipListMap<>();
 	Map<State, Double> cacheC2Values = new ConcurrentSkipListMap<>();
@@ -46,36 +40,24 @@ public class CashSimulation {
 	 * @param recursion
 	 */
 	public CashSimulation(Distribution[] distributions, int sampleNum,
-			CashRecursion recursion, double discountFactor, double fixOrderCost, double price, 
-			double variOrderCost, double holdCost, double salvageValue) {
+			CashRecursion recursion, double discountFactor) {
 		this.distributions = distributions;
 		this.sampleNum = sampleNum;
 		this.recursion = recursion;
 		this.stateTransition = recursion.getStateTransitionFunction();
 		this.immediateValue = recursion.getImmediateValueFunction();		
 		this.discountFactor = discountFactor;
-		this.fixOrderCost = fixOrderCost;
-		this.price = price;
-		this.variOrderCost = variOrderCost;
-		this.holdCost = holdCost;
-		this.salvageValue = salvageValue;
 	}
 	
 	
 	public CashSimulation(Distribution[] distributions, int sampleNum, ImmediateValueFunction<CashState, Double, Double, Double> immediateValue,
 			StateTransitionFunction<CashState, Double, Double, CashState> stateTransition,
-			double discountFactor, double fixOrderCost, double price, 
-			double variOrderCost, double holdCost, double salvageValue) {
+			double discountFactor) {
 		this.distributions = distributions;
 		this.sampleNum = sampleNum;	
 		this.discountFactor = discountFactor;
 		this.immediateValue = immediateValue;
 		this.stateTransition = stateTransition;
-		this.fixOrderCost = fixOrderCost;
-		this.price = price;
-		this.variOrderCost = variOrderCost;
-		this.holdCost = holdCost;
-		this.salvageValue = salvageValue;
 	}
 
 	public void setSampleNum(int n) {
@@ -431,7 +413,7 @@ public class CashSimulation {
 	 * @param t : period t + 1
 	 * @return value of Ly
 	 */
-	double Ly(double y, int t) {
+	double Ly(double y, int t, double price, double variOrderCost, double holdCost, double salvageValue) {
 		Distribution distribution = distributions[t];
 		
 		double meanI = 0;

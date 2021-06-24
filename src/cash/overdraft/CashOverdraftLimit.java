@@ -116,8 +116,7 @@ public class CashOverdraftLimit {
 		 * Simulating sdp results
 		 */
 		int sampleNum = 10000;
-		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
-				fixOrderCost, price, variCost, holdingCost, salvageValue);
+		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor);
 		simuation.simulateSDPGivenSamplNum(initialState);
 		double error = 0.0001; 
 		double confidence = 0.95;

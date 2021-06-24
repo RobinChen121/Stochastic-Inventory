@@ -131,7 +131,7 @@ public class MIPTesting {
 						 		double time = (System.currentTimeMillis() - currTime) / 1000;
 								System.out.println("running time is " + time + "s");
 								CashSimulation simuation = new CashSimulation(distributions, sampleNum, immediateValue, stateTransition,
-										discountFactor, fixOrderCost, price, variCost, holdingCost, salvageValue);
+										discountFactor);
 						 		cacheC1Values = mipHeuristic.cacheC1Values;
 						 		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 						 		

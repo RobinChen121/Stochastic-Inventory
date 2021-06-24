@@ -164,8 +164,7 @@ public class CashConstraint {
 		 */
 		int sampleNum = 10000;
 		
-		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor, 
-				fixOrderCost, price, variCost, holdingCost, salvageValue); // no need to add overheadCost in this class
+		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor); // no need to add overheadCost in this class
 		double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
 		double error = 0.0001; 
 		double confidence = 0.95;
