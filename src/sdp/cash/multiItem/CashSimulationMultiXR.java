@@ -59,7 +59,8 @@ public class CashSimulationMultiXR {
 	 */
 	public double simulateSDPGivenSamplNum(CashStateMultiXR iniState) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributionsMulti, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributionsMulti, sampleNum);
 		
 //		double sumD = 0;
 //		for(int i = 0; i < samples.length; i++) {

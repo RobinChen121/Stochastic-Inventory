@@ -13,6 +13,7 @@ import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
+import ilog.cplex.CplexI;
 import ilog.cplex.IloCplex;
 import sdp.inventory.State;
 import umontreal.ssj.probdist.ContinuousDistribution;
@@ -215,6 +216,7 @@ public class MipCashConstraint {
 					
 			// decision variables
 			IloIntVar[] x = cplex.boolVarArray(T);  // whether ordering in period t
+			// IloIntVar[] z = new IloIntVar[T]; 
 			IloNumVar[] s = cplex.numVarArray(T, 0.0, Double.MAX_VALUE);  // order-up-to level in period t
 			IloNumVar[] I = cplex.numVarArray(T, 0.0, Double.MAX_VALUE); 
 			IloNumVar[] B = cplex.numVarArray(T, 0.0, Double.MAX_VALUE); // end-of-period cash in each period

@@ -47,8 +47,9 @@ public class Simulation {
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 				.mapToObj(i -> new NormalDist(meanDemand[i], 0.25*meanDemand[i])) // can be changed to other distributions
 				.toArray(Distribution[]::new);
-
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];	
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; 

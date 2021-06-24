@@ -65,7 +65,8 @@ public class SimOpt {
 	}
 
 	public double simulateSingleRunCycle(double Q, double inventory, Distribution[] distributions) {
-		double[][] d = Sampling.generateLHSamples(distributions, 1);
+		Sampling sampling = new Sampling();
+		double[][] d = sampling.generateLHSamples(distributions, 1);
 		double costs = 0.0;
 		for (int t = 0; t < distributions.length; t++) {
 			if (t == 0) {
@@ -132,7 +133,8 @@ public class SimOpt {
 	public double simulateSingleRun() {
 		double inventory = this.iniInventory;
 		double costs = 0;
-		double[][] d =Sampling.generateLHSamples(distributions, 1);
+		Sampling sampling = new Sampling();
+		double[][] d = sampling.generateLHSamples(distributions, 1);
 		for (int t = 0; t < this.distributions.length; t++) {
 			double Q = getQ(t, inventory);
 			if (Q > 0) {

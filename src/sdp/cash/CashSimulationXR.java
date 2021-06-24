@@ -90,7 +90,8 @@ public class CashSimulationXR {
 	 */
 	public double simulateSDPGivenSamplNum(CashStateXR iniState) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
@@ -114,12 +115,13 @@ public class CashSimulationXR {
 	public double[] simulateSDPwithErrorConfidence(CashStateXR iniState, double error, double confidence) {
 		int minRuns = 1000;   int maxRuns = 1000000;
 		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
 
 		Tally costTally = new Tally();
 		double[] centerAndRadius = new double[2];
 		int sampleNumUse = 0;		
 		for(int i = 0; i < minRuns || (centerAndRadius[1]>=centerAndRadius[0]*error && i < maxRuns); i++) {
-			double[] realizedDemand = Sampling.getNextSample(distributions);
+			double[] realizedDemand = sampling.getNextSample(distributions);
 			double sum = 0; CashStateXR state = iniState;
 			for (int t = 0; t < realizedDemand.length; t++)
 			{
@@ -150,7 +152,8 @@ public class CashSimulationXR {
 	 */
 	public double simulateAStar(double[] optY, CashStateXR iniState) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simValues = new double[samples.length];
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; CashStateXR state = iniState;

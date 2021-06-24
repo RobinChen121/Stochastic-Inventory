@@ -159,7 +159,8 @@ public class RecursionG {
 	 */
 	public double simulateAStar(double[] optY, int sampleNum) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		
 		double[] simValues = new double[samples.length];
 		for (int i = 0; i < samples.length; i++) {}

@@ -31,7 +31,8 @@ public class SimulateFitsS extends Simulation{
 	 */
 	public double simulateSinglesS(State iniState, double[][] optsS, int maxOrderQuantity){
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; State state = iniState;
@@ -61,7 +62,8 @@ public class SimulateFitsS extends Simulation{
 	 */
 	public double simulateTwosS(State iniState, double[][] optsS, int maxOrderQuantity){
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] costs = new double[samples.length];
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; State state = iniState;
@@ -97,7 +99,8 @@ public class SimulateFitsS extends Simulation{
 	 */
 	public double simulateThreesS(State iniState, double[][] optsS, int maxOrderQuantity){
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] costs = new double[samples.length];
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; State state = iniState;

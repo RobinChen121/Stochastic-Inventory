@@ -90,7 +90,8 @@ public class CashSimulation {
 	 */
 	public double simulateSDPGivenSamplNum(CashState iniState) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		
 		double mean[] = new double[distributions.length];
 		for (int i = 0; i < distributions.length; i++) {
@@ -133,12 +134,12 @@ public class CashSimulation {
 	public double[] simulateSDPwithErrorConfidence(CashState iniState, double error, double confidence) {
 		int minRuns = 1000;   int maxRuns = 1000000;
 		Sampling.resetStartStream();
-
+		Sampling sampling = new Sampling();		
 		Tally costTally = new Tally();
 		double[] centerAndRadius = new double[2];
 		int sampleNumUse = 0;		
 		for(int i = 0; i < minRuns || (centerAndRadius[1]>=centerAndRadius[0]*error && i < maxRuns); i++) {
-			double[] realizedDemand = Sampling.getNextSample(distributions);
+			double[] realizedDemand = sampling.getNextSample(distributions);
 			double sum = 0; CashState state = iniState;
 			for (int t = 0; t < realizedDemand.length; t++)
 			{
@@ -173,7 +174,8 @@ public class CashSimulation {
 		Sampling.resetStartStream();
 		this.cacheC1Values = cacheC1Values;
 		this.cacheC2Values = cacheC2Values;
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];		
 		int M = 10000;
 		for (int i = 0; i < samples.length; i++) {
@@ -225,7 +227,8 @@ public class CashSimulation {
 			double overheadCost, Double maxQ, double fixOrderCost, double variCost) {
 		Sampling.resetStartStream();
 		this.cacheC1Values = cacheC1Values;
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];		
 		int M = 10000;
 		for (int i = 0; i < samples.length; i++) {
@@ -274,7 +277,8 @@ public class CashSimulation {
 	public double simulatesMeanCS(CashState iniState, double[][] optsCS, 
 			double minCashRequired, Double maxQ, double fixOrderCost, double variCost) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; CashState state = iniState;
@@ -313,7 +317,8 @@ public class CashSimulation {
 	 */
 	public double simulatesCSDraft(CashState iniState, double[][] optsCS, double minCashRequired, Double maxQ, double fixOrderCost, double variCost) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; CashState state = iniState;
@@ -350,8 +355,9 @@ public class CashSimulation {
 	 */
 	public double simulatesSOD(CashState iniState, double[][] optsS, double minCashRequired, Double maxQ, double fixOrderCost, double variCost) {
 		Sampling.resetStartStream();
-
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; CashState state = iniState;
@@ -387,8 +393,9 @@ public class CashSimulation {
 	 */
 	public double simulatesSOD2(CashState iniState, double[][] optsCS) {
 		Sampling.resetStartStream();
-
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; CashState state = iniState;

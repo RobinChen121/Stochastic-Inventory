@@ -51,8 +51,8 @@ public class Simulation {
 	 */
 	public double simulateSDPGivenSamplNum(State iniState) {
 		Sampling.resetStartStream();
-
-		double[][] samples = Sampling.generateLHSamples(distributions, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
 			double sum = 0; State state = iniState;
@@ -80,7 +80,8 @@ public class Simulation {
 		double[] centerAndRadius = new double[2];
 		int sampleNumUse = 0;		
 		for(int i = 0; i < minRuns || (centerAndRadius[1]>=centerAndRadius[0]*error && i < maxRuns); i++) {
-			double[] realizedDemand = Sampling.getNextSample(distributions);
+			Sampling sampling = new Sampling();
+			double[] realizedDemand = sampling.getNextSample(distributions);
 			double sum = 0; State state = iniState;
 			for (int t = 0; t < realizedDemand.length; t++)
 			{

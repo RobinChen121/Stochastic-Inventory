@@ -70,7 +70,8 @@ public class RRSimOpt {
 	public double simulateSingleRunCycle(double Q, double inventory, Distribution[] distributions) {
 		double i = inventory;
 		double c = 0;
-		double[][] d = Sampling.generateLHSamples(distributions, 1);
+		Sampling sampling = new Sampling();
+		double[][] d = sampling.generateLHSamples(distributions, 1);
 		for (int t = 0; t < distributions.length; t++) {
 			if (t == 0) {
 				c += orderingCost(Q);
@@ -138,7 +139,8 @@ public class RRSimOpt {
 
 	public double simulateSingleRun() {
 		double i = this.inventory;
-		double[][] d = Sampling.generateLHSamples(distributions, 1);
+		Sampling sampling = new Sampling();
+		double[][] d = sampling.generateLHSamples(distributions, 1);
 		double c = 0;
 		for (int t = 0; t < this.distributions.length; t++) {
 			double Q = getQ(t, i);

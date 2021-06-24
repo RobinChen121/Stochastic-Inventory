@@ -8,18 +8,23 @@ import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 import umontreal.ssj.randvar.UniformGen;
 import umontreal.ssj.randvar.UniformIntGen;
+import umontreal.ssj.rng.MRG31k3p;
+import umontreal.ssj.rng.MRG32k3a;
 import umontreal.ssj.rng.MRG32k3aL;
 import umontreal.ssj.rng.RandomStream;
 
 /** 
 * @author chen zhen 
 * @version 2018, April 11th, 4:18:55 pm 
-* @value random sampling and latin hypercube sampling
+* @value random sampling and latin hypercube sampling;
+* 
+* give same seeds if you want to get the same random number in different running time,
+* it seems the seeds in the ssj are complex which needs 6 seeds to generate random number;
 */
 
 public class Sampling {
 	
-	static RandomStream stream = new MRG32k3aL();
+	static RandomStream stream = new MRG32k3a();
 	
 	/**
 	 * Reinitializes the stream to its initial state.
@@ -27,6 +32,7 @@ public class Sampling {
 	public static void resetStartStream(){
 		stream.resetStartStream();
 	}
+	
 	
 	/**
 	 * Reinitializes the stream to the beginning of its next substream.
@@ -40,7 +46,7 @@ public class Sampling {
 	 * @param sampleNum
 	 * @return a 2D random samples
 	 */
-	public static double[][] generateRanSamples(Distribution[] distributions, int sampleNum){
+	public double[][] generateRanSamples(Distribution[] distributions, int sampleNum){
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum]; 
 		
@@ -59,7 +65,7 @@ public class Sampling {
 	 * @return one demands sample
 	 */
 	
-	public static double[] getNextSample(Distribution[] distributions) {
+	public double[] getNextSample(Distribution[] distributions) {
 		int periodNum = distributions.length;
 		double[] sample = new double[periodNum];
 		UniformGen uniform = new UniformGen(stream);
@@ -78,7 +84,7 @@ public class Sampling {
 	 * @return a 2D random samples for two items in a period t, very slow for multi products
 	 * @date: Apr 29, 2020, 12:04:34 PM 
 	 */
-	public static double[][] generateLHSamples(Distribution[][] distributions, int sampleNum){
+	public double[][] generateLHSamples(Distribution[][] distributions, int sampleNum){
 		int itemNum = distributions.length;		
 		int T = distributions[0].length;
 		double[][] samples = new double[sampleNum][itemNum * T]; 
@@ -86,8 +92,7 @@ public class Sampling {
 		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
 		for (int i = 0; i < sampleNum; i++) {
 			for (int j = 0; j < itemNum; j++)
-				for (int t = 0; t < T; t++)
-				 {
+				for (int t = 0; t < T; t++) {
 					double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
 					double lowBound = (double) i / (double) sampleNum;
 					double ppf = lowBound + randomNum;
@@ -103,7 +108,7 @@ public class Sampling {
 	 * @param sampleNum
 	 * @return a 2D random samples
 	 */
-	public static double[][] generateLHSamples(Distribution[] distributions, int sampleNum){
+	public double[][] generateLHSamples(Distribution[] distributions, int sampleNum){
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum]; 
 		
@@ -120,6 +125,32 @@ public class Sampling {
 		return samples;
 	}
 	
+	/** latin hypercube sampling
+	 * @param distributions
+	 * @param sampleNum
+	 * @return a 2D random samples, in which the sample number in each period can be different;
+	 * each row is a period
+	 */
+	public double[][] generateLHSamples(Distribution[] distributions, int[] sampleNums){
+		int periodNum = distributions.length;		
+		double[][] samples = new double[periodNum][]; 
+		
+		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
+		for (int i = 0; i < periodNum; i++) {
+			int sampleNum = sampleNums[i];
+			samples[i] = new double[sampleNum];
+			for (int j = 0; j < sampleNum; j++) {
+				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double lowBound = (double) j/ (double) sampleNum;
+				samples[i][j] = lowBound + randomNum;
+				samples[i][j] = distributions[i].inverseF(samples[i][j]);
+			}
+		}
+		
+	    shuffle2(samples); // ´òÂÒÊý×é
+		return samples;
+	}
+	
 	/** latin hypercube sampling for binormal distribution.
 	 * 
 	 * Since two independent variable, generate two variable independently, and merge the two samples into one
@@ -127,7 +158,7 @@ public class Sampling {
 	 * @param sampleNum
 	 * @return a 2D random samples
 	 */
-	public static double[][] generateLHSamples(BiNormalDist[] distributions, int sampleNum){
+	public double[][] generateLHSamples(BiNormalDist[] distributions, int sampleNum){
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum * 2]; 
 		
@@ -174,7 +205,7 @@ public class Sampling {
 	 * @param sampleNum
 	 * @return a 2D random samples
 	 */
-	public static double[][] generateLHSamplesMulti(Distribution[][] distributions, int sampleNum){
+	public double[][] generateLHSamplesMulti(Distribution[][] distributions, int sampleNum){
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum * 2]; 
 		
@@ -218,7 +249,7 @@ public class Sampling {
 	 * @param sampleNum
 	 * @return a 2D random samples
 	 */
-	public static double[][] generateLHSamples(Distribution[] distributions, int sampleNum, double frac){
+	public double[][] generateLHSamples(Distribution[] distributions, int sampleNum, double frac){
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum]; 
 		
@@ -238,13 +269,27 @@ public class Sampling {
 	/** shuffle a 2D array
 	 * 
 	 */
-	static double[][] shuffle(double[][] samples){
+	 double[][] shuffle(double[][] samples){
 		for(int i = 0; i < samples[0].length; i++)
 			for (int j = 0; j < samples.length; j++){
 			int mark = UniformIntGen.nextInt(stream, 0, samples.length - 1);
 			double temp = samples[j][i];
 			samples[j][i] = samples[mark][i];
 			samples[mark][i] = temp;
+		}
+		return samples;
+	}
+	 
+	 /** shuffle a 2D array
+		* 
+	 */
+	 double[][] shuffle2(double[][] samples){
+		for(int i = 0; i < samples.length; i++)  // t
+			for (int j = 0; j < samples[i].length; j++){
+			int mark = UniformIntGen.nextInt(stream, 0, samples[i].length - 1);
+			double temp = samples[i][j];
+			samples[i][j] = samples[i][mark];
+			samples[i][mark] = temp;
 		}
 		return samples;
 	}

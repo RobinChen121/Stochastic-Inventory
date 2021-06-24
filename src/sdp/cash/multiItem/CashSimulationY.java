@@ -54,7 +54,8 @@ public class CashSimulationY {
 	
 	public double simulateSDPGivenSamplNum(CashStateMulti iniState, double[] variCost) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributionsMulti, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributionsMulti, sampleNum);
 		
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
@@ -111,7 +112,8 @@ public class CashSimulationY {
 	 */
 	public double simulateSDPGivenSamplNum2(CashStateMulti iniState, double[] variCost) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributionsMulti, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributionsMulti, sampleNum);
 		
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
@@ -169,7 +171,8 @@ public class CashSimulationY {
 	 */
 	public double simulateSDPGivenSamplNuma1a2(CashStateMulti iniState, double[] variCost, double[] a1, double[] a2) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributionsMulti, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributionsMulti, sampleNum);
 		
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
@@ -228,7 +231,8 @@ public class CashSimulationY {
 	 */
 	public double simulateSDPGivenSamplNuma1a22(CashStateMulti iniState, double[] variCost, double[] a1, double[] a2) {
 		Sampling.resetStartStream();
-		double[][] samples = Sampling.generateLHSamples(distributionsMulti, sampleNum);
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributionsMulti, sampleNum);
 		
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {
