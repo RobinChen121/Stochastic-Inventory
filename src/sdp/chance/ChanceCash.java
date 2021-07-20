@@ -21,6 +21,7 @@ import gurobi.GRBLinExpr;
 import gurobi.GRBModel;
 import gurobi.GRBVar;
 import milp.GurobiChance;
+import milp.SimulateChanceCash;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
@@ -55,40 +56,72 @@ public class ChanceCash {
 	}
 	
 	public static void main(String[] args) {
-		double iniCash = 100;
+		double iniCash = 10;
 		double iniI = 0;
-		double variCostUnit = 2;
+		double variCostUnit = 1;
 		double salvageValueUnit = 0.5;
 		double trunQuantile = 0.9999;
-		double serviceRate = 0.9; // maximum negative possibility rate is 1 - serviceRate
+		double serviceRate = 0; // maximum negative possibility rate is 1 - serviceRate
 
-		double[] price = {7, 4, 4};
-		double[] meanDemand = {30, 30};
-		int[] sampleNums = {20, 20}; // sample number in each period
-		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
+		double[] price = {2, 2, 2, 2};
+		double[] meanDemand = {50, 50, 50};
+		int[] sampleNums = {10, 10, 10}; // sample number in each period
+		double maxOrderQuantity = 150; // maximum ordering quantity when having enough cash
 		int T = sampleNums.length;
 		double[] overheadCost = new double[T];
-		Arrays.fill(overheadCost, 100); // overhead costs
+		Arrays.fill(overheadCost, 5); // overhead costs
 		
 
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 				// .mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) //can be changed to other distributions
-				.mapToObj(i -> new PoissonDist(meanDemand[i])).toArray(Distribution[]::new);
+				.mapToObj(i -> new PoissonDist(meanDemand[i])).toArray(Distribution[]::new); // Poisson demand
 
 		/**
 		 * solve the problem by SAA
 		 */
+		// generate scenarios, samples in each period form a scenario tree
+		Sampling sampling = new Sampling();
+		double[][] scenarios = sampling.generateLHSamples(distributions, sampleNums);
+		int sampleNumTotal = IntStream.of(sampleNums).reduce(1, (a, b) -> a * b);		
+		int negativeScenarioNumRequire = (int) (sampleNumTotal * (1 - serviceRate));
+		
+	    System.out.println("result of SAA-scenario tree: ");
 		GurobiChance model = new GurobiChance(distributions, sampleNums, iniCash, iniI, price, variCostUnit, 
-							salvageValueUnit, overheadCost, serviceRate);
+							salvageValueUnit, overheadCost, serviceRate, scenarios);
 		long currTime = System.currentTimeMillis();
-		double[] result = model.solve();
-		System.out.println();
+		double[] result = model.solve();		
+		double time1 = (System.currentTimeMillis() - currTime) / 1000.00;
+	    currTime = System.currentTimeMillis();
+	    double[] result2 = model.solveSort();	    
+	    System.out.println();
 	    System.out.println("**********************************************");
-	    System.out.println("result of SAA: ");
-		double time = (System.currentTimeMillis() - currTime) / 1000.00;
-		System.out.println("running time is " + time + "s");	
+	    System.out.println("result of SAA-scenario tree before sorting scenarios: ");
+	    System.out.println("running time is " + time1 + "s");	
 	    System.out.printf("first stage decison Q is: %.2f\n", result[0]);
 	    System.out.printf("Objective value is: %.2f\n", result[1]);
+	    System.out.println("negative scenario number in the solution is : " + result[2]);
+	    System.out.println("maximum negative scenario number required is: " + negativeScenarioNumRequire);
+	    
+	    System.out.println();
+		System.out.println("**********************************************");
+	    System.out.println("result of SAA-scenario tree after sorting scenarios: ");
+		currTime = System.currentTimeMillis();	
+		double time3 = (System.currentTimeMillis() - currTime) / 1000.00;
+	    currTime = System.currentTimeMillis();  
+
+	    System.out.println("running time is " + time3 + "s");	
+	    System.out.printf("first stage decison Q is: %.2f\n", result2[0]);
+	    System.out.printf("Objective value is: %.2f\n", result2[1]);
+	    System.out.println("negative scenario number in the solution is : " + result2[2]);
+	    System.out.println("maximum negative scenario number required is: " + negativeScenarioNumRequire);
+	    
+//	    System.out.println();
+//	    System.out.println("**********************************************");
+//	    System.out.println("result of SAA-No-scenario tree: ");
+//		double time2 = (System.currentTimeMillis() - currTime) / 1000.00;
+//		System.out.println("running time is " + time2 + "s");	
+//	    System.out.printf("first stage decison Q is: %.2f\n", result2[0]);
+//	    System.out.printf("Objective value is: %.2f\n", result2[1]);
 	    
 	    /**
 		 * solve the problem by SDP to get a lower bound
@@ -155,7 +188,7 @@ public class ChanceCash {
 		System.out.println();
 	    System.out.println("**********************************************");
 	    System.out.println("result of SDP: ");
-	    time = (System.currentTimeMillis() - currTime) / 1000;
+	    double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
 		System.out.println("first stage decision Q is : " + recursion.getAction(initialState));
 		System.out.println("final optimal cash  is " + finalValue);    
@@ -163,13 +196,20 @@ public class ChanceCash {
 		/*******************************************************************
 		 * Simulating sdp results
 		 */
-		int sampleNum = 10000;
-		
+		int sampleNum = 10000;		
 		CashSimulation simuation = new CashSimulation(distributions, sampleNum, recursion, discountFactor); // no need to add overheadCost in this class
 		double simFinalValue = simuation.simulateSDPGivenSamplNum(initialState);
 		double error = 0.0001; 
 		double confidence = 0.95;
-		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);
-	    
+		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);	    
+		
+		/*******************************************************************
+		 * Simulating SAA result
+		 */
+		SimulateChanceCash simulate = new SimulateChanceCash(distributions, iniCash, iniI, price, variCostUnit, salvageValueUnit, overheadCost, serviceRate, stateTransition, 
+				immediateValue, discountFactor, sampleNums, scenarios);
+		double simFinalValue2 = simulate.simulateSDPGivenSamplNum(initialState, result[0], 1000);
+		System.out.println("**********************************************");
+		System.out.println("simulate result for chanced SAA is " + simFinalValue2);  
 	}
 }

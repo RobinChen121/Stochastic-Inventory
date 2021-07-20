@@ -10,7 +10,7 @@ import sdp.inventory.State;
 */
 
 public class CashState extends State{
-	double iniCash = 0;
+	public double iniCash = 0;
 
 	public CashState(int period, double initialInventory, double iniCash) {
 		super(period, initialInventory);

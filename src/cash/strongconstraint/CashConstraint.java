@@ -53,18 +53,18 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {8, 8, 3, 3};
+		double[] meanDemand = {50, 50, 50};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 5;
+		double iniCash = 10;
 		double fixOrderCost = 0;
-		double variCost = 2;
-		double price = 6;
+		double variCost = 1;
+		double price = 2;
 		double depositeRate = 0;
-		double salvageValue = 1;
+		double salvageValue = 0.5;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
-		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
+		double overheadCost = 5; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
@@ -102,8 +102,9 @@ public class CashConstraint {
 
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
-			double maxQ = (int) Math.min(maxOrderQuantity,
-					Math.max(0, (s.getIniCash() - overheadCost - fixOrderCost) / variCost));
+			double maxQ = // maxOrderQuantity; 
+			         (int) Math.min(maxOrderQuantity,
+					 Math.max(0, (s.getIniCash() - overheadCost - fixOrderCost) / variCost));
 //			if (s.getPeriod() == 1)
 //				return new double[]{200.0};
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
