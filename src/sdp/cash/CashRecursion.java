@@ -174,7 +174,15 @@ public class CashRecursion {
 					}
 					if (s.getPeriod() < pmf.length) { // 
 						CashState newState = stateTransition.apply(s, orderQty, dAndP[j][0]);
-						thisQProb += dAndP[j][1] * discountFactor * getSurvProb(newState);
+						double thisDProb = 0;
+						if (newState.iniCash < 0) {
+							thisDProb = 0;
+						}
+						else {
+							thisDProb = getSurvProb(newState);
+						}
+//						double thisDProb = getSurvProb(newState);
+						thisQProb += dAndP[j][1] * discountFactor * thisDProb;
 					}
 				}
 				QValues[i] = thisQProb;
@@ -216,7 +224,7 @@ public class CashRecursion {
 			arr[i++] = new double[]{entry.getKey().getPeriod(), entry.getKey().getIniInventory(), entry.getKey().getIniCash(), entry.getValue()};
 		}
 		return arr;
-	}
+	}	
 	
 	
 	/**

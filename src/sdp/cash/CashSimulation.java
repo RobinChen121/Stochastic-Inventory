@@ -4,10 +4,15 @@ package sdp.cash;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import org.apache.commons.math3.exception.OutOfRangeException;
+import org.apache.poi.ss.formula.functions.Count;
+
+import milp.LostSaleChance;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.State;
 import sdp.inventory.StateTransition.StateTransitionFunction;
@@ -47,6 +52,21 @@ public class CashSimulation {
 		this.stateTransition = recursion.getStateTransitionFunction();
 		this.immediateValue = recursion.getImmediateValueFunction();		
 		this.discountFactor = discountFactor;
+	}
+	
+	/**
+	 * simulation for SAA
+	 * @param distributions
+	 * @param sampleNum
+	 * @param recursion
+	 * @param discountFactor
+	 */
+	public CashSimulation(Distribution[] distributions, int sampleNum, ImmediateValueFunction<CashState, Double, Double, Double> immediateValue,
+			StateTransitionFunction<CashState, Double, Double, CashState> stateTransition) {
+		this.distributions = distributions;
+		this.sampleNum = sampleNum;
+		this.immediateValue = immediateValue;
+		this.stateTransition = stateTransition;
 	}
 	
 	
@@ -93,8 +113,6 @@ public class CashSimulation {
 				double optQ = recursion.getAction(state);
 				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
 				double thisValue = immediateValue.apply(state, optQ, randomDemand);
-//				if (thisValue < -500) // for debuging
-//					System.out.println(thisValue);
 				sum += Math.pow(discountFactor, t) * thisValue;
 				state = stateTransition.apply(state, optQ, randomDemand);
 			}
@@ -104,6 +122,198 @@ public class CashSimulation {
 		double simFinalValue = Arrays.stream(simuValues).sum()/samples.length + iniState.iniCash;
 		System.out.println("\nfinal simulated expected value in " + df2.format(sampleNum) + " samples is: " + simFinalValue);
 		return simFinalValue;
+	}
+	
+	
+	/**
+	 * @param arr
+	 * @param t
+	 * @return an array from index t to T-1
+	 */
+	public double[] gettTArray(double[] arr, int t) {
+		int T = arr.length;
+		double[] result =  new double[T - t];
+		for (int i = t; i < T; i++)
+			result[i-t] = arr[i];
+		return result;
+	}
+	
+	public double[][] gettTArray(double[][] arr, int t) {
+		int T = arr.length;
+		int m = arr[0].length;
+		double[][] result =  new double[T - t][m];
+		for (int i = t; i < T; i++) {
+			for (int j = 0; j < m; j++) 			
+				result[i-t][j] = arr[i][j];
+		}
+		return result;
+	}
+	
+	public int[] gettTArray(int[] arr, int t) {
+		int T = arr.length;
+		int[] result =  new int[T - t];
+		for (int i = t; i < T; i++)
+			result[i-t] = arr[i];
+		return result;
+	}
+	
+	public Distribution[] gettTArray(Distribution[] arr, int t) {
+		int T = arr.length;
+		Distribution[] result =  new Distribution[T - t];
+		for (int i = t; i < T; i++)
+			result[i-t] = arr[i];
+		return result;
+	}
+	
+	
+	public double[] simulateSAALostRate(CashState iniState, double iniQ,  double serviceRate, 
+			int[] sampleNums, double[] prices, double[] variCostUnits, double[] overheadCosts, double salvageValueUnit, double holdCostUnit,
+			double[][] scenarios, int sampleNum) {
+		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
+		
+		double[] simuValues = new double[samples.length];
+		int T = samples[0].length;
+		int lostSaleCount = 0;
+		for (int i = 0; i < samples.length; i++) {
+			CashState state = iniState;
+			boolean countBeforeBankrupt = false;
+			boolean countLostBefore = false;
+			double thisValue = 0;
+			double optQ = 0;
+			double thisServiceRate = 1;
+			for (int t = 0; t < T; t++) {
+				if (t == 0) {
+					optQ = iniQ;
+					thisServiceRate = serviceRate;
+				}				
+				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
+				thisValue = state.iniCash + immediateValue.apply(state, optQ, randomDemand);
+				if (state.getIniInventory() + optQ < randomDemand - 0.1 && countLostBefore == false) {
+					lostSaleCount ++;
+					countLostBefore = true;
+				}
+				if (thisValue < - 0.1 && countBeforeBankrupt == false) {
+					simuValues[i] = 1;
+					countBeforeBankrupt = true;
+				}
+				if (t < T - 1) {
+					double nextServiceRate = countLostBefore == true ? 0 : thisServiceRate / distributions[t].cdf(optQ + state.getIniInventory()); // very important
+					state = stateTransition.apply(state, optQ, randomDemand);
+					double iniCash = state.iniCash;
+					double iniI = state.getIniInventory();
+					double[] nextPrices = gettTArray(prices, t + 1);
+					int[] nextSampleNums = gettTArray(sampleNums, t + 1);
+					double[] nextVariCostUnits = gettTArray(variCostUnits, t + 1);
+					Distribution[] nexDistributions = gettTArray(distributions, t + 1);
+					double[] nextOverheadCosts = gettTArray(overheadCosts, t + 1);
+					double[][] nextScenarios = gettTArray(scenarios, t + 1);
+					LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
+							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
+					double[] result = model.solveMaxSurvival();	
+					optQ = result[0];
+					thisServiceRate = nextServiceRate;
+				}			
+			}
+		}
+
+		double simFinalValue = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
+		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;		
+		double[] result =  {simFinalValue, lostSaleRate};
+		return result;
+	}
+	
+
+	/**
+	 * 
+	 * @param iniState
+	 * @return simulate sdp in a given number of samples with lost sale rate simulation
+	 */
+	public double[] simulateSDPGivenSamplNumLostRate(CashState iniState, ImmediateValueFunction<CashState, Double, Double, Double> immediateValue2) {
+		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
+		
+//		double mean[] = new double[distributions.length];
+//		for (int i = 0; i < distributions.length; i++) {
+//			double sum = 0;
+//			for (int j = 0; j < sampleNum; j++) {
+//				sum += samples[j][i];
+//			}
+//			mean[i] = sum / sampleNum;
+//		}
+		
+		double[] simuValues = new double[samples.length];		
+		int lostSaleCount = 0;
+		for (int i = 0; i < samples.length; i++) {
+			CashState state = iniState;
+			boolean countBefore = false;
+			boolean countBeforeBankrupt = false;
+			for (int t = 0; t < samples[0].length; t++)
+			{
+				recursion.getExpectedValue(state);
+				double optQ = recursion.getAction(state);
+				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
+				if (state.getIniInventory() + optQ < randomDemand - 0.1 && countBefore == false) {
+					lostSaleCount ++;
+					countBefore = true;
+				}
+				double thisValue = state.iniCash + immediateValue2.apply(state, optQ, randomDemand);
+				state = stateTransition.apply(state, optQ, randomDemand);
+				if (thisValue < - 0.1 && countBeforeBankrupt == false) {
+					simuValues[i] = 1;
+					countBeforeBankrupt = true;
+				}
+			}
+			
+		}
+		double simFinalValue = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
+		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;		
+		double[] result =  {simFinalValue, lostSaleRate};
+		return result;
+	}
+	
+	/**
+	 * @param iniState
+	 * @return bankrupt probability
+	 */
+	public double simulateDefaultProb(CashState iniState) {
+		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
+		
+		double mean[] = new double[distributions.length];
+		for (int i = 0; i < distributions.length; i++) {
+			double sum = 0;
+			for (int j = 0; j < sampleNum; j++) {
+				sum += samples[j][i];
+			}
+			mean[i] = sum / sampleNum;
+		}
+		
+		double[] simuValues = new double[samples.length];	
+		double count = 0;
+		for (int i = 0; i < samples.length; i++) {
+			double sum = 0; CashState state = iniState;
+			boolean recordMinusCash = false;
+			for (int t = 0; t < samples[0].length; t++)
+			{
+				recursion.getExpectedValue(state);
+				double optQ = recursion.getAction(state);
+				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
+				double thisValue = immediateValue.apply(state, optQ, randomDemand);
+				sum += Math.pow(discountFactor, t) * thisValue;
+				state = stateTransition.apply(state, optQ, randomDemand);
+				if (sum + iniState.iniCash < 0 && recordMinusCash == false) {
+					count++;
+					recordMinusCash = true;
+				}
+					
+			}
+			simuValues[i] = sum;				
+		}
+		return count/(double) sampleNum;
 	}
 
 	/**

@@ -25,9 +25,10 @@ public class SimulateChanceCash {
 	Distribution[] distributions;
 	int[] sampleNums;
 	double[][] scenarios;
+	double holdCostUnit;
 	
 	public SimulateChanceCash(Distribution[] distributions, double iniCash, double iniI, double[] price, double variCostUnit, double salvageValueUnit,
-			double[] overheadCost, double serviceRate, StateTransitionFunction<CashState, Double, Double, CashState> stateTransition,
+			double holdCostUnit, double[] overheadCost, double serviceRate, StateTransitionFunction<CashState, Double, Double, CashState> stateTransition,
 			ImmediateValueFunction<CashState, Double, Double, Double> immediateValue, double discountFactor,
 			int[] sampleNums, double[][] scenarios) {
 		this.iniCash = iniCash;
@@ -43,6 +44,7 @@ public class SimulateChanceCash {
 		this.distributions = distributions;
 		this.sampleNums = sampleNums;
 		this.scenarios = scenarios;
+		this.holdCostUnit = holdCostUnit;
 	}
 	
 	public double simulateSDPGivenSamplNum(CashState iniState, double iniQ, int sampleNum) {
@@ -67,9 +69,16 @@ public class SimulateChanceCash {
 				else {
 					double tIniCash = state.iniCash;
 					double tIniI = state.getIniInventory();
-					GurobiChance model = new GurobiChance(Arrays.copyOfRange(distributions, t, T), Arrays.copyOfRange(sampleNums, t, T), tIniCash, tIniI, price, variCostUnit, 
-							salvageValueUnit, overheadCost, serviceRate, Arrays.copyOfRange(scenarios, t, T));
-					double[] result = model.solveSort(); // sort or not sort
+					PositiveCashChance model = new PositiveCashChance(Arrays.copyOfRange(distributions, t, T), Arrays.copyOfRange(sampleNums, t, T), tIniCash, tIniI, price, variCostUnit, 
+							salvageValueUnit, holdCostUnit, overheadCost, serviceRate, Arrays.copyOfRange(scenarios, t, T));
+					
+					double[] result = new double[3];
+					try {
+						result = model.solveSort(); // sort or not sort
+					} catch (Exception e) {
+						System.out.println(result);
+					}
+					
 					double optQ = result[0];
 					double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
 					double thisValue = immediateValue.apply(state, optQ, randomDemand);
@@ -87,10 +96,5 @@ public class SimulateChanceCash {
 	
 	
 
-	public static void main(String[] args) {
-		double[][] a = {{1, 2, 3}, {3, 4, 5}, {6, 7, 8}};
-		System.out.println(Arrays.deepToString(Arrays.copyOfRange(a, 0, 2)));
-
-	}
 
 }

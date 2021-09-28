@@ -76,32 +76,6 @@ public class Sampling {
 	}
 	
 	
-
-	/** latin hypercube sampling
-	 * @param distributions
-	 * @param sampleNum
-	 * @param t
-	 * @return a 2D random samples for two items in a period t, very slow for multi products
-	 * @date: Apr 29, 2020, 12:04:34 PM 
-	 */
-	public double[][] generateLHSamples(Distribution[][] distributions, int sampleNum){
-		int itemNum = distributions.length;		
-		int T = distributions[0].length;
-		double[][] samples = new double[sampleNum][itemNum * T]; 
-		
-		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
-		for (int i = 0; i < sampleNum; i++) {
-			for (int j = 0; j < itemNum; j++)
-				for (int t = 0; t < T; t++) {
-					double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
-					double lowBound = (double) i / (double) sampleNum;
-					double ppf = lowBound + randomNum;
-					samples[i][j + t * itemNum] = Math.round(distributions[j][t].inverseF(ppf) * 1.0) / 1.0;
-				}
-		}
-	    shuffle(samples); // 打乱数组
-		return samples;
-	}
 	
 	/** latin hypercube sampling
 	 * @param distributions
@@ -132,6 +106,8 @@ public class Sampling {
 	 * each row is a period
 	 */
 	public double[][] generateLHSamples(Distribution[] distributions, int[] sampleNums){
+		resetNextSubstream();
+		
 		int periodNum = distributions.length;		
 		double[][] samples = new double[periodNum][]; 
 		
@@ -198,52 +174,52 @@ public class Sampling {
 	}
 	
 	
-	/** latin hypercube sampling for bi poisson distribution.
-	 * 
-	 * Since two independent variable, generate two variable independently, and merge the two samples into one
-	 * @param distributions
-	 * @param sampleNum
-	 * @return a 2D random samples
-	 */
-	public double[][] generateLHSamplesMulti(Distribution[][] distributions, int sampleNum){
-		int periodNum = distributions.length;		
-		double[][] samples = new double[sampleNum][periodNum * 2]; 
-		
-		double[][] samples1 = new double[sampleNum][periodNum];
-		double[][] samples2 = new double[sampleNum][periodNum];
-		
-		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
-		for (int i = 0; i < periodNum; i++) {
-			Distribution distribution1 = distributions[i][0];
-			for (int j = 0; j < sampleNum; j++) {
-				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
-				double lowBound = (double) j/ (double) sampleNum;
-				samples1[j][i] = lowBound + randomNum;
-				samples1[j][i] = distribution1.inverseF(samples1[j][i]);
-			}		
-			shuffle(samples1); // 打乱数组		
-		}
-		for (int i = 0; i < periodNum; i++) {
-			Distribution distribution2 = distributions[i][1];
-			for (int j = 0; j < sampleNum; j++) {
-				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
-				double lowBound = (double) j/ (double) sampleNum;
-				samples2[j][i] = lowBound + randomNum;
-				samples2[j][i] = distribution2.inverseF(samples2[j][i]);
-			}		
-			shuffle(samples2); // 打乱数组		
-		}
-		
-		for (int i = 0; i < sampleNum; i++) {
-			for (int j = 0; j < periodNum; j++) {
-				samples[i][j] = samples1[i][j];
-				samples[i][j + periodNum] = samples2[i][j];
-			}			
-		}
-		
-		return samples;
-	}
-	
+//	/** latin hypercube sampling for bi poisson distribution.
+//	 * 
+//	 * Since two independent variable, generate two variable independently, and merge the two samples into one
+//	 * @param distributions
+//	 * @param sampleNum
+//	 * @return a 2D random samples
+//	 */
+//	public double[][] generateLHSamplesMulti(Distribution[][] distributions, int sampleNum){
+//		int periodNum = distributions.length;		
+//		double[][] samples = new double[sampleNum][periodNum * 2]; 
+//		
+//		double[][] samples1 = new double[sampleNum][periodNum];
+//		double[][] samples2 = new double[sampleNum][periodNum];
+//		
+//		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
+//		for (int i = 0; i < periodNum; i++) {
+//			Distribution distribution1 = distributions[i][0];
+//			for (int j = 0; j < sampleNum; j++) {
+//				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+//				double lowBound = (double) j/ (double) sampleNum;
+//				samples1[j][i] = lowBound + randomNum;
+//				samples1[j][i] = distribution1.inverseF(samples1[j][i]);
+//			}		
+//			shuffle(samples1); // 打乱数组		
+//		}
+//		for (int i = 0; i < periodNum; i++) {
+//			Distribution distribution2 = distributions[i][1];
+//			for (int j = 0; j < sampleNum; j++) {
+//				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+//				double lowBound = (double) j/ (double) sampleNum;
+//				samples2[j][i] = lowBound + randomNum;
+//				samples2[j][i] = distribution2.inverseF(samples2[j][i]);
+//			}		
+//			shuffle(samples2); // 打乱数组		
+//		}
+//		
+//		for (int i = 0; i < sampleNum; i++) {
+//			for (int j = 0; j < periodNum; j++) {
+//				samples[i][j] = samples1[i][j];
+//				samples[i][j + periodNum] = samples2[i][j];
+//			}			
+//		}
+//		
+//		return samples;
+//	}
+//	
 	/** latin hypercube sampling with truncationQuantile 
 	 * @param distributions
 	 * @param sampleNum
@@ -293,6 +269,32 @@ public class Sampling {
 		}
 		return samples;
 	}
+	 
+		/** latin hypercube sampling
+		 * @param distributions
+		 * @param sampleNum
+		 * @param t
+		 * @return a 2D random samples for multi products in a period t, very slow for multi products
+		 * @date: Apr 29, 2020, 12:04:34 PM 
+		 */
+		public double[][] generateLHSamplesMultiProd(Distribution[][] distributions, int sampleNum){
+			int itemNum = distributions.length;		
+			int T = distributions[0].length;
+			double[][] samples = new double[sampleNum][itemNum * T]; 
+			
+			// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
+			for (int i = 0; i < sampleNum; i++) {
+				for (int j = 0; j < itemNum; j++)
+					for (int t = 0; t < T; t++) {
+						double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+						double lowBound = (double) i / (double) sampleNum;
+						double ppf = lowBound + randomNum;
+						samples[i][j + t * itemNum] = Math.round(distributions[j][t].inverseF(ppf) * 1.0) / 1.0;
+					}
+			}
+		    shuffle(samples); // 打乱数组
+			return samples;
+		}
 	
 	
 //	public static void main(String[] args) {

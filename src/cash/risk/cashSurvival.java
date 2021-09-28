@@ -3,12 +3,14 @@
  */
 package cash.risk;
 
+import java.text.DecimalFormat;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import cash.strongconstraint.FindsCS.FindCCrieria;
 import sdp.cash.CashRecursion;
+import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
 import sdp.cash.CashRecursion.OptDirection;
 import sdp.inventory.GetPmf;
@@ -33,18 +35,19 @@ public class cashSurvival {
 	 * @date: Nov 21, 2020, 6:01:10 PM 
 	 */
 	public static void main(String[] args) {
-		double[] meanDemand = {3, 3, 3};
+		double[] meanDemand = {5, 4, 8};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 1;
+		double iniCash = 15;
 		double fixOrderCost = 0;
-		double variCost = 2;
-		double price = 6;
+		double variCost = 1;
+		double[] price = {2, 3, 3};
 		double depositeRate = 0;
-		double salvageValue = 1;
+		double salvageValue = 0.5;
 		double holdingCost = 0;	
-		FindCCrieria criteria = FindCCrieria.XRELATE;		
-		double overheadCost = 5; // costs like wages or rents which is required to pay in each period
+		FindCCrieria criteria = FindCCrieria.XRELATE;	
+		
+		double overheadCost = 10; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 		
@@ -74,7 +77,8 @@ public class cashSurvival {
 		
 		// immediate value
 		ImmediateValueFunction<CashState, Double, Double, Double> immediateValue = (state, action, randomDemand) -> {
-			double revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
+			int t = state.getPeriod() - 1;
+			double revenue = price[t] * Math.min(state.getIniInventory() + action, randomDemand);
 			double fixedCost = action > 0 ? fixOrderCost : 0;
 			double variableCost = variCost * action;
 			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
@@ -121,7 +125,36 @@ public class cashSurvival {
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
 		
+		double[][] optTable = recursion.getOptTable();
+		System.out.println();
 		
+		/*******************************************************************
+		 * Simulate the result
+		 */
+		
+		// immediate value
+		ImmediateValueFunction<CashState, Double, Double, Double> immediateValue2 = (state, action, randomDemand) -> {
+			int t = state.getPeriod() - 1;
+			double revenue = price[t] * Math.min(state.getIniInventory() + action, randomDemand);
+			double fixedCost = action > 0 ? fixOrderCost : 0;
+			double variableCost = variCost * action;
+			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
+			double inventoryLevel = state.getIniInventory() + action - randomDemand;
+			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
+			double cashIncrement = (1 - overheadRate) * revenue + deposite - holdCosts - overheadCost
+					- state.getIniCash();
+			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
+			cashIncrement += salValue;
+			double endCash = state.getIniCash() + cashIncrement;
+			return cashIncrement;
+		};
+		
+		int sampleNum = 100000;
+		CashSimulation simulation = new CashSimulation(distributions, sampleNum, recursion, discountFactor); // no need to add overheadCost in this class
+		double[] result = simulation.simulateSDPGivenSamplNumLostRate(initialState, immediateValue2);
+		DecimalFormat df2 = new DecimalFormat("###, ###");
+		System.out.println("\nfinal simulated survival probability in " + df2.format(sampleNum) + " samples is: " + result[0]);
+		System.out.println("\nfinal simulated lost sale rate " + " is: " + result[1]);
 		 
 		
 	}

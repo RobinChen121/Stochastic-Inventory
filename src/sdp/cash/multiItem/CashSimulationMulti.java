@@ -96,7 +96,7 @@ public class CashSimulationMulti {
 	public double simulateSDPGivenSamplNumMulti(CashStateMulti iniState) {
 		Sampling.resetStartStream();
 		Sampling sampling = new Sampling();
-		double[][] samples = sampling.generateLHSamplesMulti(distributionsMulti, sampleNum);
+		double[][] samples = sampling.generateLHSamplesMultiProd(distributionsMulti, sampleNum);
 		
 		double[] simuValues = new double[samples.length];		
 		for (int i = 0; i < samples.length; i++) {

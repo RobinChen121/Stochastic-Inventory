@@ -26,10 +26,13 @@ import umontreal.ssj.probdist.Distribution;
  * @author chen
  * @email: okchen321@163.com
  * @date: 2021 Jun 24, 13:48:27  
- * @desp: calling gurobi in java to solve the chance-constrained problems
+ * @desp: calling gurobi in java to solve the chance-constrained problems/
+ * 
+ * the result is not good as expected, because the probability of non negative cash changes dramatically from
+ * small to large.
  *
  */
-public class GurobiChance {
+public class PositiveCashChance {
 	Distribution[] distributions;
 	int[] sampleNums;
 	double iniCash;
@@ -39,13 +42,16 @@ public class GurobiChance {
 	double salvageValueUnit;
 	double[] overheadCost;
 	double serviceRate;
+	double holdCostUnit;
 	double[][] scenarios;
 	
 	double M1 = 10000;
 	double M2 = 10000;
 	
-	public GurobiChance(Distribution[] distributions, int[] sampleNums, double iniCash, double iniI, double[] price, double variCostUnit, 
-			double salvageValueUnit, double[] overheadCost, double serviceRate, double[][] scenarios) {
+	double minB = 0;
+	
+	public PositiveCashChance(Distribution[] distributions, int[] sampleNums, double iniCash, double iniI, double[] price, double variCostUnit, 
+			double salvageValueUnit, double holdCostUnit, double[] overheadCost, double serviceRate, double[][] scenarios) {
 		this.distributions = distributions;
 		this.sampleNums = sampleNums;
 		this.iniCash = iniCash;
@@ -56,6 +62,7 @@ public class GurobiChance {
 		this.overheadCost = overheadCost;
 		this.serviceRate = serviceRate;
 		this.scenarios = scenarios;
+		this.holdCostUnit = holdCostUnit;
 	}
 	
 	
@@ -117,23 +124,27 @@ public class GurobiChance {
 		    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
 		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 		    		}
 		    		else if (t == 0 && T == 1) {
 		    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
 		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
 		    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 					}
 		    		else if (t == T - 1 && T > 1) {
 		    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
 		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
 		    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 					}
 		    		else {
 		    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
-		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);	    			
+		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);	
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 		    		}	    			
 		    	}
 		    
@@ -208,16 +219,20 @@ public class GurobiChance {
 			model.addConstr(sumAlpha, GRB.LESS_EQUAL, negativeScenarioNumRequire, "ChanceConstraint1");
 			for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++) {
-		    		if(t == 0) {
-		    			minCash[t][s].addConstant(iniCash); minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
-		    			// minCash[t][s].addConstant(-overheadCost[t]);
-		    		}
-		    		else {
-		    			minCash[t][s].multAdd(1, cash[t-1][s]); minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
-		    			// minCash[t][s].addConstant(-overheadCost[t]);
-					}
+//		    		if(t == 0) {
+//		    			minCash[t][s].addConstant(iniCash); 
+//		    			minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
+//		    			// minCash[t][s].addConstant(-overheadCost[t]);
+//		    		}
+//		    		else {
+//		    			minCash[t][s].multAdd(1, cash[t-1][s]); 
+//		    			minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
+////		    			// minCash[t][s].addConstant(-overheadCost[t]);
+//					}
+		    		minCash[t][s].multAdd(1, cash[t][s]); 
 		    		GRBLinExpr rightExpr = new GRBLinExpr();
 		    		rightExpr.addTerm(-M2, alpha[s]);
+		    		rightExpr.addConstant(minB);
 		    		model.addConstr(minCash[t][s], GRB.GREATER_EQUAL, rightExpr, "ChanceConstraint2");
 		    	}
 			
@@ -377,23 +392,27 @@ public class GurobiChance {
 		    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
 		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 		    		}
 		    		else if (t == 0 && T == 1) {
 		    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
 		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
 		    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 					}
 		    		else if (t == T - 1 && T > 1) {
 		    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
 		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
 		    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 					}
 		    		else {
 		    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
-		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);	    			
+		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);	
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 		    		}	    			
 		    	}
 		    
@@ -467,17 +486,24 @@ public class GurobiChance {
 //			model.addConstr(sumAlpha, GRB.LESS_EQUAL, negativeScenarioNumRequire, "ChanceConstraint1");
 			for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++) {
-		    		if(t == 0) {
-		    			minCash[t][s].addConstant(iniCash); minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
-		    			// minCash[t][s].addConstant(-overheadCost[t]);
-		    		}
-		    		else {
-		    			minCash[t][s].multAdd(1, cash[t-1][s]); minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
-		    			// minCash[t][s].addConstant(-overheadCost[t]);
-					}
+//		    		if(t == 0) {
+//	    				minCash[t][s].addConstant(iniCash); 
+//	    				minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
+//	    				// minCash[t][s].addConstant(-overheadCost[t]);
+//	    			}
+//	    			else {
+//	    				minCash[t][s].multAdd(1, cash[t-1][s]); 
+//	    				minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
+////	    			// minCash[t][s].addConstant(-overheadCost[t]);
+//					}
+		    		minCash[t][s].multAdd(1, cash[t][s]); 
+		    		
 		    		GRBLinExpr rightExpr = new GRBLinExpr();
-		    		if (s <= negativeScenarioNumRequire)
+		    		if (s < negativeScenarioNumRequire) { // no =
 		    			rightExpr.addConstant(-M2);
+		    			rightExpr.addConstant(minB);
+		    		}
+		    			
 		    		else {
 						rightExpr.clear();
 					}
@@ -623,23 +649,27 @@ public class GurobiChance {
 		    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
 		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 		    		}
 		    		else if (t == 0 && T == 1) {
 		    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
 		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
 		    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 					}
 		    		else if (t == T - 1 && T > 1) {
 		    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
 		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
 		    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 					}
 		    		else {
 		    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
 		    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
-		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);	    			
+		    			cash[t][s].addTerm(-variCostUnit, Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);	
+		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
 		    		}	    			
 		    	}
 		    

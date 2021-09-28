@@ -24,7 +24,7 @@ import umontreal.ssj.probdist.PoissonDist;
  * @Desc: check the monotony property of GB(y*) - GA(x)- K , GA(x)
  *
  */
-public class CheakMonotony {
+public class CheckMonotony {
 	public static void main(String[] args) {
 		
 		double[][] iniMeanDemands = { { 15, 15, 15, 15, 15, 15, 15, 15, 15, 15 },
