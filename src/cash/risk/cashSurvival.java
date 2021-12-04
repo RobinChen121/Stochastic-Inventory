@@ -35,13 +35,13 @@ public class cashSurvival {
 	 * @date: Nov 21, 2020, 6:01:10 PM 
 	 */
 	public static void main(String[] args) {
-		double[] meanDemand = {5, 4, 8};
+		double[] meanDemand = {5, 5, 5, 5};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
 		double iniCash = 15;
 		double fixOrderCost = 0;
 		double variCost = 1;
-		double[] price = {2, 3, 3};
+		double[] price = {3, 3, 3, 3};
 		double depositeRate = 0;
 		double salvageValue = 0.5;
 		double holdingCost = 0;	

@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.IntStream;
 
 import org.apache.commons.math3.exception.OutOfRangeException;
 import org.apache.poi.ss.formula.functions.Count;
@@ -140,11 +141,18 @@ public class CashSimulation {
 	
 	public double[][] gettTArray(double[][] arr, int t) {
 		int T = arr.length;
-		int m = arr[0].length;
-		double[][] result =  new double[T - t][m];
+		
+		double[][] result =  new double[T - t][];
 		for (int i = t; i < T; i++) {
-			for (int j = 0; j < m; j++) 			
-				result[i-t][j] = arr[i][j];
+			int m = arr[i].length;
+			result[i-t] = new double[m];
+			for (int j = 0; j < m; j++) 		
+				try {
+					result[i-t][j] = arr[i][j];
+				} catch (Exception e) {
+					System.out.println(m);
+				}
+				
 		}
 		return result;
 	}
@@ -166,6 +174,21 @@ public class CashSimulation {
 	}
 	
 	
+	/**
+	 * simulate SAA for joint chance problem.
+	 * @param iniState
+	 * @param iniQ
+	 * @param serviceRate
+	 * @param sampleNums
+	 * @param prices
+	 * @param variCostUnits
+	 * @param overheadCosts
+	 * @param salvageValueUnit
+	 * @param holdCostUnit
+	 * @param scenarios
+	 * @param sampleNum
+	 * @return the final value with lost sale rate
+	 */
 	public double[] simulateSAALostRate(CashState iniState, double iniQ,  double serviceRate, 
 			int[] sampleNums, double[] prices, double[] variCostUnits, double[] overheadCosts, double salvageValueUnit, double holdCostUnit,
 			double[][] scenarios, int sampleNum) {
@@ -212,6 +235,255 @@ public class CashSimulation {
 					LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
 							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
 					double[] result = model.solveMaxSurvival();	
+					optQ = result[0];
+					thisServiceRate = nextServiceRate;
+				}			
+			}
+		}
+
+		double simFinalValue = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
+		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;		
+		double[] result =  {simFinalValue, lostSaleRate};
+		return result;
+	}
+	
+	
+	/**
+	 * simulate SAA for joint chance problem with another chance updating method.
+	 * @param iniState
+	 * @param iniQ
+	 * @param serviceRate
+	 * @param sampleNums
+	 * @param prices
+	 * @param variCostUnits
+	 * @param overheadCosts
+	 * @param salvageValueUnit
+	 * @param holdCostUnit
+	 * @param scenarios
+	 * @param sampleNum
+	 * @return the final value with lost sale rate
+	 */
+	public double[] simulateSAALostRate2(CashState iniState, double iniQ,  double serviceRate, 
+			int[] sampleNums, double[] prices, double[] variCostUnits, double[] overheadCosts, double salvageValueUnit, double holdCostUnit,
+			double[][] scenarios, int sampleNum) {
+		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples2(distributions, sampleNum);
+			
+		int maxLostScenarioNum = (int) (sampleNum * (1 - serviceRate));
+		
+		double[] simuValues = new double[samples.length];
+		int T = samples[0].length;
+		CashState[] state = new CashState[samples.length];
+		Arrays.fill(state, iniState);
+		double[] optQ = new double[samples.length];
+		Arrays.fill(optQ, iniQ);
+		boolean[] countLostBefore = new boolean[samples.length];
+		boolean[] countBeforeBankrupt = new boolean[samples.length];
+		int lostSaleCount = 0;
+		for (int t = 0; t < T; t++) {			
+			double thisValue = 0;
+			for (int i = 0; i < samples.length; i++) {
+				double randomDemand = Math.round(samples[i][t]);
+				if (state[i].getIniInventory() + optQ[i] < randomDemand - 0.1 && countLostBefore[i] == false) {
+					lostSaleCount ++;
+					countLostBefore[i] = true;
+				}
+				
+				thisValue = state[i].iniCash + immediateValue.apply(state[i], optQ[i], randomDemand);
+				
+				if (thisValue < - 0.1 && countBeforeBankrupt[i] == false) {
+					simuValues[i] = 1;
+					countBeforeBankrupt[i] = true;
+				}
+				state[i] = stateTransition.apply(state[i], optQ[i], randomDemand);
+			}
+			double lostRate = (double) (maxLostScenarioNum - lostSaleCount) / (double) (sampleNum - lostSaleCount);
+			double updateServiceRate = 1 - lostRate;	
+							
+			for (int i = 0; i < samples.length; i++) {							
+				if (t < T -1) {
+					double nextServiceRate = countLostBefore[i] == true ? 0 : updateServiceRate; // very important
+					double iniCash = state[i].iniCash;
+					double iniI = state[i].getIniInventory();
+					double[] nextPrices = gettTArray(prices, t + 1);
+					int[] nextSampleNums = gettTArray(sampleNums, t + 1);
+					double[] nextVariCostUnits = gettTArray(variCostUnits, t + 1);
+					Distribution[] nexDistributions = gettTArray(distributions, t + 1);
+					double[] nextOverheadCosts = gettTArray(overheadCosts, t + 1);
+					double[][] nextScenarios = gettTArray(scenarios, t + 1);
+					LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
+						salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
+					double[] result = model.solveMaxSurvival();	
+					optQ[i] = result[0];
+				}		
+			}			
+		}
+
+		double simFinalValue = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
+		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;		
+		double[] result =  {simFinalValue, lostSaleRate};
+		return result;
+	}
+	
+	
+	/** simulate extended SAA for another lost sale updating
+	 * @param iniState
+	 * @param iniQ
+	 * @param serviceRate
+	 * @param sampleNums
+	 * @param prices
+	 * @param variCostUnits
+	 * @param overheadCosts
+	 * @param salvageValueUnit
+	 * @param holdCostUnit
+	 * @param scenarios
+	 * @param sampleNum
+	 * @return
+	 */
+	public double[] simulateExtendSAALostRate2(CashState iniState, double iniQ,  double serviceRate, 
+			int[] sampleNums, double[] prices, double[] variCostUnits, double[] overheadCosts, double salvageValueUnit, double holdCostUnit,
+			double[][] scenarios, int sampleNum) {
+		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples2(distributions, sampleNum);
+			
+		int maxLostScenarioNum = (int) (sampleNum * (1 - serviceRate));
+		
+		double[] simuValues = new double[samples.length];
+		int T = samples[0].length;
+		CashState[] state = new CashState[samples.length];
+		Arrays.fill(state, iniState);
+		double[] optQ = new double[samples.length];
+		Arrays.fill(optQ, iniQ);
+		boolean[] countLostBefore = new boolean[samples.length];
+		boolean[] countBeforeBankrupt = new boolean[samples.length];
+		
+		double[] periodServiceRate = new double[samples.length];
+		Arrays.fill(periodServiceRate, serviceRate);
+		
+		int lostSaleCount = 0;
+		for (int t = 0; t < T; t++) {			
+			double thisValue = 0;
+			for (int i = 0; i < samples.length; i++) {
+				double randomDemand = Math.round(samples[i][t]);
+				if (state[i].getIniInventory() + optQ[i] < randomDemand - 0.1 && countLostBefore[i] == false) {
+					lostSaleCount ++;
+					countLostBefore[i] = true;
+				}
+				
+				thisValue = state[i].iniCash + immediateValue.apply(state[i], optQ[i], randomDemand);				
+				if (thisValue < - 0.1 && countBeforeBankrupt[i] == false) {
+					simuValues[i] = 1;
+					countBeforeBankrupt[i] = true;
+				}
+				state[i] = stateTransition.apply(state[i], optQ[i], randomDemand);
+			}
+			double lostRate = (double) (maxLostScenarioNum - lostSaleCount) / (double) (sampleNum - lostSaleCount);
+			double updateServiceRate = Math.max(serviceRate, 1 - lostRate);	
+							
+			for (int i = 0; i < samples.length; i++) {							
+				if (t < T -1) {
+					double thisPeriodServRate = distributions[t].cdf(optQ[i] + state[i].getIniInventory());
+					periodServiceRate[i] = Math.max(updateServiceRate, thisPeriodServRate);
+					double nextServiceRate = countLostBefore[i] == true ? 0 : periodServiceRate[i]; //updateServiceRate; //very important
+					double iniCash = state[i].iniCash;
+					double iniI = state[i].getIniInventory();
+					double[] nextPrices = gettTArray(prices, t + 1);
+					int[] nextSampleNums = gettTArray(sampleNums, t + 1);
+					double[] nextVariCostUnits = gettTArray(variCostUnits, t + 1);
+					Distribution[] nexDistributions = gettTArray(distributions, t + 1);
+					double[] nextOverheadCosts = gettTArray(overheadCosts, t + 1);
+					double[][] nextScenarios = gettTArray(scenarios, t + 1);
+					LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
+						salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
+					double[] result = model.solveSort();
+					optQ[i] = result[0];
+				}		
+			}			
+		}
+
+		double simFinalValue = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
+		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;		
+		double[] result =  {simFinalValue, lostSaleRate};
+		return result;
+	}
+	
+	/**
+	 * simulate the extended SAA.
+	 * @param iniState
+	 * @param iniQ
+	 * @param serviceRate
+	 * @param sampleNums
+	 * @param prices
+	 * @param variCostUnits
+	 * @param overheadCosts
+	 * @param salvageValueUnit
+	 * @param holdCostUnit
+	 * @param scenarios
+	 * @param sampleNum
+	 * @return the final value with lost sale rate.
+	 */
+	public double[] simulateExtendSAALostRate(CashState iniState, double iniQ,  double serviceRate, 
+			int[] sampleNums, double[] prices, double[] variCostUnits, double[] overheadCosts, double salvageValueUnit, double holdCostUnit,
+			double[][] scenarios, int sampleNum) {
+		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
+		
+		double[] simuValues = new double[samples.length];
+		int T = samples[0].length;
+		int lostSaleCount = 0;
+		for (int i = 0; i < samples.length; i++) {
+			CashState state = iniState;
+			boolean countBeforeBankrupt = false;
+			boolean countLostBefore = false;
+			double thisValue = 0;
+			double optQ = 0;
+			double thisServiceRate = 1;
+			for (int t = 0; t < T; t++) {
+				if (t == 0) {
+					optQ = iniQ;
+					thisServiceRate = serviceRate;
+				}				
+				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
+				thisValue = state.iniCash + immediateValue.apply(state, optQ, randomDemand);
+				if (state.getIniInventory() + optQ < randomDemand - 0.1 && countLostBefore == false) {
+					lostSaleCount ++;
+					countLostBefore = true;
+				}
+				if (thisValue < - 0.1 && countBeforeBankrupt == false) {
+					simuValues[i] = 1;
+					countBeforeBankrupt = true;
+				}
+				if (t < T - 1) {
+					// revise
+					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
+					
+					double nextServiceRate = 0;
+					if (countLostBefore == true)
+						nextServiceRate = 0;
+					else {
+						nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+					} // very important
+					state = stateTransition.apply(state, optQ, randomDemand);
+					double iniCash = state.iniCash;
+					double iniI = state.getIniInventory();
+					double[] nextPrices = gettTArray(prices, t + 1);
+					int[] nextSampleNums = gettTArray(sampleNums, t + 1);
+					double[] nextVariCostUnits = gettTArray(variCostUnits, t + 1);
+					Distribution[] nexDistributions = gettTArray(distributions, t + 1);
+					double[] nextOverheadCosts = gettTArray(overheadCosts, t + 1);
+					double[][] nextScenarios = gettTArray(scenarios, t + 1);
+					LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
+							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
+//					double[] result = new double[3];
+//					try {
+//						result = model.solveSort();
+//					} catch (Exception e) {
+//						System.out.println(result);
+//					}
+					double[] result = model.solveSort();	
 					optQ = result[0];
 					thisServiceRate = nextServiceRate;
 				}			

@@ -85,6 +85,31 @@ public class Sampling {
 	public double[][] generateLHSamples(Distribution[] distributions, int sampleNum){
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum]; 
+		resetNextSubstream();
+		
+		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
+		for (int i = 0; i < periodNum; i++)
+			for (int j = 0; j < sampleNum; j++) {
+				double a = Math.random();
+				double randomNum = a / (double) sampleNum; //   UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double lowBound = (double) j/ (double) sampleNum;
+				samples[j][i] = lowBound + randomNum;
+				samples[j][i] = distributions[i].inverseF(samples[j][i]);
+			}
+		
+	    shuffle(samples); // 打乱数组
+		return samples;
+	}
+	
+	/** not change for each run
+	 * @param distributions
+	 * @param sampleNum
+	 * @return
+	 */
+	public double[][] generateLHSamples2(Distribution[] distributions, int sampleNum){
+		int periodNum = distributions.length;		
+		double[][] samples = new double[sampleNum][periodNum]; 
+		resetNextSubstream();
 		
 		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
 		for (int i = 0; i < periodNum; i++)
@@ -99,14 +124,45 @@ public class Sampling {
 		return samples;
 	}
 	
-	/** latin hypercube sampling
+	/** latin hypercube sampling,
+	 * ssj stream for generate random numbers is a little strange, always same every time.
 	 * @param distributions
 	 * @param sampleNum
 	 * @return a 2D random samples, in which the sample number in each period can be different;
-	 * each row is a period
+	 * each row is a period;
+	 * 
+	 * 
 	 */
 	public double[][] generateLHSamples(Distribution[] distributions, int[] sampleNums){
-		resetNextSubstream();
+		//resetNextSubstream();
+		
+		int periodNum = distributions.length;		
+		double[][] samples = new double[periodNum][]; 
+		
+		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
+		for (int i = 0; i < periodNum; i++) {
+			int sampleNum = sampleNums[i];
+			samples[i] = new double[sampleNum];
+			for (int j = 0; j < sampleNum; j++) {
+				double randomNum = Math.random() / (double) sampleNum; //UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double lowBound = (double) j/ (double) sampleNum;
+				samples[i][j] = lowBound + randomNum;
+				samples[i][j] = distributions[i].inverseF(samples[i][j]);
+			}
+		}
+		
+	    shuffle2(samples); // 打乱数组
+		return samples;
+	}
+	
+	
+	/** not change in each run
+	 * @param distributions
+	 * @param sampleNums
+	 * @return
+	 */
+	public double[][] generateLHSamples2(Distribution[] distributions, int[] sampleNums){
+		//resetNextSubstream();
 		
 		int periodNum = distributions.length;		
 		double[][] samples = new double[periodNum][]; 
@@ -126,6 +182,7 @@ public class Sampling {
 	    shuffle2(samples); // 打乱数组
 		return samples;
 	}
+
 	
 	/** latin hypercube sampling for binormal distribution.
 	 * 
@@ -145,7 +202,7 @@ public class Sampling {
 		for (int i = 0; i < periodNum; i++) {
 			NormalDist distribution1 = new NormalDist(distributions[i].getMu1(), distributions[i].getSigma1());
 			for (int j = 0; j < sampleNum; j++) {
-				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double randomNum = Math.random() / (double) sampleNum; //UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
 				double lowBound = (double) j/ (double) sampleNum;
 				samples1[j][i] = lowBound + randomNum;
 				samples1[j][i] = distribution1.inverseF(samples1[j][i]);
@@ -155,7 +212,7 @@ public class Sampling {
 		for (int i = 0; i < periodNum; i++) {
 			NormalDist distribution2 = new NormalDist(distributions[i].getMu2(), distributions[i].getSigma2());
 			for (int j = 0; j < sampleNum; j++) {
-				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double randomNum = Math.random() / (double) sampleNum; //UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
 				double lowBound = (double) j/ (double) sampleNum;
 				samples2[j][i] = lowBound + randomNum;
 				samples2[j][i] = distribution2.inverseF(samples2[j][i]);
@@ -232,7 +289,7 @@ public class Sampling {
 		// 在每个[i/n, (i+1)/n] 内生成一个随机概率，然后根据概率得到指定分布的数
 		for (int i = 0; i < periodNum; i++)
 			for (int j = 0; j < sampleNum; j++) {
-				double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+				double randomNum = Math.random() / (double) sampleNum; //UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
 				double lowBound = (double) j/ (double) sampleNum;
 				samples[j][i] = frac*(lowBound + randomNum);
 				samples[j][i] = distributions[i].inverseF(samples[j][i]);
@@ -286,7 +343,7 @@ public class Sampling {
 			for (int i = 0; i < sampleNum; i++) {
 				for (int j = 0; j < itemNum; j++)
 					for (int t = 0; t < T; t++) {
-						double randomNum = UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+						double randomNum = Math.random() / (double) sampleNum; //UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
 						double lowBound = (double) i / (double) sampleNum;
 						double ppf = lowBound + randomNum;
 						samples[i][j + t * itemNum] = Math.round(distributions[j][t].inverseF(ppf) * 1.0) / 1.0;

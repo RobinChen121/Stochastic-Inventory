@@ -13,6 +13,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+
 import cern.jet.random.Beta;
 import gurobi.GRB;
 import gurobi.GRBEnv;
@@ -164,7 +167,7 @@ public class LostSaleChance {
 		    // objective function, set objective
 		    expectFinalPositiveCashNum.clear();
 		    for (int s = 0; s < sampleNumTotal; s++) {
-		    	expectFinalPositiveCashNum.addTerm(100, z[s]); // make objective greater 
+		    	expectFinalPositiveCashNum.addTerm(1.0, z[s]); // make objective greater 
 		    }
 			model.setObjective(expectFinalPositiveCashNum, GRB.MAXIMIZE);
 			
@@ -249,7 +252,7 @@ public class LostSaleChance {
 			
 			// positive cash balance
 			M2 = iniCash + price[0] * M1; // prices are same
-			M3 = variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash;
+			M3 = iniI * holdCostUnit * T + variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash; // variCostUnit[0] * M1
 			
 			for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++){
@@ -348,7 +351,7 @@ public class LostSaleChance {
 			}	    
 			
 			result[0] = Q[0][0].get(GRB.DoubleAttr.X);
-			result[1] = model.get(GRB.DoubleAttr.ObjVal) / 100;
+			result[1] = model.get(GRB.DoubleAttr.ObjVal);
 			result[2] = Arrays.stream(betaValue).sum();
 			//System.out.println("negative cash scenario numbers in the SAA modelling results are " + negScenarioNum);
 			
@@ -356,7 +359,7 @@ public class LostSaleChance {
 			model.dispose();
 			env.dispose();
 		} catch (GRBException e) {
-			System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
+			//System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
 			result[0] = 0;
 			result[1] = 0;
 			result[2] = 0;
@@ -367,6 +370,7 @@ public class LostSaleChance {
 	/**
 	 * solve the chance SAA by sorting the scenarios,
 	 * this is an extended formualtion.
+	 * bidimap to map the value and key one-one correspondence;
 	 * @return
 	 */
 	public double[] solveSort() {
@@ -375,7 +379,7 @@ public class LostSaleChance {
 			int T = distributions.length;
 			int sampleNumTotal = IntStream.of(sampleNums).reduce(1, (a, b) -> a * b);
 			int negativeScenarioNumRequire = (int) (sampleNumTotal * (1 - serviceRate));
-			int p = negativeScenarioNumRequire;
+			int p = negativeScenarioNumRequire; //sampleNumTotal; 
 			
 			List<List<Integer>> Indexes = new ArrayList<>();
 			for (int t = 0; t < T; t++)
@@ -397,13 +401,19 @@ public class LostSaleChance {
 			GRBVar[][] Q = new GRBVar[T][sampleNumTotal];
 			GRBVar[][] delta = new GRBVar[T][sampleNumTotal]; // auxiliary variable
 			GRBVar[][] I = new GRBVar[T][sampleNumTotal];
-			for (int t = 0; t < T; t++) {
-				for (int s = 0; s < sampleNumTotal; s++) {
-					Q[t][s] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "Q");
-					delta[t][s] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, "delta");
-					I[t][s] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "I");
-				}
-			}
+			GRBVar[] beta = new GRBVar[sampleNumTotal];	// whether lost sale happens
+			GRBVar[][] alpha = new GRBVar[T][sampleNumTotal];	// auxiliary variable
+		    GRBVar[] z = new GRBVar[sampleNumTotal];	// auxiliary variable
+		    for (int s = 0; s < sampleNumTotal; s++) {
+		    	for (int t = 0; t < T; t++) {
+		    		Q[t][s] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "Q");
+		    		delta[t][s] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, "delta");
+		    		I[t][s] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "I");	
+		    		alpha[t][s] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, "alpha");
+		    	}
+		    	z[s] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "z");
+		    	beta[s] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "beta");
+		    }
 
 			// expression variables
 			GRBLinExpr[][] cash = new GRBLinExpr[T][sampleNumTotal];
@@ -412,7 +422,7 @@ public class LostSaleChance {
 			GRBLinExpr expectFinalCash = new GRBLinExpr();		
 			
 			M2 = iniCash + price[0] * M1; // prices are same
-			M3 = variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash;
+			M3 = holdCostUnit * T * iniI + variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash;
 			
 			// cash flow
 		    for (int t = 0; t < T; t++) 
@@ -449,11 +459,12 @@ public class LostSaleChance {
 		    	}
 		    
 		    // objective function, set objective
-		    expectFinalCash.clear();
+		    GRBLinExpr expectFinalPositiveCashNum = new GRBLinExpr();
+		    expectFinalPositiveCashNum.clear();
 		    for (int s = 0; s < sampleNumTotal; s++) {
-		    	expectFinalCash.multAdd(1.0/sampleNumTotal, cash[T - 1][s]);
+		    	expectFinalPositiveCashNum.addTerm(1.0, z[s]); // make objective greater 
 		    }
-			model.setObjective(expectFinalCash, GRB.MAXIMIZE);
+			model.setObjective(expectFinalPositiveCashNum, GRB.MAXIMIZE);
 			
 			// choose maximum sum of demand in T periods as M1
 			M1 = 0;
@@ -471,28 +482,42 @@ public class LostSaleChance {
 			// inventory flow			
 			for (int t = 0; t < T; t++) {	
 				
+				Integer[] tScenarioIndex = IntStream.iterate(0, i->i+1).limit(sampleNumTotal).boxed().toArray(Integer[]::new);
+				Integer[] tScenarioSortIndex = IntStream.iterate(0, i->i+1).limit(sampleNumTotal).boxed().toArray(Integer[]::new);			
 				// sort the scenarios in each period
 				final int period = t;
-				Comparator<List<Integer>> comparator = (o1, o2) -> {
+				Comparator<Integer> comparator = (o1, o2) -> {
 					int thissSumD1 = 0; int thissSumD2 = 0;
-					for (int m = 0; m < period; m++) {
-						thissSumD1 += o1.get(m);
-						thissSumD2 += o1.get(m);
+					for (int m = 0; m <= period; m++) {
+						double demand1 = scenarios[m][scenarioIndexes.get(o1).get(m)];
+						thissSumD1 += demand1;
+						double demand2 = scenarios[m][scenarioIndexes.get(o2).get(m)];
+						thissSumD2 += demand2;
 					}
 					if (thissSumD1 < thissSumD2) // descending
 						return 1;
-					else if (thissSumD1 > thissSumD2)
+					else if (thissSumD1 > thissSumD2)// 返回负数表示排在上面，返回正数表示排在下面
 						return -1;
 					else {
 						return 0;
 					}
 				};				
-				Collections.sort(scenarioIndexes, comparator);
+				Arrays.sort(tScenarioSortIndex, comparator);
+				BidiMap<Integer, Integer> bMap = new DualHashBidiMap<Integer, Integer>();
+				for (int s = 0; s < sampleNumTotal; s++) {
+					int index = tScenarioSortIndex[s];
+					bMap.put(index, s);
+				}
 				
 		    	for (int s = 0; s < sampleNumTotal; s++) {
-		    		double demand = scenarioIndexes.get(s).get(t);
-		    		if (s < p) {
-		    			model.addConstr(delta[t][s], GRB.GREATER_EQUAL, delta[t][s+1], "deltaConstraint");
+		    		int sIndex = scenarioIndexes.get(s).get(t);
+		    		double demand = scenarios[t][sIndex];
+		    		int thisSSortIndex = bMap.get(s);
+		    		if (thisSSortIndex < p) {
+		    			if (p < sampleNumTotal) {
+		    				int index2 = bMap.getKey(bMap.get(s)+1);		    			
+		    				model.addConstr(delta[t][s], GRB.GREATER_EQUAL, delta[t][index2], "deltaConstraint");
+		    			}
 			    		if (t == 0) {
 			    			GRBLinExpr rightExpr1 = new GRBLinExpr();
 			    			rightExpr1.addConstant(iniI); rightExpr1.addTerm(1, Q[t][s]); 
@@ -547,46 +572,51 @@ public class LostSaleChance {
 							rightExpr1.addTerm(1, I[t-1][s]); rightExpr1.addTerm(1, Q[t][s]); 
 			    			rightExpr1.addConstant(-demand); 	
 						}
-						model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr1, "IConstraint1");	
+						model.addConstr(I[t][s], GRB.EQUAL, rightExpr1, "IConstraint1");	
 					}
 		    	}
 			}
 			
 			// chance constraint
-//		    GRBVar[] alpha = new GRBVar[sampleNumTotal];	// whether cash balance is negative in this scenario
-//		    for (int s = 0; s < sampleNumTotal; s++) {
-//		    	alpha[s] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "alpha");
-//		    }
-//			GRBLinExpr sumAlpha = new GRBLinExpr();
-//			sumAlpha.clear();
-//			for (int s = 0; s < sampleNumTotal; s++) {
-//				sumAlpha.addTerm(1, alpha[s]);
-//			}
-//			model.addConstr(sumAlpha, GRB.LESS_EQUAL, negativeScenarioNumRequire, "ChanceConstraint1");
+			for (int s = 0; s < sampleNumTotal; s++) {
+				for (int t = 0; t < T; t++) {
+					model.addConstr(delta[t][s], GRB.LESS_EQUAL, beta[s], "ChanceConstraint1");
+				}
+			}
+
+			GRBLinExpr sumBeta = new GRBLinExpr();
+			for (int s = 0; s < sampleNumTotal; s++) {
+				sumBeta.addTerm(1, beta[s]);
+			}
+			model.addConstr(sumBeta, GRB.LESS_EQUAL, negativeScenarioNumRequire, "ChanceConstraint2");
+
+			// positive cash balance
+			M2 = iniCash + price[0] * M1; // prices are same
+			M3 = variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash;
+						
 			for (int t = 0; t < T; t++) 
-		    	for (int s = 0; s < sampleNumTotal; s++) {
-//		    		if(t == 0) {
-//	    				minCash[t][s].addConstant(iniCash); 
-//	    				minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
-//	    				// minCash[t][s].addConstant(-overheadCost[t]);
-//	    			}
-//	    			else {
-//	    				minCash[t][s].multAdd(1, cash[t-1][s]); 
-//	    				minCash[t][s].addTerm(-variCostUnit, Q[t][s]);
-////	    			// minCash[t][s].addConstant(-overheadCost[t]);
-//					}
-		    		minCash[t][s].multAdd(1, cash[t][s]); 
-		    		
+		    	for (int s = 0; s < sampleNumTotal; s++){
+//		    		model.addGenConstrIndicator(alpha[t][s], 1, cash[t][s], GRB.GREATER_EQUAL, 0, null);
+//		    		model.addGenConstrIndicator(alpha[t][s], 0, cash[t][s], GRB.LESS_EQUAL, 0, null);
 		    		GRBLinExpr rightExpr = new GRBLinExpr();
-		    		if (s < negativeScenarioNumRequire) { // no =
-		    			rightExpr.addConstant(-M2);
-		    		}
-		    			
-		    		else {
-						rightExpr.clear();
-					}
-		    		model.addConstr(minCash[t][s], GRB.GREATER_EQUAL, rightExpr, "ChanceConstraint2");
+		    		rightExpr.addTerm(M2, alpha[t][s]);
+		    		model.addConstr(cash[t][s], GRB.LESS_EQUAL, rightExpr, "CashConstraint1");
+		    		rightExpr.clear();
+		    		rightExpr.addConstant(-M3); rightExpr.addTerm(M3, alpha[t][s]);
+		    		model.addConstr(cash[t][s], GRB.GREATER_EQUAL, rightExpr, "CashConstraint4");
 		    	}
+			
+			for (int s = 0; s < sampleNumTotal; s++) {
+				GRBLinExpr leftExpr = new GRBLinExpr();
+    			leftExpr.addTerm(-1, z[s]); leftExpr.addConstant(1);
+    			GRBLinExpr rightExpr = new GRBLinExpr();
+    			//rightExpr.clear();
+		    	for (int t = 0; t < T; t++){		    
+		    		model.addConstr(z[s], GRB.LESS_EQUAL, alpha[t][s], "CashConstraint3");
+		    		rightExpr.addTerm(-1, alpha[t][s]);  rightExpr.addConstant(1);
+		    	}
+		    	model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "CashConstraint2");
+			}
 			
 			// first-stage decision, here and now decision
 			for (int s = 0; s < sampleNumTotal - 1; s++) {
@@ -597,8 +627,8 @@ public class LostSaleChance {
 		    model.optimize();
 		    
 		    int negScenarioNum = 0;
-		    double[] alphaValue = new double[sampleNumTotal];
-		    
+		    double[] zValue = new double[sampleNumTotal];
+		    double[] betaValue = new double[sampleNumTotal];
 			try {
 				BufferedWriter out = new BufferedWriter(new FileWriter("detail-results.txt"));
 				out.write("ordering quantity and each scenario: \n");
@@ -615,27 +645,34 @@ public class LostSaleChance {
 				out.write("cash balance in each period and each scenario: \n");
 				for (int s = 0; s < sampleNumTotal; s++) {
 					out.write("scenario " + s + ": \n");
-					for (int t = 0; t < T; t++) 
+					int thissNegative = 0; 
+					for (int t = 0; t < T; t++) {
 						out.write(String.format("%.1f  ", cash[t][s].getValue()));
-//					alphaValue[s] = alpha[s].get(GRB.DoubleAttr.X);
+						if (cash[t][s].getValue() < -1)
+							thissNegative = 1;
+					}
+					negScenarioNum += thissNegative;
+					zValue[s] = z[s].get(GRB.DoubleAttr.X);
 					out.newLine();
 				}
 				out.newLine();
 				out.newLine();
 				out.newLine();
 				out.write("***************************************************\n");
-				out.write("min cash balance in each period and each scenario: \n");
+				out.write("alpha in each period and each scenario: \n");
 				for (int s = 0; s < sampleNumTotal; s++) {
 					out.write("scenario " + s + ": \n");
-					int recordBefore = 0;
-					for (int t = 0; t < T; t++) {
-						out.write(String.format("%.1f  ", minCash[t][s].getValue()));
-						if (recordBefore == 0 && minCash[t][s].getValue() < -0.1 ){ // a minus value to count correctly
-							negScenarioNum++;
-							recordBefore = 1;
-						}
-					}
+					for (int t = 0; t < T; t++) 
+						out.write(String.format("%.1f  ", alpha[t][s].get(GRB.DoubleAttr.X)));
 					out.newLine();
+				}
+				out.newLine();
+				out.newLine();
+				out.newLine();
+				out.write("***************************************************\n");
+				out.write("z in each scenario: \n");
+				for (int s = 0; s < sampleNumTotal; s++) {
+					out.write(String.format("%.1f  ", z[s].get(GRB.DoubleAttr.X)));	
 				}
 				out.newLine();
 				out.newLine();
@@ -647,25 +684,22 @@ public class LostSaleChance {
 			    	for (int t = 0; t < T; t++)
 			    		out.write(String.format("%.1f  ", I[t][s].get(GRB.DoubleAttr.X)));
 			    	out.newLine();
+			    	betaValue[s] = beta[s].get(GRB.DoubleAttr.X);
 			    }
 				out.close();
 			} catch (IOException e) {				
 			}	    
-		    
-//			System.out.println();
-//			System.out.println("negative scenario number in the solution is : " + negScenarioNum);
-//			System.out.println("maximum negative scenario number required is: " + negativeScenarioNumRequire);
-//			System.out.println("total scenario number is : " + sampleNumTotal);
 			
 			result[0] = Q[0][0].get(GRB.DoubleAttr.X);
 			result[1] = model.get(GRB.DoubleAttr.ObjVal);
-			result[2] = negScenarioNum;
+			result[2] = Arrays.stream(betaValue).sum();
+			//System.out.println("negative cash scenario numbers in the SAA modelling results are " + negScenarioNum);
 			
 			// Dispose of model and environment
 			model.dispose();
 			env.dispose();
 		} catch (GRBException e) {
-			System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
+			//System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
 			result[0] = 0;
 			result[1] = 0;
 			result[2] = 0;
