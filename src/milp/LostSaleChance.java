@@ -370,6 +370,7 @@ public class LostSaleChance {
 	/**
 	 * solve the chance SAA by sorting the scenarios,
 	 * this is an extended formualtion.
+	 * there is a binary variable in each period and each scenario.
 	 * bidimap to map the value and key one-one correspondence;
 	 * @return
 	 */
