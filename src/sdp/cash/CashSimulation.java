@@ -496,6 +496,155 @@ public class CashSimulation {
 		return result;
 	}
 	
+	
+	/**
+	 * simulate the extended SAA.
+	 * @param iniState
+	 * @param iniQ
+	 * @param serviceRate
+	 * @param sampleNums
+	 * @param prices
+	 * @param variCostUnits
+	 * @param overheadCosts
+	 * @param salvageValueUnit
+	 * @param holdCostUnit
+	 * @param scenarios
+	 * @param sampleNum
+	 * @return the final value with lost sale rate.
+	 */
+	public double[] simulateFurtherExtendSAALostRate(CashState iniState, double iniQ,  double serviceRate, 
+			int[] sampleNums, double[] prices, double[] variCostUnits, double[] overheadCosts, double salvageValueUnit, double holdCostUnit,
+			double[][] scenarios, int sampleNum) {
+		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
+		
+		double[] simuValues = new double[samples.length];
+		int T = samples[0].length;
+		int lostSaleCount = 0;
+		for (int i = 0; i < samples.length; i++) {
+			CashState state = iniState;
+			boolean countBeforeBankrupt = false;
+			boolean countLostBefore = false;
+			double thisValue = 0;
+			double optQ = 0;
+			double thisServiceRate = 1;
+			for (int t = 0; t < T; t++) {
+				if (t == 0) {
+					optQ = iniQ;
+					thisServiceRate = serviceRate;
+				}				
+				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
+				thisValue = state.iniCash + immediateValue.apply(state, optQ, randomDemand);
+				if (state.getIniInventory() + optQ < randomDemand - 0.1 && countLostBefore == false) {
+					lostSaleCount ++;
+					countLostBefore = true;
+				}
+				if (thisValue < - 0.1 && countBeforeBankrupt == false) {
+					simuValues[i] = 1;
+					countBeforeBankrupt = true;
+				}
+				if (t < T - 1) {
+					// revise
+					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
+					
+					double nextServiceRate = 0;
+					if (countLostBefore == true)
+						nextServiceRate = 0;
+					else {
+						nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+					} // very important
+					state = stateTransition.apply(state, optQ, randomDemand);
+					double iniCash = state.iniCash;
+					double iniI = state.getIniInventory();
+					double[] nextPrices = gettTArray(prices, t + 1);
+					int[] nextSampleNums = gettTArray(sampleNums, t + 1);
+					double[] nextVariCostUnits = gettTArray(variCostUnits, t + 1);
+					Distribution[] nexDistributions = gettTArray(distributions, t + 1);
+					double[] nextOverheadCosts = gettTArray(overheadCosts, t + 1);
+					double[][] nextScenarios = gettTArray(scenarios, t + 1);
+					LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
+							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
+					double[] result = model.solveSortFurther();	
+					optQ = result[0];
+					thisServiceRate = nextServiceRate;
+				}			
+			}
+		}
+
+		double simFinalValue = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
+		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;		
+		double[] result =  {simFinalValue, lostSaleRate};
+		return result;
+	}
+	
+	
+	public double[] simulateFurtherExtendSAALostRate2(CashState iniState, double iniQ,  double serviceRate, 
+			int[] sampleNums, double[] prices, double[] variCostUnits, double[] overheadCosts, double salvageValueUnit, double holdCostUnit,
+			double[][] scenarios, int sampleNum) {
+		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
+		
+		double[] simuValues = new double[samples.length];
+		int T = samples[0].length;
+		int lostSaleCount = 0;
+		for (int i = 0; i < samples.length; i++) {
+			CashState state = iniState;
+			boolean countBeforeBankrupt = false;
+			boolean countLostBefore = false;
+			double thisValue = 0;
+			double optQ = 0;
+			double thisServiceRate = 1;
+			for (int t = 0; t < T; t++) {
+				if (t == 0) {
+					optQ = iniQ;
+					thisServiceRate = serviceRate;
+				}				
+				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
+				thisValue = state.iniCash + immediateValue.apply(state, optQ, randomDemand);
+				if (state.getIniInventory() + optQ < randomDemand - 0.1 && countLostBefore == false) {
+					lostSaleCount ++;
+					countLostBefore = true;
+				}
+				if (thisValue < - 0.1 && countBeforeBankrupt == false) {
+					simuValues[i] = 1;
+					countBeforeBankrupt = true;
+				}
+				if (t < T - 1) {
+					// revise
+					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
+					
+					double nextServiceRate = 0;
+					if (countLostBefore == true)
+						nextServiceRate = 0;
+					else {
+						nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+					} // very important
+					state = stateTransition.apply(state, optQ, randomDemand);
+					double iniCash = state.iniCash;
+					double iniI = state.getIniInventory();
+					double[] nextPrices = gettTArray(prices, t + 1);
+					int[] nextSampleNums = gettTArray(sampleNums, t + 1);
+					double[] nextVariCostUnits = gettTArray(variCostUnits, t + 1);
+					Distribution[] nexDistributions = gettTArray(distributions, t + 1);
+					double[] nextOverheadCosts = gettTArray(overheadCosts, t + 1);
+					double[][] nextScenarios = gettTArray(scenarios, t + 1);
+					LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
+							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
+					double[] result = model.solveSortFurther2();	
+					optQ = result[0];
+					thisServiceRate = nextServiceRate;
+				}			
+			}
+		}
+
+		double simFinalValue = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
+		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;		
+		double[] result =  {simFinalValue, lostSaleRate};
+		return result;
+	}
+	
 
 	/**
 	 * 
