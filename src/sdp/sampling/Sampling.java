@@ -136,7 +136,7 @@ public class Sampling {
 	public double[][] generateLHSamples(Distribution[] distributions, int[] sampleNums){
 		//resetNextSubstream();
 		
-		int periodNum = distributions.length;		
+		int periodNum = sampleNums.length;		
 		double[][] samples = new double[periodNum][]; 
 		
 		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		

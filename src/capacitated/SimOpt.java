@@ -6,8 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
+import sdp.inventory.GetPmf;
 import sdp.sampling.Sampling;
+import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
@@ -177,16 +180,36 @@ public class SimOpt {
 	}
 
 	public static void runSingleCase() {
-		double fixOrderCost = 500;
-		double variOrderCost = 2;
-		double penaltyCost = 20;
-		double holdingCost = 1;
-		int maxOrderQuantity = 60;
+//		double fixOrderCost = 500;
+//		double variOrderCost = 2;
+//		double penaltyCost = 20;
+//		double holdingCost = 1;
+//		int maxOrderQuantity = 60;
 
-		double demand[] = { 20, 20, 20, 20, 20, 20, 20, 20, 20, 20 };
-		Distribution[] distributions = new Distribution[demand.length];
-		for (int i = 0; i < demand.length; i++)
-			distributions[i] = new PoissonDist(demand[i]);
+//		double demand[] = { 20, 20, 20, 20, 20, 20, 20, 20, 20, 20 };
+//		Distribution[] distributions = new Distribution[demand.length];
+//		for (int i = 0; i < demand.length; i++)
+//			distributions[i] = new PoissonDist(demand[i]);
+		
+		double fixOrderCost = 250;
+		double variOrderCost = 0;
+		double penaltyCost = 26;
+		double holdingCost = 1;
+		int maxOrderQuantity = 41;
+		boolean isForDrawGy = true;
+		
+		double truncationQuantile = 0.9999;
+		double stepSize = 1;
+		double minInventory = -500;
+		double maxInventory = 500;
+		
+		int T = 4;
+		double[][] values = {{34, 159, 281, 286}, {14, 223, 225, 232}, {5, 64, 115, 171}, {35, 48, 145, 210}};
+		double[][] probs = {{0.018, 0.888, 0.046, 0.048}, {0.028, 0.271, 0.17, 0.531}, {0.041, 0.027, 0.889, 0.043}, {0.069, 0.008, 0.019, 0.904}};
+		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+		.mapToObj(i -> new DiscreteDistribution(values[i], probs[i], values[i].length)) // can be changed to other distributions
+		.toArray(DiscreteDistribution[]::new);	
+		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 
 		SimOpt simOpt = new SimOpt(fixOrderCost, variOrderCost, penaltyCost, holdingCost, distributions,
 				maxOrderQuantity);
@@ -194,7 +217,7 @@ public class SimOpt {
 		double[] stats = simOpt.simulate();
 		System.out.println(stats[0] + " " + stats[1]);
 		double time = (System.currentTimeMillis() - currTime1) / 1000;
-		System.out.println("running time is " + time + " GetPmf");
+		System.out.println("running time is " + time + " s");
 	}
 
 	public static void runMultiCases() {
@@ -251,7 +274,7 @@ public class SimOpt {
 	}
 
 	public static void main(String[] args) {
-		// runSingleCase();
+//		runSingleCase();
 		runMultiCases();
 	}
 

@@ -168,12 +168,12 @@ public class CLSP {
 	      double maxState = 300;
 	      int T = meanDemand.length;
 
-	      double fixedOrderingCost = 100; 
+	      double fixedOrderingCost = 250; 
 	      double proportionalOrderingCost = 0; 
 	      double holdingCost = 1;
-	      double penaltyCost = 10;
+	      double penaltyCost = 26;
 	      
-	      int maxOrderQuantity = 100;
+	      int maxOrderQuantity = 41;
 	      
 	      Distribution[] distributions = IntStream.iterate(0, i -> i + 1)
 	                                              .limit(T)

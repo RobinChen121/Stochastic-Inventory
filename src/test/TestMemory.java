@@ -3,6 +3,8 @@
  */
 package test;
 
+import java.util.stream.IntStream;
+
 /**
  * @author: Zhen Chen
  * @email: 15011074486@163.com
@@ -18,8 +20,12 @@ public class TestMemory {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		int[][] test = new int[122281250][3];
-		System.out.println("this test");
+//		int[][] test = new int[122281250][3];
+//		System.out.println("this test");
+		
+		int[] a = {1, 2, 3, 4};
+		int b = IntStream.of(a).skip(4).reduce(1, (x, y) -> x*y);
+		System.out.println(b);
 
 	}
 

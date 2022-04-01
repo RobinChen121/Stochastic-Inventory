@@ -32,10 +32,9 @@ import umontreal.ssj.probdist.Distribution;
  * @author chen
  * @email: okchen321@163.com
  * @date: 2021 Jun 24, 13:48:27  
- * @desp: calling gurobi in java to solve the chance-constrained problems/
+ * @desp: calling gurobi in java to solve the chance-constrained problems
  * 
- * the result is not good as expected, because the probability of non negative cash changes dramatically from
- * small to large.
+ * the lost sale rate is a joint chance constraint. 
  *
  */
 public class LostSaleChance {
@@ -73,7 +72,8 @@ public class LostSaleChance {
 	
 	
 	/**
-	 * samples in each period form a scenario tree
+	 * initial SAA model for the joint chance problem.
+	 * samples in each period form a scenario tree.
 	 * @return survival probability
 	 */
 	public double[] solveMaxSurvival() {
@@ -88,13 +88,13 @@ public class LostSaleChance {
 			for (int t = 0; t < T; t++)
 				Indexes.add(IntStream.iterate(0, i -> i + 1).limit(sampleNums[t]).boxed().collect(Collectors.toList()));
 			CartesianProduct<Integer> CP = new CartesianProduct<>();
-			List<List<Integer>> scenarioIndexes = CP.product(Indexes);				
+			List<List<Integer>> scenarioIndexes = CP.product(Indexes); // too slow when T >= 10		
 			
 			// use Gurobi to solve the mip model
 			// Create empty environment, set options, and start
 			GRBEnv env = new GRBEnv(true);
 			
-			env.set("logFile", "mip-chance.log");
+			//env.set("logFile", "mip-chance.log");
 			env.start();
 
 			// Create empty model
@@ -128,6 +128,19 @@ public class LostSaleChance {
 		    GRBLinExpr expectFinalPositiveCashNum = new GRBLinExpr();
 		    
 		    // cash flow
+			// choose maximum sum of demand in T periods as M1
+			M1 = 0;
+			for (int s = 0; s < sampleNumTotal; s++) {
+				double thissSumD = 0;
+				for (int t = 0; t < T; t++) {
+					int sIndex = scenarioIndexes.get(s).get(t);
+					thissSumD += scenarios[t][sIndex];
+				}
+				if (thissSumD > M1)
+					M1 = thissSumD;
+			}
+			M2 = iniCash + price[0] * M1; // prices are same
+			M3 = iniI * holdCostUnit * T + variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash; // variCostUnit[0] * M1
 		    for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++) {
 		    		revenue[t][s] = new GRBLinExpr();
@@ -172,17 +185,7 @@ public class LostSaleChance {
 			model.setObjective(expectFinalPositiveCashNum, GRB.MAXIMIZE);
 			
 			
-			// choose maximum sum of demand in T periods as M1
-			M1 = 0;
-			for (int s = 0; s < sampleNumTotal; s++) {
-				double thissSumD = 0;
-				for (int t = 0; t < T; t++) {
-					int sIndex = scenarioIndexes.get(s).get(t);
-					thissSumD += scenarios[t][sIndex];
-				}
-				if (thissSumD > M1)
-					M1 = thissSumD;
-			}
+
 			//M1 = M1 + iniI;
 			
 			// Add constraint
@@ -250,16 +253,14 @@ public class LostSaleChance {
 			}
 			model.addConstr(sumBeta, GRB.LESS_EQUAL, negativeScenarioNumRequire, "ChanceConstraint2");
 			
-			// positive cash balance
-			M2 = iniCash + price[0] * M1; // prices are same
-			M3 = iniI * holdCostUnit * T + variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash; // variCostUnit[0] * M1
+
 			
 			for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++){
 //		    		model.addGenConstrIndicator(alpha[t][s], 1, cash[t][s], GRB.GREATER_EQUAL, 0, null);
 //		    		model.addGenConstrIndicator(alpha[t][s], 0, cash[t][s], GRB.LESS_EQUAL, 0, null);
 		    		GRBLinExpr rightExpr = new GRBLinExpr();
-		    		rightExpr.addTerm(M2, alpha[t][s]);
+		    		rightExpr.addTerm(M2, alpha[t][s]); rightExpr.addConstant(-2); // add a constant to avoid survival probs too big
 		    		model.addConstr(cash[t][s], GRB.LESS_EQUAL, rightExpr, "CashConstraint1");
 		    		rightExpr.clear();
 		    		rightExpr.addConstant(-M3); rightExpr.addTerm(M3, alpha[t][s]);
@@ -284,6 +285,7 @@ public class LostSaleChance {
 			}
 			
 			// Optimize model
+			//model.set(GRB.DoubleParam.TimeLimit, 3600); // set time limit for gurobi
 		    model.optimize();
 		    
 		    int negScenarioNum = 0;
@@ -369,12 +371,13 @@ public class LostSaleChance {
 	
 	/**
 	 * solve the chance SAA by sorting the scenarios,
-	 * this is an extended formualtion.
+	 * this is an extended formulation:sort the scenario in each period.
 	 * there is a binary variable in each period and each scenario.
 	 * bidimap to map the value and key one-one correspondence;
+	 * there is delta inequality constraint.
 	 * @return
 	 */
-	public double[] solveSort() {
+	public double[] solveSortEach() {
 		double[] result = new double[3];
 		try {
 			int T = distributions.length;
@@ -391,7 +394,7 @@ public class LostSaleChance {
 			// use Gurobi to solve the mip model
 			// Create empty environment, set options, and start
 			GRBEnv env = new GRBEnv(true);
-			env.set("logFile", "mip-chance.log");
+			//env.set("logFile", "mip-chance.log");
 			env.start();
 
 			// Create empty model
@@ -490,7 +493,7 @@ public class LostSaleChance {
 				
 				Integer[] tScenarioIndex = IntStream.iterate(0, i->i+1).limit(sampleNumTotal).boxed().toArray(Integer[]::new);
 				Integer[] tScenarioSortIndex = IntStream.iterate(0, i->i+1).limit(sampleNumTotal).boxed().toArray(Integer[]::new);			
-				// sort the scenarios in each period
+				// sort the scenarios in each period, return the index of sorted scenarios
 				final int period = t;
 				Comparator<Integer> comparator = (o1, o2) -> {
 					int thissSumD1 = 0; int thissSumD2 = 0;
@@ -519,7 +522,7 @@ public class LostSaleChance {
 		    		int sIndex = scenarioIndexes.get(s).get(t);
 		    		double demand = scenarios[t][sIndex];
 		    		int thisSSortIndex = bMap.get(s);
-		    		if (thisSSortIndex < p) {
+		    		if (thisSSortIndex < p) { // delta inequality constraint
 		    			if (p < sampleNumTotal) {
 		    				int index2 = bMap.getKey(bMap.get(s)+1);		    			
 		    				model.addConstr(delta[t][s], GRB.GREATER_EQUAL, delta[t][index2], "deltaConstraint");
@@ -716,7 +719,11 @@ public class LostSaleChance {
 	
 	
 	
-	public double[] solveSortFurther() {
+	/**
+	 * sort the scenarios in the whole planning horizon, not in the single period.
+	 * @return
+	 */
+	public double[] solveSortWhole() {
 		double[] result = new double[3];
 		try {
 			int T = distributions.length;
@@ -736,7 +743,7 @@ public class LostSaleChance {
 					sum1 += o1.get(t)*price[t];
 					sum2 += o2.get(t)*price[t];
 				}
-				if (sum1 < sum2)
+				if (sum1 < sum2) // 返回负数表示排在上面，返回正数表示排在下面
 					return 1;
 				else if(sum1 > sum2)
 					return -1;
@@ -749,7 +756,7 @@ public class LostSaleChance {
 			// use Gurobi to solve the mip model
 			// Create empty environment, set options, and start
 			GRBEnv env = new GRBEnv(true);
-			env.set("logFile", "mip-chance.log");
+			//env.set("logFile", "mip-chance.log");
 			env.start();
 
 			// Create empty model
@@ -781,54 +788,9 @@ public class LostSaleChance {
 
 			// expression variables
 			GRBLinExpr[][] cash = new GRBLinExpr[T][sampleNumTotal];
-			GRBLinExpr[][] minCash = new GRBLinExpr[T][sampleNumTotal];
+//			GRBLinExpr[][] minCash = new GRBLinExpr[T][sampleNumTotal];
 			GRBLinExpr[][] revenue = new GRBLinExpr[T][sampleNumTotal];
-			GRBLinExpr expectFinalCash = new GRBLinExpr();		
-			
-			M2 = iniCash + price[0] * M1; // prices are same
-			M3 = holdCostUnit * T * iniI + variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash;
-			
-			// cash flow
-		    for (int t = 0; t < T; t++) 
-		    	for (int s = 0; s < sampleNumTotal; s++) {
-		    		revenue[t][s] = new GRBLinExpr();
-		    		cash[t][s] = new GRBLinExpr();
-		    		minCash[t][s] = new GRBLinExpr();
-		    		if (t == 0 && T > 1) {
-		    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
-		    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
-		    			cash[t][s].addTerm(-variCostUnit[t], Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
-		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
-		    		}
-		    		else if (t == 0 && T == 1) {
-		    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
-		    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
-		    			cash[t][s].addTerm(-variCostUnit[t], Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
-		    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
-		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
-					}
-		    		else if (t == T - 1 && T > 1) {
-		    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
-		    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
-		    			cash[t][s].addTerm(-variCostUnit[t], Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
-		    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
-		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
-					}
-		    		else {
-		    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
-		    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
-		    			cash[t][s].addTerm(-variCostUnit[t], Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);	
-		    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
-		    		}	    			
-		    	}
-		    
-		    // objective function, set objective
-		    GRBLinExpr expectFinalPositiveCashNum = new GRBLinExpr();
-		    expectFinalPositiveCashNum.clear();
-		    for (int s = 0; s < sampleNumTotal; s++) {
-		    	expectFinalPositiveCashNum.addTerm(1.0, z[s]); // make objective greater 
-		    }
-			model.setObjective(expectFinalPositiveCashNum, GRB.MAXIMIZE);
+//			GRBLinExpr expectFinalCash = new GRBLinExpr();		
 			
 			// choose maximum sum of demand in T periods as M1
 			M1 = 0;
@@ -840,6 +802,76 @@ public class LostSaleChance {
 				if (thissSumD > M1)
 					M1 = thissSumD;
 			}
+			M2 = iniCash + price[0] * M1; // prices are same
+			M3 = holdCostUnit * T * iniI + variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash;
+			
+			// cash flow
+		    for (int t = 0; t < T; t++) 
+		    	for (int s = 0; s < sampleNumTotal; s++) {
+		    		revenue[t][s] = new GRBLinExpr();
+		    		cash[t][s] = new GRBLinExpr();
+//		    		minCash[t][s] = new GRBLinExpr();
+//		    		if (s < p) {
+			    		if (t == 0 && T > 1) {
+			    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
+			    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
+			    			cash[t][s].addTerm(-variCostUnit[t], Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
+			    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
+			    		}
+			    		else if (t == 0 && T == 1) {
+			    			revenue[t][s].addConstant(price[t] * iniI); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
+			    			cash[t][s].addConstant(iniCash); cash[t][s].add(revenue[t][s]); 
+			    			cash[t][s].addTerm(-variCostUnit[t], Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
+			    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
+			    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
+						}
+			    		else if (t == T - 1 && T > 1) {
+			    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
+			    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
+			    			cash[t][s].addTerm(-variCostUnit[t], Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);
+			    			cash[t][s].addTerm(salvageValueUnit, I[t][s]);
+			    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
+						}
+			    		else {
+			    			revenue[t][s].addTerm(price[t], I[t-1][s]); revenue[t][s].addTerm(price[t], Q[t][s]); revenue[t][s].addTerm(-price[t], I[t][s]);
+			    			cash[t][s].multAdd(1, cash[t-1][s]); cash[t][s].add(revenue[t][s]); 
+			    			cash[t][s].addTerm(-variCostUnit[t], Q[t][s]); cash[t][s].addConstant(-overheadCost[t]);	
+			    			cash[t][s].addTerm(-holdCostUnit, I[t][s]);
+			    		}	    	
+		    		}
+//		    		else { // 库存持有成本计算时还需要修改，要累加
+//		    			GRBLinExpr HIts = new GRBLinExpr();
+//		    			GRBLinExpr salValue = new GRBLinExpr();
+//		    			cash[t][s].addConstant(iniCash); 
+////		    			HIts.addConstant(-holdCostUnit*iniI); 
+//		    			salValue.addConstant(salvageValueUnit*iniI); 
+//		    			double pD = 0;
+//		    			for (int k = 0; k <= t; k++) {
+//		    				double demand = listScenariosAll.get(s).get(k);
+//		    				pD = price[k]*demand;
+//		    				cash[t][s].addConstant(pD);
+//		    				cash[t][s].addTerm(-variCostUnit[k], Q[k][s]);
+//		    				cash[t][s].addConstant(-overheadCost[k]);
+////		    				HIts.addTerm(-holdCostUnit, Q[k][s]);
+////		    				HIts.addConstant(demand*holdCostUnit);
+//		    				salValue.addTerm(salvageValueUnit, Q[k][s]);
+//		    				salValue.addConstant(-demand*salvageValueUnit);
+//		    			}
+////		    			cash[t][s].add(HIts);
+//		    			if (t == T-1)
+//		    				cash[t][s].add(salValue);
+//					}
+//		    	}
+		    
+		    // objective function, set objective
+		    GRBLinExpr expectFinalPositiveCashNum = new GRBLinExpr();
+		    expectFinalPositiveCashNum.clear();
+		    for (int s = 0; s < sampleNumTotal; s++) {
+		    	expectFinalPositiveCashNum.addTerm(1.0, z[s]); // make objective greater 
+		    }
+			model.setObjective(expectFinalPositiveCashNum, GRB.MAXIMIZE);
+			
+
 						
 			// Add constraint
 			// inventory flow			
@@ -891,7 +923,7 @@ public class LostSaleChance {
 			    		rightExpr.addTerm(M1, delta[t][s]);
 			    		model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr, "IConstraint4");
 		    		}
-		    		else {
+		    		else {// 服务率高，下面这些等式约束条件就多，反而总体计算慢了
 		    			GRBLinExpr rightExpr1 = new GRBLinExpr();
 						if (t==0) {
 			    			rightExpr1.addConstant(iniI); rightExpr1.addTerm(1, Q[t][s]); 
@@ -902,7 +934,6 @@ public class LostSaleChance {
 			    			rightExpr1.addConstant(-demand); 	
 						}
 						model.addConstr(I[t][s], GRB.EQUAL, rightExpr1, "IConstraint1");	
-//						model.addConstr(delta[t][s], GRB.EQUAL, 0, "deltaEqualZero");
 					}
 		    	}
 			}
@@ -1039,14 +1070,12 @@ public class LostSaleChance {
 	
 	
 	/**
-	 * solve the chance SAA by sorting the scenarios,
+	 * solve the chance SAA by sorting the scenarios in each period,
 	 * this is an extended formulation.
 	 * sort the scenario in each period but without the delta inequality constraint.
-	 * there is a binary variable in each period and each scenario.
-	 * bidimap to map the value and key one-one correspondence;
 	 * @return
 	 */
-	public double[] solveSortFurther2() {
+	public double[] solveSort2() {
 		double[] result = new double[3];
 		try {
 			int T = distributions.length;
@@ -1054,16 +1083,11 @@ public class LostSaleChance {
 			int negativeScenarioNumRequire = (int) (sampleNumTotal * (1 - serviceRate));
 			int p = negativeScenarioNumRequire; //sampleNumTotal; 
 			
-			List<List<Integer>> Indexes = new ArrayList<>();
-			for (int t = 0; t < T; t++)
-				Indexes.add(IntStream.iterate(0, i -> i + 1).limit(sampleNums[t]).boxed().collect(Collectors.toList()));
-			CartesianProduct<Integer> CP = new CartesianProduct<>();
-			List<List<Integer>> scenarioIndexes = CP.product(Indexes);
-		
+	
 			// use Gurobi to solve the mip model
 			// Create empty environment, set options, and start
 			GRBEnv env = new GRBEnv(true);
-			env.set("logFile", "mip-chance.log");
+			//env.set("logFile", "mip-chance.log");
 			env.start();
 
 			// Create empty model
@@ -1072,7 +1096,7 @@ public class LostSaleChance {
 
 			// Create variables
 			GRBVar[][] Q = new GRBVar[T][sampleNumTotal];
-			GRBVar[][] delta = new GRBVar[T][p]; // auxiliary variable
+			GRBVar[][] delta = new GRBVar[T][p]; // auxiliary variable, only p
 			GRBVar[][] I = new GRBVar[T][sampleNumTotal];
 			GRBVar[] beta = new GRBVar[sampleNumTotal];	// whether lost sale happens
 			GRBVar[][] alpha = new GRBVar[T][sampleNumTotal];	// auxiliary variable
@@ -1087,10 +1111,10 @@ public class LostSaleChance {
 		    	beta[s] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "beta");
 		    }
 		    
-		    for (int s = 0; s < p; s++) {
-		    	for (int t = 0; t < T; t++) {
-		    		delta[t][s] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, "delta");
-		    	}	
+		    for (int t = 0; t < T; t++) {
+		    	for (int s = 0; s < p; s++) {
+		    		delta[t][s] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, "delta");	
+		    	}
 		    }
 
 			// expression variables
@@ -1145,63 +1169,48 @@ public class LostSaleChance {
 			model.setObjective(expectFinalPositiveCashNum, GRB.MAXIMIZE);
 			
 			// choose maximum sum of demand in T periods as M1
-			M1 = 0;
-			for (int s = 0; s < sampleNumTotal; s++) {
-				double thissSumD = 0;
-				for (int t = 0; t < T; t++) {
-					int sIndex = scenarioIndexes.get(s).get(t);
-					thissSumD += scenarios[t][sIndex];
-				}
-				if (thissSumD > M1)
-					M1 = thissSumD;
-			}
+			M1 = 10000;
+	
 						
 			// Add constraint
-			// inventory flow			
-			for (int t = 0; t < T; t++) {	
+			// inventory flow		
+			// sort scenario directly in each period, does not use bmap to store index of the sorted scenario
+			for (int t = 0; t < T; t++) {		
 				
-				Integer[] tScenarioIndex = IntStream.iterate(0, i->i+1).limit(sampleNumTotal).boxed().toArray(Integer[]::new);
-				Integer[] tScenarioSortIndex = IntStream.iterate(0, i->i+1).limit(sampleNumTotal).boxed().toArray(Integer[]::new);			
-				// sort the scenarios in each period
-				final int period = t;
-				Comparator<Integer> comparator = (o1, o2) -> {
-					int thissSumD1 = 0; int thissSumD2 = 0;
-					for (int m = 0; m <= period; m++) {
-						double demand1 = scenarios[m][scenarioIndexes.get(o1).get(m)];
-						thissSumD1 += demand1;
-						double demand2 = scenarios[m][scenarioIndexes.get(o2).get(m)];
-						thissSumD2 += demand2;
+				List<List<Double>> listScenarios = new ArrayList<>();
+				for (int t1 = 0; t1 < t + 1; t1++)
+					listScenarios.add(Arrays.stream(scenarios[t1]).boxed().collect(Collectors.toList()));
+				CartesianProduct<Double> CP = new CartesianProduct<>();
+				List<List<Double>> listScenariosAll = CP.product(listScenarios);
+				Comparator<List<Double>> comparator = (o1, o2) -> {
+					double sum1 = 0;
+					double sum2 = 0;
+					for (int t1 = 0; t1 < o1.size(); t1++) {
+						sum1 += o1.get(t1)*price[t1];
+						sum2 += o2.get(t1)*price[t1];
 					}
-					if (thissSumD1 < thissSumD2) // descending
+					if (sum1 < sum2)
 						return 1;
-					else if (thissSumD1 > thissSumD2)// 返回负数表示排在上面，返回正数表示排在下面
+					else if(sum1 > sum2)
 						return -1;
 					else {
 						return 0;
-					}
-				};				
-				Arrays.sort(tScenarioSortIndex, comparator);
-				BidiMap<Integer, Integer> bMap = new DualHashBidiMap<Integer, Integer>();
-				for (int s = 0; s < sampleNumTotal; s++) {
-					int index = tScenarioSortIndex[s];
-					bMap.put(index, s);
-				}
+					}				
+				};
+				Collections.sort(listScenariosAll, comparator);
 				
+				int divideNum = IntStream.of(sampleNums).skip(t + 1).reduce(1, (x, y) -> x*y);
 		    	for (int s = 0; s < sampleNumTotal; s++) {
-		    		int sIndex = scenarioIndexes.get(s).get(t);
-		    		double demand = scenarios[t][sIndex];
-		    		int thisSSortIndex = bMap.get(s);
-		    		if (thisSSortIndex < p) {
-//		    			if (p < sampleNumTotal) {
-//		    				int index2 = bMap.getKey(bMap.get(s)+1);		    			
-//		    				model.addConstr(delta[t][s], GRB.GREATER_EQUAL, delta[t][index2], "deltaConstraint");
-//		    			}
+		    		// add the s index
+		    		int sIndex = s / divideNum;
+		    		double demand = listScenariosAll.get(sIndex).get(t);
+		    		if (s < p) {
 			    		if (t == 0) {
 			    			GRBLinExpr rightExpr1 = new GRBLinExpr();
 			    			rightExpr1.addConstant(iniI); rightExpr1.addTerm(1, Q[t][s]); 
 			    			rightExpr1.addConstant(-demand); 
 			    			GRBLinExpr rightExpr2 = new GRBLinExpr();
-			    			rightExpr2.addConstant(M1); rightExpr2.addTerm(-M1, delta[t][thisSSortIndex]);
+			    			rightExpr2.addConstant(M1); rightExpr2.addTerm(-M1, delta[t][s]);
 			    			GRBLinExpr rightExpr = new GRBLinExpr();
 			    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr2);
 			    			model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr, "IConstraint1");
@@ -1213,7 +1222,7 @@ public class LostSaleChance {
 			    			model.addConstr(I[t][s], GRB.GREATER_EQUAL, rightExpr, "IConstraint2");
 			    			
 			    			GRBLinExpr rightExpr4 = new GRBLinExpr();
-			    			rightExpr4.addTerm(M1, delta[t][thisSSortIndex]);
+			    			rightExpr4.addTerm(M1, delta[t][s]);
 			    			model.addConstr(rightExpr1, GRB.LESS_EQUAL, rightExpr4, "IConstraint3");
 			    		}
 			    		else {
@@ -1221,7 +1230,7 @@ public class LostSaleChance {
 			    			rightExpr1.addTerm(1, I[t-1][s]); rightExpr1.addTerm(1, Q[t][s]); 
 			    			rightExpr1.addConstant(-demand); 
 			    			GRBLinExpr rightExpr2 = new GRBLinExpr();
-			    			rightExpr2.addConstant(M1); rightExpr2.addTerm(-M1, delta[t][thisSSortIndex]);
+			    			rightExpr2.addConstant(M1); rightExpr2.addTerm(-M1, delta[t][s]);
 			    			GRBLinExpr rightExpr = new GRBLinExpr();
 			    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr2);
 			    			model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr, "IConstraint1");
@@ -1233,14 +1242,12 @@ public class LostSaleChance {
 			    			model.addConstr(I[t][s], GRB.GREATER_EQUAL, rightExpr, "IConstraint2");
 			    			
 			    			GRBLinExpr rightExpr4 = new GRBLinExpr();
-			    			rightExpr4.addTerm(M1, delta[t][thisSSortIndex]);
+			    			rightExpr4.addTerm(M1, delta[t][s]);
 			    			model.addConstr(rightExpr1, GRB.LESS_EQUAL, rightExpr4, "IConstraint3");
 						}
 			    		GRBLinExpr rightExpr = new GRBLinExpr();
-			    		rightExpr.addTerm(M1, delta[t][thisSSortIndex]);
+			    		rightExpr.addTerm(M1, delta[t][s]);
 			    		model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr, "IConstraint4");
-			    		
-			    		model.addConstr(delta[t][thisSSortIndex], GRB.LESS_EQUAL, beta[s], "ChanceConstraint1");
 		    		}
 		    		else {
 		    			GRBLinExpr rightExpr1 = new GRBLinExpr();
@@ -1255,12 +1262,16 @@ public class LostSaleChance {
 						model.addConstr(I[t][s], GRB.EQUAL, rightExpr1, "IConstraint1");	
 //						model.addConstr(delta[t][s], GRB.EQUAL, 0, "deltaEqualZero");
 					}
-		    		
 		    	}
 			}
 			
-			
 			// chance constraint
+			for (int s = 0; s < p; s++) {
+				for (int t = 0; t < T; t++) {
+					model.addConstr(delta[t][s], GRB.LESS_EQUAL, beta[s], "ChanceConstraint1");
+				}
+			}
+
 			GRBLinExpr sumBeta = new GRBLinExpr();
 			for (int s = 0; s < sampleNumTotal; s++) {
 				sumBeta.addTerm(1, beta[s]);

@@ -40,7 +40,7 @@ public class Drawing {
 	 * drawing a picture about optimal ordering quantities for different initial
 	 * inventory levels
 	 */
-	public void drawXQ(double[][] xQ) {
+	public static void drawXQ(double[][] xQ) {
 		XYSeries seriesQ = new XYSeries("xQSeries");
 		int N = xQ.length;
 		for (int i = 0; i < N; i++) {

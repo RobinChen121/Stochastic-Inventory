@@ -151,7 +151,7 @@ public class cashSurvival {
 		
 		int sampleNum = 100000;
 		CashSimulation simulation = new CashSimulation(distributions, sampleNum, recursion, discountFactor); // no need to add overheadCost in this class
-		double[] result = simulation.simulateSDPGivenSamplNumLostRate(initialState, immediateValue2);
+		double[] result = simulation.simulateSDPGivenSamplNum(initialState, immediateValue2);
 		DecimalFormat df2 = new DecimalFormat("###, ###");
 		System.out.println("\nfinal simulated survival probability in " + df2.format(sampleNum) + " samples is: " + result[0]);
 		System.out.println("\nfinal simulated lost sale rate " + " is: " + result[1]);
