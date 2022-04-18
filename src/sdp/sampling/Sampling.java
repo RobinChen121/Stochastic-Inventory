@@ -131,7 +131,6 @@ public class Sampling {
 	 * @return a 2D random samples, in which the sample number in each period can be different;
 	 * each row is a period;
 	 * 
-	 * 
 	 */
 	public double[][] generateLHSamples(Distribution[] distributions, int[] sampleNums){
 		//resetNextSubstream();
