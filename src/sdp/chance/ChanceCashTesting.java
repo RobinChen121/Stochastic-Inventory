@@ -36,10 +36,10 @@ import umontreal.ssj.rng.RandomStream;
  * test the effects of sample number, service level, planning horizon length, distribution.
  * simulate 6 periods problem of SAA method may take more than 40 minutes.
  * 
- * need seasonal price and vari cost for the rolling horizon testing
+ * need seasonal price and vari cost
  *
  */
-public class ChanceCashTestingRollingHorizon {
+public class ChanceCashTesting {
 	
 	public static void main(String[] args) {
 		WriteToExcel wr = new WriteToExcel();
@@ -64,9 +64,9 @@ public class ChanceCashTestingRollingHorizon {
 		double iniCash = 40;
 		double iniI = 0;
 		double trunQuantile = 0.999;
-		double serviceRate = 0.8; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
+		double serviceRate = 0.9; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
 		
-		int T = 3; //meanDemands[0].length;
+		int T = 6; //meanDemands[0].length;
 		int[] sampleNums = new int[T];
 		double[] prices = new double[T];
 		double[] variCostUnits = new double[T];
@@ -141,7 +141,7 @@ public class ChanceCashTestingRollingHorizon {
 				nf.setMinimumFractionDigits(5);		
 				DecimalFormat df = new DecimalFormat("###, ###");
 				
-		        resultSAA = model.solveMaxSurvivalTesting();				
+		        resultSAA = model.solveMaxSurvival();				
 				time1 = (System.currentTimeMillis() - currTime) / 1000.00;
 			    currTime = System.currentTimeMillis();	    
 			    System.out.println("**********************************************");
@@ -245,40 +245,29 @@ public class ChanceCashTestingRollingHorizon {
 			    time1 = (System.currentTimeMillis() - currTime) / 1000.00;	     
 			    System.out.println("running time is " + time1 + "s");
 			    System.out.println("final simulated survival probability of rolling further SAA in " + df.format(sampleNum) + " samples is: " + nf.format(resultRolling[0]));
-			    double sigma2 = Math.sqrt(resultRolling[1]*(1 - resultRolling[1])/sampleNum);
-				double error2  = 1.96*sigma2;
-				double serviceRate2 = 1 - resultRolling[1];
-				System.out.printf("the service rate for simulated extended SAA rolling horizon is %.4f, with error %.4f\n", serviceRate2, error2);
-				
+		    		
+			    /**
+			     * Simulate the restult of SAA
+				 */			    
 			    double error;
 			    double thisServiceRate;		
 			    double[] result1; 
-			    /**
-			     * Simulate the restult of SAA
-				 */			    			    
-//			    currTime = System.currentTimeMillis();
-//			    result1 = simulation1.simulateSAATesting(initialState, resultSAA[0], serviceRate, demandSamples, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, sampleNum);
-//			    time1 = (System.currentTimeMillis() - currTime) / 1000.00;	
-//			    System.out.println("running time is " + time1 + "s");
-//			    System.out.println("final simulated survival probability of SAA in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
-//				error  = 1.96 * Math.sqrt(result1[1]*(1 - result1[1]) / sampleNum);
-//				thisServiceRate = 1-result1[1];
-//				System.out.println("final simulated service sale rate of SAA " + " is: " + nf.format(thisServiceRate) + " with error " + nf.format(error)); 
-//				System.out.println();
+			    result1 = simulation1.simulateSAATesting(initialState, resultSAA[0], serviceRate, demandSamples, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, sampleNum);
+				System.out.println("final simulated survival probability of SAA in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
+				error  = 1.96 * Math.sqrt(result1[1]*(1 - result1[1]) / sampleNum);
+				thisServiceRate = 1-result1[1];
+				System.out.println("final simulated service sale rate of SAA " + " is: " + nf.format(thisServiceRate) + " with error " + nf.format(error)); 
+				System.out.println();
 				
 				/**
 			     * Simulate the result of extended SAA
 				 */	
-				currTime = System.currentTimeMillis();
-				System.out.println("**********************************************");
-				result1 = simulation1.simulateExtendSAAWholeTesting(initialState, resultExtendSAA[0], serviceRate, demandSamples, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, sampleNum);
-				time1 = (System.currentTimeMillis() - currTime) / 1000.00;
-			    System.out.println("running time is " + time1 + "s");
-			    System.out.println("final simulated survival probability of extended SAA(sort whole planning horizon) in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
+			    result1 = simulation1.simulateExtendSAAWholeTesting(initialState, resultExtendSAA[0], serviceRate, demandSamples, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, sampleNum);
+				System.out.println("final simulated survival probability of extended SAA(sort whole planning horizon) in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
 				error  = 1.96 * Math.sqrt(result1[1]*(1 - result1[1]) / sampleNum);
 				thisServiceRate = 1-result1[1];
 				System.out.println("final simulated service rate of extended SAA(sort whole planning horizon) " + " is: " + nf.format(thisServiceRate) + " with error " + nf.format(error));
-				System.out.println();
+
 			}
 		}
 		System.out.println();

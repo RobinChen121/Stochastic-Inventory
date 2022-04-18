@@ -18,7 +18,7 @@ public class TestTime {
 		for (int i  = 0; i < 10000000; i++)
 			sum += i;
 		
-		double time = (System.currentTimeMillis() - currTime) / 1000.0; // the denominator should be float in order to output float number
+		double time = (System.currentTimeMillis() - currTime) / 1000.0; // 分母改为小数就输出的为小数，否则输出为整数
 		System.out.println("running time is " + time + "s");
 
 	}

@@ -1,11 +1,7 @@
 package sdp.write;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.text.DecimalFormat;
 
 
@@ -17,20 +13,6 @@ import java.text.DecimalFormat;
 */
 
 public class WriteToExcel {
-	
-	public void writeToFile(String fileName, String str) {
-		File results = new File(fileName);
-		try {
-			FileOutputStream fos = new FileOutputStream(results, true);
-			OutputStreamWriter osw = new OutputStreamWriter(fos);
-			osw.write(str + "\n");
-			osw.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 	
 	public void writeArrayToTxt(double[][] data, String string) {
 		int rowNum = data.length;
