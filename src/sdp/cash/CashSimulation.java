@@ -167,6 +167,18 @@ public class CashSimulation {
 		return result;
 	}
 	
+	public double[][] gettTArray2(double[][] arr, int t) {
+		int T = arr[0].length;
+		int m = arr.length;
+		
+		double[][] result =  new double[m][T-t];
+		for (int i = t; i < T; i++) {
+			for (int j = 0; j < m; j++) 		
+				result[j][i-t] = arr[j][i];		
+		}
+		return result;
+	}
+	
 	public double[][] gettTArray(double[][] arr, int t, int r) {
 		int T = arr.length;
 		int R = t + r > T ? T: t + r; 
@@ -740,10 +752,6 @@ public class CashSimulation {
 		double error  = 1.96*sigma;
 		System.out.printf("the confidence interval for simulated extened SAA rolling horizon is [%.4f, %.4f], with error %.4f\n", lowCI, upCI, error);
 		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;	
-		double sigma2 = Math.sqrt(lostSaleRate*(1 - lostSaleRate)/n);
-		double error2  = 1.96*sigma2;
-		double serviceRate2 = 1 - lostSaleRate;
-		System.out.printf("the service rate for simulated extended SAA rolling horizon is %.4f, with error %.4f\n", serviceRate2, error2);
 		double[] results =  {simFinalValue, lostSaleRate};
 		return results;
 	}
@@ -965,7 +973,7 @@ public class CashSimulation {
 					maxOrderQuantity = Math.min(maxOrderQuantity, maxQ);
 					if (state.getIniInventory() < optsCS[t][0]) {
 						if (cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory())) == null)
-							optsCS[t][1] = 0;	// ²»´æÔÚ C(x) ¾ÍÄ¬ÈÏ²»´æ×Ê½ð½Úµã
+							optsCS[t][1] = 0;	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ C(x) ï¿½ï¿½Ä¬ï¿½Ï²ï¿½ï¿½ï¿½ï¿½Ê½ï¿½Úµï¿½
 						else 
 							optsCS[t][1] = cacheC1Values.get(new State(state.getPeriod(), state.getIniInventory()));
 					}
@@ -1281,13 +1289,18 @@ public class CashSimulation {
 					double iniCash = state.iniCash;
 					double iniI = state.getIniInventory();
 					double[] nextPrices = gettTArray(prices, t + 1);
-					double[][] nextDemandSamples = gettTArray(demandSamples, t + 1);
+					double[][] nextDemandSamples = gettTArray2(demandSamples, t + 1);
 					double[] nextVariCostUnits = gettTArray(variCostUnits, t + 1);
 					Distribution[] nexDistributions = gettTArray(distributions, t + 1);
 					double[] nextOverheadCosts = gettTArray(overheadCosts, t + 1);
-					LostSaleChanceTesting model = new LostSaleChanceTesting(nexDistributions, nextDemandSamples, iniCash, iniI, nextPrices, nextVariCostUnits, 
-							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate);
-					double[] result = model.solveSortWholeTesting();	
+					double[] result = new double[3];
+					try {
+						LostSaleChanceTesting model = new LostSaleChanceTesting(nexDistributions, nextDemandSamples, iniCash, iniI, nextPrices, nextVariCostUnits, 
+								salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate);
+						result = model.solveSortWholeTesting();
+					} catch (Exception e) {
+						nextDemandSamples = gettTArray(demandSamples, t + 1);
+					}						
 					optQ = result[0];
 					thisServiceRate = nextServiceRate;
 				}			

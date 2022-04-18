@@ -97,7 +97,7 @@ public class Sampling {
 				samples[j][i] = distributions[i].inverseF(samples[j][i]);
 			}
 		
-	    shuffle(samples); // ´òÂÒÊý×é
+	    shuffle(samples); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		return samples;
 	}
 	
@@ -120,7 +120,7 @@ public class Sampling {
 				samples[j][i] = distributions[i].inverseF(samples[j][i]);
 			}
 		
-	    shuffle(samples); // ´òÂÒÊý×é
+	    shuffle(samples); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		return samples;
 	}
 	
@@ -130,7 +130,6 @@ public class Sampling {
 	 * @param sampleNum
 	 * @return a 2D random samples, in which the sample number in each period can be different;
 	 * each row is a period;
-	 * 
 	 * 
 	 */
 	public double[][] generateLHSamples(Distribution[] distributions, int[] sampleNums){
@@ -151,7 +150,7 @@ public class Sampling {
 			}
 		}
 		
-	    shuffle2(samples); // ´òÂÒÊý×é
+	    shuffle2(samples); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		return samples;
 	}
 	
@@ -179,7 +178,7 @@ public class Sampling {
 			}
 		}
 		
-	    shuffle2(samples); // ´òÂÒÊý×é
+	    shuffle2(samples); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		return samples;
 	}
 
@@ -207,7 +206,7 @@ public class Sampling {
 				samples1[j][i] = lowBound + randomNum;
 				samples1[j][i] = distribution1.inverseF(samples1[j][i]);
 			}		
-			shuffle(samples1); // ´òÂÒÊý×é		
+			shuffle(samples1); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½		
 		}
 		for (int i = 0; i < periodNum; i++) {
 			NormalDist distribution2 = new NormalDist(distributions[i].getMu2(), distributions[i].getSigma2());
@@ -217,7 +216,7 @@ public class Sampling {
 				samples2[j][i] = lowBound + randomNum;
 				samples2[j][i] = distribution2.inverseF(samples2[j][i]);
 			}		
-			shuffle(samples2); // ´òÂÒÊý×é		
+			shuffle(samples2); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½		
 		}
 		
 		for (int i = 0; i < sampleNum; i++) {
@@ -254,7 +253,7 @@ public class Sampling {
 //				samples1[j][i] = lowBound + randomNum;
 //				samples1[j][i] = distribution1.inverseF(samples1[j][i]);
 //			}		
-//			shuffle(samples1); // ´òÂÒÊý×é		
+//			shuffle(samples1); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½		
 //		}
 //		for (int i = 0; i < periodNum; i++) {
 //			Distribution distribution2 = distributions[i][1];
@@ -264,7 +263,7 @@ public class Sampling {
 //				samples2[j][i] = lowBound + randomNum;
 //				samples2[j][i] = distribution2.inverseF(samples2[j][i]);
 //			}		
-//			shuffle(samples2); // ´òÂÒÊý×é		
+//			shuffle(samples2); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½		
 //		}
 //		
 //		for (int i = 0; i < sampleNum; i++) {
@@ -286,7 +285,7 @@ public class Sampling {
 		int periodNum = distributions.length;		
 		double[][] samples = new double[sampleNum][periodNum]; 
 		
-		// ÔÚÃ¿¸ö[i/n, (i+1)/n] ÄÚÉú³ÉÒ»¸öËæ»ú¸ÅÂÊ£¬È»ºó¸ù¾Ý¸ÅÂÊµÃµ½Ö¸¶¨·Ö²¼µÄÊý
+		// ï¿½ï¿½Ã¿ï¿½ï¿½[i/n, (i+1)/n] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê£ï¿½È»ï¿½ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½ÊµÃµï¿½Ö¸ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½
 		for (int i = 0; i < periodNum; i++)
 			for (int j = 0; j < sampleNum; j++) {
 				double randomNum = Math.random() / (double) sampleNum; //UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
@@ -295,7 +294,7 @@ public class Sampling {
 				samples[j][i] = distributions[i].inverseF(samples[j][i]);
 			}
 		
-	    shuffle(samples); // ´òÂÒÊý×é
+	    shuffle(samples); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		return samples;
 	}
 	
@@ -349,7 +348,7 @@ public class Sampling {
 						samples[i][j + t * itemNum] = Math.round(distributions[j][t].inverseF(ppf) * 1.0) / 1.0;
 					}
 			}
-		    shuffle(samples); // ´òÂÒÊý×é
+		    shuffle(samples); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			return samples;
 		}
 	

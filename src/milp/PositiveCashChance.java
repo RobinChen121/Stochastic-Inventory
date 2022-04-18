@@ -322,8 +322,7 @@ public class PositiveCashChance {
 	}
 	
 	/**
-	 * solve the chance SAA by sorting the scenarios;
-	 * objective is to maximize expected final cash
+	 * solve the chance SAA by sorting the scenarios
 	 * @return
 	 */
 	public double[] solveSort() {

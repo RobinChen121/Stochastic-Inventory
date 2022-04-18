@@ -794,6 +794,7 @@ public class LostSaleChance {
 			
 			// choose maximum sum of demand in T periods as M1
 			M1 = 0;
+			try {
 			for (int s = 0; s < sampleNumTotal; s++) {
 				double thissSumD = 0;
 				for (int t = 0; t < T; t++) {
@@ -801,7 +802,14 @@ public class LostSaleChance {
 				}
 				if (thissSumD > M1)
 					M1 = thissSumD;
+			
 			}
+				
+			} catch (Exception e) {
+				System.out.println();
+			}
+			
+			
 			M2 = iniCash + price[0] * M1; // prices are same
 			M3 = holdCostUnit * T * iniI + variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash;
 			
@@ -1396,5 +1404,3 @@ public class LostSaleChance {
 	}
 	
 }
-	
-	

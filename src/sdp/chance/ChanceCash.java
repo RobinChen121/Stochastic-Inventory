@@ -81,16 +81,17 @@ public class ChanceCash {
 	}
 	
 	public static void main(String[] args) {
-		double iniCash = 150;
+		double iniCash = 40;
 		double iniI = 0;
-		double trunQuantile = 0.999;
-		double serviceRate = 0.6; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
+		double trunQuantile = 0.9999;
+		double serviceRate = 0.8; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
 
-		int[] sampleNums = {5, 5, 5, 5}; // sample number in each period, the number of samples in the first period can have big influence
-		double[] meanDemand = {10, 5, 10, 5};
+		int[] sampleNums = {5, 5, 5, 5, 5}; // sample number in each period, the number of samples in the first period can have big influence
+		double[] meanDemand = {30, 30, 30, 30, 30};
 		int T = sampleNums.length;
 		
-		int[] sampleNumsRolling = {5, 5, 5, 5};
+		int[] sampleNumsRolling = new int[T];
+		Arrays.fill(sampleNumsRolling, 5);
 		int rollingLength = 2; // rolling horizon length
 		double meanDemandSum = Arrays.stream(meanDemand).sum();
 		double rollingDemandSum = Arrays.stream(meanDemand).limit(rollingLength).sum();
@@ -107,13 +108,12 @@ public class ChanceCash {
 		double[] mus = new double[T];
 		double sigmasCoe = 0.25;
 		
-		Arrays.fill(prices, 22);	
+		Arrays.fill(prices, 16);	
 		Arrays.fill(variCostUnits, 10);
 		Arrays.fill(overheadCosts, 100); // overhead costs
 //		Arrays.fill(mus, 3.6);
 //		Arrays.fill(sigmas, 0.6);
 		
-
 		
 		double maxOrderQuantity = 300; // maximum ordering quantity when having enough cash
 
@@ -215,8 +215,11 @@ public class ChanceCash {
 	    double error;
 	    double thisServiceRate;
 	    
+	    currTime = System.currentTimeMillis();
 	    result1 = simulation1.simulateSAA(initialState, result[0], serviceRate, sampleNums, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNum);
-		System.out.println("final simulated survival probability of SAA in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
+	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;  
+	    System.out.println("running time is " + time1 + "s");
+	    System.out.println("final simulated survival probability of SAA in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
 		error  = 1.96 * Math.sqrt(result1[1]*(1 - result1[1]) / sampleNum);
 		thisServiceRate = 1-result1[1];
 		System.out.println("final simulated service sale rate of SAA " + " is: " + nf.format(thisServiceRate) + " with error " + nf.format(error)); 
@@ -231,8 +234,7 @@ public class ChanceCash {
 		result = model.solveSortWhole();	// same result with soveSort or solveSort2, but less computational time
 		                                   // former name is solveSortFurther()
 		
-		time1 = (System.currentTimeMillis() - currTime) / 1000.00;
-	    currTime = System.currentTimeMillis();	    
+		time1 = (System.currentTimeMillis() - currTime) / 1000.00;    
 	    System.out.println("**********************************************");
 	    System.out.println("after sorting scenarios in the whole planning horizon, result of SAA-scenario tree: ");
 	    System.out.println("running time is " + time1 + "s");	
@@ -250,46 +252,16 @@ public class ChanceCash {
 	    
 	    /**
 		 * Simulate the result of extended SAA
-		 */	    
+		 */	   
+	    currTime = System.currentTimeMillis();
 	    result1 = simulation1.simulateExtendSAAWhole(initialState, result[0], serviceRate, sampleNums, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNum);
-		System.out.println("final simulated survival probability of extended SAA(sort whole planning horizon) in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
+	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;  
+	    System.out.println("running time is " + time1 + "s");
+	    System.out.println("final simulated survival probability of extended SAA(sort whole planning horizon) in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
 		error  = 1.96 * Math.sqrt(result1[1]*(1 - result1[1]) / sampleNum);
 		thisServiceRate = 1-result1[1];
 		System.out.println("final simulated service rate of extended SAA(sort whole planning horizon) " + " is: " + nf.format(thisServiceRate) + " with error " + nf.format(error));
 
-		/**
-		 * solve the problem by extended formulation of SAA,
-		 * sort scenarios in each period.
-		 */
-//		currTime = System.currentTimeMillis();
-//		result = model.solveSortEach();	// same result with soveSort or solveSort2, but less computational time
-//		                                   // former name is solveSortFurther()
-//		
-//		time1 = (System.currentTimeMillis() - currTime) / 1000.00;
-//	    currTime = System.currentTimeMillis();	    
-//	    System.out.println("**********************************************");
-//	    System.out.println("after sorting scenarios in each period, the result of SAA-scenario tree: ");
-//	    System.out.println("running time is " + time1 + "s");	
-//	    System.out.printf("first stage decison Q is: %.2f\n", result[0]);
-//	    positiveScenario = result[1];
-//	    System.out.printf("Objective value is: %.0f in %d scenarios\n", positiveScenario, sampleNumTotal);
-//	    survivalProb = 100 * result[1] / sampleNumTotal;
-//	    System.out.printf("Survival probability is: %.5f%%\n", survivalProb);
-//	    System.out.println("lost sale scenario number in the solution is : " + result[2]);
-//	    System.out.println("maximum lost sale scenario number allowed is: " + negativeScenarioNumRequire);
-//	    lostRate = result[2] / (double) sampleNumTotal;
-//	    System.out.println("lost sale rate of SAA is: " + nf.format(lostRate));
-//	    System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
-//	    System.out.println();
-//	    
-//	    /**
-//		 * Simulate the result of extended SAA sorting each period
-//		 */	    
-//	    result1 = simulation1.simulateExtendSAAEach(initialState, result[0], serviceRate, sampleNums, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNum);
-//		System.out.println("final simulated survival probability of extended SAA sorting each period in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
-//		System.out.println("final simulated lost sale rate of extended SAA sorting each period " + " is: " + nf.format(result1[1]));
-	
-		
 	    /**
 		 * solve the problem by SDP when there is no joint chance constraint
 		 */	
@@ -321,7 +293,7 @@ public class ChanceCash {
 		/*******************************************************************
 		 * Simulating sdp results
 		 */	
-		sampleNum = 10000;
+		sampleNum = 1000;
 		CashSimulation simulation = new CashSimulation(distributions, sampleNum, recursion, discountFactor); // no need to add overheadCost in this class
 		double[] result2 = simulation.simulateSDPGivenSamplNum(initialState, immediateValue);
 		System.out.println("final simulated survival probability in " + df.format(sampleNum) + " samples is: " + nf.format(result2[0]));
@@ -373,13 +345,51 @@ public class ChanceCash {
 		sampleNum = 100; // number of scenarios for rolling SAA
 	    currTime = System.currentTimeMillis();
 	    System.out.println("**********************************************");
+	    scenarios = sampling.generateLHSamples(distributions, sampleNumsRolling);
 	    result1 = simulation1.rollingHoirzonFurtherExtendSAA(rollingLength, initialState, rollingServiceRate, sampleNumsRolling, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNum);
 	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;	    
 	    System.out.println("after rolling horizon for length " + rollingLength +", result of SAA-scenario tree: ");
 	    System.out.println("running time is " + time1 + "s");
 	    System.out.println("final simulated survival probability of rolling further SAA in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
-		System.out.println("final simulated lost sale rate of rolling further SAA " + " is: " + nf.format(result1[1]));
-				
-		
+	    double sigma2 = Math.sqrt(result1[1]*(1 - result1[1])/sampleNum);
+		double error2  = 1.96*sigma2;
+		double serviceRate2 = 1 - result1[1];
+		System.out.printf("the service rate for simulated extended SAA rolling horizon is %.4f, with error %.4f\n", serviceRate2, error2);
+						
 	}
 }
+
+
+
+
+/**
+ * solve the problem by extended formulation of SAA,
+ * sort scenarios in each period.
+ */
+//currTime = System.currentTimeMillis();
+//result = model.solveSortEach();	// same result with soveSort or solveSort2, but less computational time
+//                                   // former name is solveSortFurther()
+//
+//time1 = (System.currentTimeMillis() - currTime) / 1000.00;
+//currTime = System.currentTimeMillis();	    
+//System.out.println("**********************************************");
+//System.out.println("after sorting scenarios in each period, the result of SAA-scenario tree: ");
+//System.out.println("running time is " + time1 + "s");	
+//System.out.printf("first stage decison Q is: %.2f\n", result[0]);
+//positiveScenario = result[1];
+//System.out.printf("Objective value is: %.0f in %d scenarios\n", positiveScenario, sampleNumTotal);
+//survivalProb = 100 * result[1] / sampleNumTotal;
+//System.out.printf("Survival probability is: %.5f%%\n", survivalProb);
+//System.out.println("lost sale scenario number in the solution is : " + result[2]);
+//System.out.println("maximum lost sale scenario number allowed is: " + negativeScenarioNumRequire);
+//lostRate = result[2] / (double) sampleNumTotal;
+//System.out.println("lost sale rate of SAA is: " + nf.format(lostRate));
+//System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
+//System.out.println();
+//
+///**
+// * Simulate the result of extended SAA sorting each period
+// */	    
+//result1 = simulation1.simulateExtendSAAEach(initialState, result[0], serviceRate, sampleNums, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNum);
+//System.out.println("final simulated survival probability of extended SAA sorting each period in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
+//System.out.println("final simulated lost sale rate of extended SAA sorting each period " + " is: " + nf.format(result1[1]));
