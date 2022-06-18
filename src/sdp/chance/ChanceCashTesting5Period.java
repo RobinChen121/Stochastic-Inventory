@@ -16,6 +16,7 @@ import java.util.stream.IntStream;
 
 import milp.LostSaleChance;
 import milp.LostSaleChanceTesting;
+import milp.testPiecewise;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
@@ -41,7 +42,7 @@ import umontreal.ssj.rng.RandomStream;
  * @date: 2022 Mar 26, 15:14:50  
  * @desp: 
  * 
- * test the effects of sample number, service level, planning horizon length, distribution.
+ * test the effects of sample number, service level, planning horizon length, fluctuation, holding cost, initial cash/ margin.
  * simulate 6 periods problem of SAA method may take more than 40 minutes.
  * 
  *
@@ -55,7 +56,7 @@ public class ChanceCashTesting5Period {
 				"demand mode" + "\t" + "serviceRate" + "\t" + "scenario number" + "\t" + "iniCash" + "\t" + "price" + "\t" + "variCost" + "\t" + "SAA obj" + "\t" + "time" + "\t" + "sim SAA obj" + "\t" +
 		         "sim SAA service rate" + "\t" + "sim saa time" + "\t" + "extend SAA obj" + "\t" + "time" + "\t" + "sim extend SAA obj" + "\t" 
 					 + "sim extend SAA service" + "\t" + "sim extend time" + "\t" + "upper bound" + "\t" + "lower bound" +  "\t" + "simSampleNum"
-					 + "\t" + "sigmasCoe";
+					 + "\t" + "sigmasCoe" + "\t" +"holdingCost";
 		wr.writeToFile(fileName, headString);
 		
 		
@@ -83,7 +84,7 @@ public class ChanceCashTesting5Period {
 		double[] seasonalPrice = {14, 20, 18, 15};
 		double[] seasonalVariCost = {10, 15, 16, 12};
 		double sigmasCoe = 0.25; // for use in normal distribution
-		int sampleNum = 1000;  // sample number in simulation
+		int sampleNum = 100;  // sample number in simulation
 		
 		for (int t = 0; t < T; t++) {
 			int m = t % 4;
@@ -94,16 +95,17 @@ public class ChanceCashTesting5Period {
 		Arrays.fill(variCostUnits, 10); //
 		Arrays.fill(overheadCosts, 100); // overhead costs
 		double holdCostUnit = 0;
-		double salvageValueUnit = 5;
+		double salvageValueUnit = 2;
 		double maxOrderQuantity = 300; // maximum ordering quantity when having enough cash
 		
 		int[] sampleNumsRolling = new int[T];
 		Arrays.fill(sampleNumsRolling,5);
-		int rollingLength = 4; // rolling horizon length		
+		int rollingLength = 3; // rolling horizon length		
 		
 		int instanceNum = meanDemands.length;
 		int runNum = 1; // run number is 10 for computing upper bounds
 		
+		for(int kk = 0; kk < 10; kk++) {
 		for (int m = 0; m < instanceNum; m++) {
 			long currTime = System.currentTimeMillis();
 			double time1;
@@ -338,9 +340,9 @@ public class ChanceCashTesting5Period {
 			 * output results to excel
 			 */
 			System.out.println("");
-			double[] out = new double[]{m, serviceRate, sampleNumTotal, iniCash, prices[0], variCostUnits[0], saaObj, saaTime, saaSimObj, saaSimServiceRate, saaSimTime, extendObj, extendTime, extendSimObj, extendSimServiceRate, extendSimTime, staUpperBound, lowerBound, sampleNum, sigmasCoe};
-			wr.writeToExcelAppend(out, fileName);
-			    
+			double[] out = new double[]{m, serviceRate, sampleNumTotal, iniCash, prices[0], variCostUnits[0], saaObj, saaTime, saaSimObj, saaSimServiceRate, saaSimTime, extendObj, extendTime, extendSimObj, extendSimServiceRate, extendSimTime, staUpperBound, lowerBound, sampleNum, sigmasCoe,holdCostUnit};
+			wr.writeToExcelAppend(out, fileName);		 
+		}
 			    
 //			/**
 //			 * solve the problem by rolling horizon of extended SAA

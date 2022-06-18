@@ -252,7 +252,7 @@ public class ChanceCashTesting {
 			    double error;
 			    double thisServiceRate;		
 			    double[] result1; 
-			    result1 = simulation1.simulateSAATesting(initialState, resultSAA[0], serviceRate, demandSamples, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, sampleNum);
+			    result1 = simulation1.simulateSAATesting(initialState, resultSAA[0], serviceRate, scenarios, sampleNums, demandSamples, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, sampleNum);
 				System.out.println("final simulated survival probability of SAA in " + df.format(sampleNum) + " samples is: " + nf.format(result1[0]));
 				error  = 1.96 * Math.sqrt(result1[1]*(1 - result1[1]) / sampleNum);
 				thisServiceRate = 1-result1[1];

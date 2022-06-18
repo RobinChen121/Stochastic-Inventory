@@ -715,12 +715,12 @@ public class CashSimulation {
 					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
 					
 					double nextServiceRate = 0;
-					if (countLostBefore == true)
-						nextServiceRate = 0;
-					else {
-						nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
-					} // very important
-//					nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+//					if (countLostBefore == true)
+//						nextServiceRate = 0;
+//					else {
+//						nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+//					} // very important
+					nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
 					state = stateTransition.apply(state, optQ, randomDemand);
 					iniCash = state.iniCash;
 					iniI = state.getIniInventory();
@@ -1177,13 +1177,15 @@ public class CashSimulation {
 	/**
 	 * simulateSAA
 	 */
-	public double[] simulateSAATesting(CashState iniState, double iniQ,  double serviceRate, 
+	public double[] simulateSAATesting(CashState iniState, double iniQ,  double serviceRate, double[][] scenarios, int[] sampleNums,
 			double[][] demandSamples, double[] prices, double[] variCostUnits, double[] overheadCosts, double salvageValueUnit, double holdCostUnit,
 			int sampleNum) {
 		Sampling.resetStartStream();
 		Sampling sampling = new Sampling();
 		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
+		int sampleReplaceNum = demandSamples.length;
 		
+		Arrays.fill(sampleNums, 5);
 		double[] simuValues = new double[samples.length];
 		int T = samples[0].length;
 		int lostSaleCount = 0;
@@ -1214,16 +1216,29 @@ public class CashSimulation {
 					state = stateTransition.apply(state, optQ, randomDemand);
 					double iniCash = state.iniCash;
 					double iniI = state.getIniInventory();
-					double[] nextPrices = gettTArray(prices, t + 1);
-					double[][] nextDemandSamples = gettTArray(demandSamples, t + 1);
+					double[] nextPrices = gettTArray(prices, t + 1);					
 					double[] nextVariCostUnits = gettTArray(variCostUnits, t + 1);
 					Distribution[] nexDistributions = gettTArray(distributions, t + 1);
 					double[] nextOverheadCosts = gettTArray(overheadCosts, t + 1);
-					LostSaleChanceTesting model = new LostSaleChanceTesting(nexDistributions, nextDemandSamples, iniCash, iniI, nextPrices, nextVariCostUnits, 
-							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate);
-					double[] result = model.solveMaxSurvivalTesting();	
-					optQ = result[0];
-					thisServiceRate = nextServiceRate;
+					double[][] nextDemandSamples = gettTArray(demandSamples, t + 1);
+					double[][] nextScenarios = gettTArray(scenarios, t + 1);
+					int[] nextSampleNums = gettTArray(sampleNums, t + 1);
+					
+					int sampleNumTotalNext = IntStream.of(nextSampleNums).reduce(1, (a, b) -> a * b);
+					
+//					if (sampleNumTotalNext < sampleReplaceNum) {
+						LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
+								salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
+						double[] result = model.solveMaxSurvival();	
+						optQ = result[0];
+//					}
+//					else {
+//						LostSaleChanceTesting model = new LostSaleChanceTesting(nexDistributions, nextDemandSamples, iniCash, iniI, nextPrices, nextVariCostUnits, 
+//							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate);
+//						double[] result = model.solveMaxSurvivalTesting();	
+//						optQ = result[0];
+//					}					
+//					thisServiceRate = nextServiceRate;
 				}			
 			}
 		}
