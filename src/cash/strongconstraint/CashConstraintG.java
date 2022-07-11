@@ -30,7 +30,7 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashConstraintG {
 	public static void main(String[] args) {
 		double[] meanDemand = {10, 10, 10, 10};
-
+		
 		double variCost = 1;
 		double price = 2;
 		double depositeRate = 0;

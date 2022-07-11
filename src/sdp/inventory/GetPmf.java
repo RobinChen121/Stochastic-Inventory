@@ -18,6 +18,7 @@ import umontreal.ssj.probdist.UniformIntDist;
 public class GetPmf {
 	Distribution[] distributions;
 	Distribution[][] distributionsMulti;
+	Distribution distribution;
 	double truncationQuantile;
 	double stepSize;
 
@@ -34,7 +35,48 @@ public class GetPmf {
 		this.stepSize = stepSize;
 	}
 	
+	public GetPmf(Distribution distribution, double truncationQuantile, double stepSize) {
+		this.truncationQuantile = truncationQuantile;
+		this.stepSize = stepSize;
+		this.distribution = distribution;
+	}
+	
 	/**
+	 * for a single distribution
+	 * @return
+	 */
+	public double[][] getpmfSingleDist(){
+		double supportLB;
+		double supportUB;
+		if (distribution instanceof DiscreteDistributionInt)
+			supportLB = 0;
+		else {
+			supportLB = (int) distribution.inverseF(1 - truncationQuantile);
+		}
+		supportUB = (int) distribution.inverseF(truncationQuantile);
+		int demandLength = (int) ((supportUB - supportLB + 1) / stepSize);
+		double[][] pmf = new double[demandLength][];
+		
+		for (int j = 0; j < demandLength; j++) {
+			pmf[j][0] = supportLB + j * stepSize;
+		
+			if (distribution instanceof DiscreteDistributionInt ||
+					distributions[0] instanceof PoissonDist) { // may be something wrong, poisson[] can't be (casted) delivered
+				                                                    // but the results are correct
+				double probilitySum = distribution.cdf(supportUB) - distribution.cdf(supportLB);
+				pmf[j][1] = ((DiscreteDistributionInt) distribution).prob(j) / probilitySum;
+			} else {
+				double probilitySum = distribution.cdf(supportUB + 0.5 * stepSize)
+						- distribution.cdf(supportLB - 0.5 * stepSize);
+				pmf[j][1] = (distribution.cdf(pmf[j][0] + 0.5 * stepSize)
+						- distribution.cdf(pmf[j][0] - 0.5 * stepSize)) / probilitySum;
+			}
+		}
+		return pmf;
+	}
+	
+	/**
+	 * for distributions in a planning horizon
 	 * @return
 	 */
 	public double[][][] getpmf() {
