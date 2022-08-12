@@ -17,6 +17,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 /**
@@ -35,23 +36,21 @@ public class cashSurvival {
 	 * @date: Nov 21, 2020, 6:01:10 PM 
 	 */
 	public static void main(String[] args) {
-		double[] meanDemand = {5, 5, 5, 5};
-		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
+		double[] meanDemand = {10, 20, 10};
 		double iniInventory = 0;
-		double iniCash = 15;
+		double iniCash = 120;
 		double fixOrderCost = 0;
 		double variCost = 1;
-		double[] price = {3, 3, 3, 3};
+		double[] price = {5, 5, 5, 5};
 		double depositeRate = 0;
 		double salvageValue = 0.5;
-		double holdingCost = 0;	
-		FindCCrieria criteria = FindCCrieria.XRELATE;	
+		double holdingCost = 0.5;	
 		
-		double overheadCost = 10; // costs like wages or rents which is required to pay in each period
+		double overheadCost = 80; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 		
-		double truncationQuantile = 0.9999;
+		double truncationQuantile = 0.99;
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
@@ -61,9 +60,10 @@ public class cashSurvival {
 		double discountFactor = 1;		
 		
 		// get demand possibilities for each period
+		double sigmaCoe = 0.25;
 		int T = meanDemand.length;
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				// .mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
+				//.mapToObj(i -> new NormalDist(meanDemand[i], sigmaCoe * meanDemand[i])).toArray(Distribution[]::new);// can be changed to other distributions
 				.mapToObj(i -> new PoissonDist(meanDemand[i])).toArray(Distribution[]::new);
 		
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
@@ -88,10 +88,6 @@ public class cashSurvival {
 					- state.getIniCash();
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
 			cashIncrement += salValue;
-			double endCash = state.getIniCash() + cashIncrement;
-			if (endCash < 0) {
-				cashIncrement += penaltyCost * endCash; // can change to overdraft interest
-			}
 			return cashIncrement;
 		};
 

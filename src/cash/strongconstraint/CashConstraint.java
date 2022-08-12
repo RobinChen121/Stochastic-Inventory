@@ -59,7 +59,7 @@ public class CashConstraint {
 		double iniCash = 200;
 		double fixOrderCost = 0;
 		double variCost = 2;
-		double[] price = {6};
+		double price = 6;
 		double depositeRate = 0;
 		double salvageValue = 1;
 		double holdingCost = 0;	
@@ -111,7 +111,7 @@ public class CashConstraint {
 		// immediate value
 		ImmediateValueFunction<CashState, Double, Double, Double> immediateValue = (state, action, randomDemand) -> {
 			int t = state.getPeriod() - 1;
-			double revenue = price[t] * Math.min(state.getIniInventory() + action, randomDemand);
+			double revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
 			double fixedCost = action > 0 ? fixOrderCost : 0;
 			double variableCost = variCost * action;
 			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
@@ -231,15 +231,15 @@ public class CashConstraint {
  		/*******************************************************************
 		 * Find (s, C, S) by MIP and simulate
 		 */
-//		System.out.println("************************************************");
-// 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
-// 		double[][] sCS = mipHeuristic.findsCSPieceWise(); 
-// 		Map<State, Double> cacheCValues = new TreeMap<>();
-// 		cacheCValues = mipHeuristic.cacheC1Values;
-// 		double simsCSMIPValue = simulation.simulatesCS(initialState, sCS, cacheCValues, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//		gap1 = (finalValue - simsCSMIPValue)/finalValue;
-//		gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
-//		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
+		System.out.println("************************************************");
+ 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
+ 		double[][] sCS = mipHeuristic.findsCSPieceWise(); 
+ 		Map<State, Double> cacheCValues = new TreeMap<>();
+ 		cacheCValues = mipHeuristic.cacheC1Values;
+ 		double simsCSMIPValue = simulation.simulatesCS(initialState, sCS, cacheCValues, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+		double gap1 = (finalValue - simsCSMIPValue)/finalValue;
+		double gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
+		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 		
  		
 // 		/*******************************************************************

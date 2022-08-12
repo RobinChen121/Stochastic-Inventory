@@ -1,10 +1,12 @@
 package workforce;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
+import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import umontreal.ssj.probdist.BinomialDist;
@@ -58,17 +60,31 @@ public class StaffRecursion {
 			int[] feasibleActions = getFeasibleAction.apply(state);
 			int iniStaffNum = state.iniStaffNum;
 			int t = state.period - 1;
-			Distribution distribution = new BinomialDist(iniStaffNum, dimissionRate[t]);
-			double[][] pmf = getPmf(distribution);
+			double[][] pmf = {{0, 1}};; 
+			if (iniStaffNum > 0) {
+				Distribution distribution = new BinomialDist(iniStaffNum, dimissionRate[t]);
+				pmf = getPmf(distribution);
+			}
+			else {
+				
+			}
 			
 			int bestHireQty = 0;
 			double[] QValues = new double[feasibleActions.length];
 			double val = Double.MAX_VALUE;
+//			if (t == 1 && Math.abs(state.iniStaffNum - 93) < 0.1)
+//				System.out.println(state.iniStaffNum);
 			for (int i = 0; i < feasibleActions.length; i++) {
 				int orderQty = feasibleActions[i];
 				double thisQValue = 0;								
 				for (int j = 0; j < pmf.length; j++) {
-					thisQValue += pmf[j][1] * immediateValue.apply(s, orderQty, (int)pmf[j][0]);
+					double thisValue = immediateValue.apply(s, orderQty, (int)pmf[j][0]);
+					try {
+						thisQValue += pmf[j][1] * thisValue;
+					} catch (Exception e) {
+						System.out.println();
+					}
+
 					if (s.period < dimissionRate.length) {
 						StaffState newState = stateTransition.apply(s, orderQty, (int) pmf[j][0]);
 						thisQValue += pmf[j][1] * getExpectedValue(newState);
@@ -86,8 +102,61 @@ public class StaffRecursion {
 		});
 	}
 	
+	/**
+	 * expected value when not hiring in the first period
+	 * @param state
+	 * @return
+	 */
+	public double getExpectedValueNoHireFirst(StaffState state) {
+		return this.cacheValues.computeIfAbsent(state, s -> {	
+			int[] feasibleActions = getFeasibleAction.apply(state);
+			int iniStaffNum = state.iniStaffNum;
+			int t = state.period - 1;
+			Distribution distribution = new BinomialDist(iniStaffNum, dimissionRate[t]);
+			double[][] pmf = getPmf(distribution);
+			
+			int bestHireQty = 0;
+			double[] QValues = new double[feasibleActions.length];
+			double val = Double.MAX_VALUE;
+			for (int i = 0; i < feasibleActions.length; i++) {
+				int orderQty = t == 0 ? 0 : feasibleActions[i];
+				double thisQValue = 0;								
+				for (int j = 0; j < pmf.length; j++) {
+					double thisValue = immediateValue.apply(s, orderQty, (int)pmf[j][0]);
+					thisQValue += pmf[j][1] * thisValue;
+					if (s.period < dimissionRate.length) {
+						StaffState newState = stateTransition.apply(s, orderQty, (int) pmf[j][0]);
+						thisQValue += pmf[j][1] * getExpectedValue(newState);
+					}
+				}
+				QValues[i] = thisQValue;
+				if (QValues[i] < val) {
+					val = QValues[i];
+					bestHireQty = orderQty;
+				}
+			}
+
+			return val;
+		});
+	}
+	
 	public int getAction(StaffState state) {
 		return cacheActions.get(state);
+	}
+	
+	/**
+	 * 
+	 * @return optimal decision table of SDP
+	 */
+	public double[][] getOptTable(){
+		Iterator<Map.Entry<StaffState, Integer>> iterator = cacheActions.entrySet().iterator();
+		double[][] arr = new double[cacheActions.size()][3];
+		int i = 0;
+		while (iterator.hasNext()) {
+			Map.Entry<StaffState, Integer> entry = iterator.next();
+			arr[i++] = new double[]{entry.getKey().period, entry.getKey().iniStaffNum, entry.getValue()};
+		}
+		return arr;
 	}
 
 }

@@ -1,5 +1,9 @@
 package milp;
 
+/*
+ * This is an alternative version of LostSaleChance Class
+ */
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -360,7 +364,7 @@ public class LostSaleChanceTesting {
 					sum1 += o1.get(t)*price[t];
 					sum2 += o2.get(t)*price[t];
 				}
-				if (sum1 < sum2) // ·µ»Ø¸ºÊý±íÊ¾ÅÅÔÚÉÏÃæ£¬·µ»ØÕýÊý±íÊ¾ÅÅÔÚÏÂÃæ
+				if (sum1 < sum2) // ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 					return 1;
 				else if(sum1 > sum2)
 					return -1;
@@ -515,7 +519,7 @@ public class LostSaleChanceTesting {
 			    		rightExpr.addTerm(M1, delta[t][s]);
 			    		model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr, "IConstraint4");
 		    		}
-		    		else {// ·þÎñÂÊ¸ß£¬ÏÂÃæÕâÐ©µÈÊ½Ô¼ÊøÌõ¼þ¾Í¶à£¬·´¶ø×ÜÌå¼ÆËãÂýÁË
+		    		else {// ï¿½ï¿½ï¿½ï¿½ï¿½Ê¸ß£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½Ê½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¶à£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		    			GRBLinExpr rightExpr1 = new GRBLinExpr();
 						if (t==0) {
 			    			rightExpr1.addConstant(iniI); rightExpr1.addTerm(1, Q[t][s]); 

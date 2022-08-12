@@ -22,7 +22,7 @@ import umontreal.ssj.probdist.NormalDist;
 /**
  * @author chen
  * @email: 15011074486@163.com
- * @Date: 2022年4月19日, 下午10:25:02
+ * @Date: 2022.04.19, 10:25:02
  * @Description: test joint chance of sampling with replacement
  * 
  */

@@ -35,12 +35,6 @@ https://packages.atlassian.com/maven-3rdparty/">
     	<version>1.0.19</version>
 	</dependency>
   
-  <!-- https://mvnrepository.com/artifact/jfree/jfreechart -->
-  <dependency>
-    <groupId>jfree</groupId>
-    <artifactId>jfreechart</artifactId>
-    <version>1.0.13</version>
-  </dependency>
   
   <!-- https://mvnrepository.com/artifact/colt/colt -->
 	<dependency>
@@ -63,10 +57,6 @@ https://packages.atlassian.com/maven-3rdparty/">
     <artifactId>poi</artifactId>
     <version>4.1.2</version>
 </dependency>
-
-
-
-
 
 
 

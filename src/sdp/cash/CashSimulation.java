@@ -274,8 +274,18 @@ public class CashSimulation {
 					simuValues[i] = 1;
 					countBeforeBankrupt = true;
 				}
-				if (t < T - 1) {
-					double nextServiceRate = countLostBefore == true ? 0 : thisServiceRate / distributions[t].cdf(optQ + state.getIniInventory()); // very important
+				if (t < T - 1) {										
+					double nextServiceRate = 0;
+					
+					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
+					nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+					
+//					double meanDemandSum = IntStream.range(0, T).mapToDouble(j -> distributions[j].getMean()).sum();
+//					double rollingDemandSum = IntStream.range(t, T).mapToDouble(j -> distributions[j].getMean()).sum();
+//					double portion = rollingDemandSum / meanDemandSum;
+//					double nextServiceRate2 = Math.pow(serviceRate, portion);
+//					nextServiceRate = Math.max(nextServiceRate, nextServiceRate2);					
+					
 					state = stateTransition.apply(state, optQ, randomDemand);
 					double iniCash = state.iniCash;
 					double iniI = state.getIniInventory();
@@ -294,15 +304,15 @@ public class CashSimulation {
 			}
 		}
 
-		double simFinalValue = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
-		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;		
+		double simObj = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
+		double simLostRate = (double) lostSaleCount / (double) sampleNum;		
 		int n = samples.length;
-		double sigma = Math.sqrt(simFinalValue*(1 - simFinalValue)/n);
-		double lowCI = simFinalValue - 1.96*sigma;
-		double upCI = simFinalValue + 1.96*sigma;
+		double sigma = Math.sqrt(simObj*(1 - simObj)/n);
+		double lowCI = simObj - 1.96*sigma;
+		double upCI = simObj + 1.96*sigma;
 		double error = 1.96*sigma;
-		System.out.printf("the confidence interval for simulated  SAA is [%.4f, %.4f], with error is %.4f. \n", lowCI, upCI, error);	
-		double[] result =  {simFinalValue, lostSaleRate};
+		System.out.printf("the confidence interval for simulated  SAA objective is [%.4f, %.4f], with error is %.4f. \n", lowCI, upCI, error);	
+		double[] result =  {simObj, simLostRate};
 		return result;
 	}
 	
@@ -610,16 +620,23 @@ public class CashSimulation {
 					simuValues[i] = 1;
 					countBeforeBankrupt = true;
 				}
-				if (t < T - 1) {
-					// revise
-					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
-					
+				if (t < T - 1) {			
 					double nextServiceRate = 0;
-					if (countLostBefore == true)
-						nextServiceRate = 0;
-					else {
-						nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
-					} // very important
+					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());						
+					nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+
+//                    double meanDemandSum = IntStream.range(0, T).mapToDouble(j -> distributions[j].getMean()).sum();
+//					double rollingDemandSum = IntStream.range(t, T).mapToDouble(j -> distributions[j].getMean()).sum();
+//					double portion = rollingDemandSum / meanDemandSum;
+//					nextServiceRate = Math.pow(serviceRate, portion);
+//					double nextServiceRate2 = Math.pow(serviceRate, portion);
+//					nextServiceRate = Math.max(nextServiceRate, nextServiceRate2);
+					
+//					if (countLostBefore == true)
+//						nextServiceRate = 0;
+//					else {
+//						nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+//					} // very important
 					state = stateTransition.apply(state, optQ, randomDemand);
 					double iniCash = state.iniCash;
 					double iniI = state.getIniInventory();
@@ -650,8 +667,89 @@ public class CashSimulation {
 		return result;
 	}
 	
+	public double[] simulateScenarioTree(CashState iniState, double iniQ,  double serviceRate, 
+			int[] sampleNums, double[] prices, double[] variCostUnits, double[] overheadCosts, double salvageValueUnit, double holdCostUnit,
+			double[][] scenarios, int sampleNum) {
+		Sampling.resetStartStream();
+		Sampling sampling = new Sampling();
+		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
+		
+		double[] simuValues = new double[samples.length];
+		int T = samples[0].length;
+		int lostSaleCount = 0;
+		for (int i = 0; i < samples.length; i++) {
+			CashState state = iniState;
+			boolean countBeforeBankrupt = false;
+			boolean countLostBefore = false;
+			double thisValue = 0;
+			double optQ = 0;
+			double thisServiceRate = 1;
+			for (int t = 0; t < T; t++) {
+				if (t == 0) {
+					optQ = iniQ;
+					thisServiceRate = serviceRate;
+				}				
+				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
+				thisValue = state.iniCash + immediateValue.apply(state, optQ, randomDemand);
+				if (state.getIniInventory() + optQ < randomDemand - 0.1 && countLostBefore == false) {
+					lostSaleCount ++;
+					countLostBefore = true;
+				}
+				if (thisValue < - 0.1 && countBeforeBankrupt == false) {
+					simuValues[i] = 1;
+					countBeforeBankrupt = true;
+				}
+				if (t < T - 1) {					
+					double nextServiceRate = 0;
+					
+//                    double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());	
+//					nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+
+	                double meanDemandSum = IntStream.range(0, T).mapToDouble(j -> distributions[j].getMean()).sum();
+					double rollingDemandSum = IntStream.range(t, T).mapToDouble(j -> distributions[j].getMean()).sum();
+					double portion = rollingDemandSum / meanDemandSum;
+					nextServiceRate = Math.pow(serviceRate, portion);
+					double nextServiceRate2 = Math.pow(serviceRate, portion);
+					nextServiceRate = Math.max(nextServiceRate, nextServiceRate2);
+					
+//					if (countLostBefore == true)
+//						nextServiceRate = 0;
+//					else {
+//						nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+//					} // very important
+					state = stateTransition.apply(state, optQ, randomDemand);
+					double iniCash = state.iniCash;
+					double iniI = state.getIniInventory();
+					double[] nextPrices = gettTArray(prices, t + 1);
+					int[] nextSampleNums = gettTArray(sampleNums, t + 1);
+					double[] nextVariCostUnits = gettTArray(variCostUnits, t + 1);
+					Distribution[] nexDistributions = gettTArray(distributions, t + 1);
+					double[] nextOverheadCosts = gettTArray(overheadCosts, t + 1);
+					double[][] nextScenarios = gettTArray(scenarios, t + 1);
+					LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
+							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
+					double[] result = model.solveScenario();	
+					optQ = result[0];
+					thisServiceRate = nextServiceRate;
+				}			
+			}
+		}
+
+		int n = samples.length;
+		double simFinalValue = 1 - Arrays.stream(simuValues).sum()/(double)samples.length;
+		double sigma = Math.sqrt(simFinalValue*(1 - simFinalValue)/n);
+		double lowCI = simFinalValue - 1.96*sigma;
+		double upCI = simFinalValue + 1.96*sigma;
+		double error  = 1.96*sigma;
+		System.out.printf("the confidence interval for simulated scenario tree is [%.4f, %.4f], with error %.4f\n", lowCI, upCI, error);
+		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;		
+		double[] result =  {simFinalValue, lostSaleRate};
+		return result;
+	}
+	
 	/**
 	 * rolling horizon for the further extended SAA
+	 * @param r is the rolling length
 	 * @param iniState
 	 * @param iniQ
 	 * @param serviceRate
@@ -710,17 +808,16 @@ public class CashSimulation {
 					simuValues[i] = 1;
 					countBeforeBankrupt = true;
 				}
-				if (t < T - 1) {
-					// revise
-					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
-					
-					double nextServiceRate = 0;
-//					if (countLostBefore == true)
-//						nextServiceRate = 0;
-//					else {
-//						nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
-//					} // very important
+				if (t < T - 1) {									
+					double nextServiceRate;
+					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());	
 					nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+					
+//					double meanDemandSum = IntStream.range(0, T).mapToDouble(j -> distributions[j].getMean()).sum();
+//					double rollingDemandSum = IntStream.range(t, Math.min(t+r, T)).mapToDouble(j -> distributions[j].getMean()).sum();
+//					double portion = rollingDemandSum / meanDemandSum;
+//					nextServiceRate = Math.pow(serviceRate, portion);
+					
 					state = stateTransition.apply(state, optQ, randomDemand);
 					iniCash = state.iniCash;
 					iniI = state.getIniInventory();
@@ -737,7 +834,7 @@ public class CashSimulation {
 					model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
 							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
 
-					result = model.solveSortWhole();
+					result = model.solveMaxSurvival();
 					optQ = result[0];
 					thisServiceRate = nextServiceRate;
 				}			
@@ -750,7 +847,7 @@ public class CashSimulation {
 		double lowCI = simFinalValue - 1.96*sigma;
 		double upCI = simFinalValue + 1.96*sigma;
 		double error  = 1.96*sigma;
-		System.out.printf("the confidence interval for simulated extened SAA rolling horizon is [%.4f, %.4f], with error %.4f\n", lowCI, upCI, error);
+		System.out.printf("the confidence interval for simulated scenario rolling horizon is [%.4f, %.4f], with error %.4f\n", lowCI, upCI, error);
 		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;	
 		double[] results =  {simFinalValue, lostSaleRate};
 		return results;

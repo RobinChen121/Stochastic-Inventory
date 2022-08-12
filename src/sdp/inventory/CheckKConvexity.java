@@ -61,8 +61,8 @@ public class CheckKConvexity {
 				}
 		
 		if (mark == 0) {
-			System.out.println("CK convexity holds");
-			return "CK convexity holds";
+			System.out.println("K convexity holds");
+			return "K convexity holds";
 		}
 		return null;
 	}
