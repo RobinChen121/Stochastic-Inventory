@@ -55,16 +55,15 @@ public class ChanceCashTestingRollingHorizon {
 				{47,30,13,6,13,30,47,54,47,30,13,6},
 				{36,30,24,21,24,30,36,39,36,30,24,21},
 				{63,27,10,24,1,23,33,35,67,7,14,41},
-				{1,15,46,140,80,147,134,74,84,109,47,88},
+				{5,15,46,140,80,147,134,74,84,109,47,88},
 				{14,24,71,118,49,86,152,117,226,208,78,59},
 				{13,35,79,43,44,59,22,55,61,34,50,95},
 				{15,56,19,84,136,67,67,155,87,164,19,67}
 		};
-				
-		double iniCash = 40;
+						
 		double iniI = 0;
-		double trunQuantile = 0.999;
-		double serviceRate = 0.7; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
+		double trunQuantile = 0.99;
+		double serviceRate = 0.8; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
 		
 		int T = meanDemands[0].length;
 		int[] sampleNums = new int[T];
@@ -76,31 +75,33 @@ public class ChanceCashTestingRollingHorizon {
 		double sigmasCoe = 0.25; // for use in normal distribution
 		
 		
-		for (int t = 0; t < T; t++) {
-			int m = t % 4;
-			prices[t] = seasonalPrice[m];
-			variCostUnits[t] = seasonalVariCost[m];
-		}
-		Arrays.fill(prices, 16);	//
-		Arrays.fill(variCostUnits, 10); //
-		Arrays.fill(overheadCosts, 100); // overhead costs
-		double holdCostUnit = 0;
-		double salvageValueUnit = 2;
+//		for (int t = 0; t < T; t++) {
+//			int m = t % 4;
+//			prices[t] = seasonalPrice[m];
+//			variCostUnits[t] = seasonalVariCost[m];
+//		}
+		Arrays.fill(prices, 5);	//
+		Arrays.fill(variCostUnits, 1); //
+		Arrays.fill(overheadCosts, 80); // overhead costs
+		
+		double holdCostUnit = 0.5;
+		double salvageValueUnit = 0.5;
 		double maxOrderQuantity = 300; // maximum ordering quantity when having enough cash
 		
 		int[] sampleNumsRolling = new int[T];
-		int sampleOnePeriod = 5; 
+		int sampleOnePeriod = 13; 
 		Arrays.fill(sampleNumsRolling,sampleOnePeriod);
-		int rollingLength = 2; // rolling horizon length		
 		
+		int rollingLength = 3; // rolling horizon length		
 		int instanceNum = meanDemands.length;
-		
-		for(int kk = 0; kk < 10; kk++) {
-		for (int m = 1; m < 2; m++) {
+		double iniCash = 100;
+		for (int m = 3; m < 10; m++) {
+			for(int kk = 0; kk < 10; kk++) {	
 			/**
 			 * solve the problem by rolling horizon of extended SAA
 			 * 
 			 */
+			
 			int instanceIndex = m;
 			Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 						.mapToObj(i -> new NormalDist(meanDemands[instanceIndex][i], sigmasCoe*meanDemands[instanceIndex][i])).toArray(Distribution[]::new); //can be changed to other distributions
@@ -148,7 +149,7 @@ public class ChanceCashTestingRollingHorizon {
 				return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 			};
 					
-			int sampleNum = 100; // number of scenarios for rolling SAA
+			int sampleNum = 10; // number of scenarios for rolling SAA
 			int period = 1;		
 		    CashState initialState = new CashState(period, iniI, iniCash);			    			    			    	    
 		    CashSimulation simulation1 = new CashSimulation(distributions, sampleNum, immediateValue, stateTransition); // no need to add overheadCost in this class

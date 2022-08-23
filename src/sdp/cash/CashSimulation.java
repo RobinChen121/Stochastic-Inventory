@@ -780,7 +780,10 @@ public class CashSimulation {
 		double[][] nextScenarios = gettTArray(scenarios, 0, r);
 		LostSaleChance model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
 				salvageValueUnit, holdCostUnit, nextOverheadCosts, serviceRate, nextScenarios);
-		double[] result = model.solveSortWhole();	
+		
+//		double[] result = model.solveSortWhole();
+		double[] result = model.solveMaxSurvival();	
+//		double[] result = model.solveScenario();	
 		double iniQ = result[0];
 		
 		double[] simuValues = new double[samples.length];
@@ -810,23 +813,21 @@ public class CashSimulation {
 				}
 				if (t < T - 1) {									
 					double nextServiceRate;
-					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());	
-					nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;
+										
+					double meanDemandSum = IntStream.range(0, T).mapToDouble(j -> distributions[j].getMean()).sum();
+					double rollingDemandSum = IntStream.range(t, Math.min(t+r, T)).mapToDouble(j -> distributions[j].getMean()).sum();
+					double portion = rollingDemandSum / meanDemandSum;
+					nextServiceRate = Math.pow(serviceRate, portion);
 					
-//					double meanDemandSum = IntStream.range(0, T).mapToDouble(j -> distributions[j].getMean()).sum();
-//					double rollingDemandSum = IntStream.range(t, Math.min(t+r, T)).mapToDouble(j -> distributions[j].getMean()).sum();
-//					double portion = rollingDemandSum / meanDemandSum;
-//					nextServiceRate = Math.pow(serviceRate, portion);
+//					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
+//					nextServiceRate = thisPeriodServRate > nextServiceRate ? thisPeriodServRate : nextServiceRate;
 					
 					state = stateTransition.apply(state, optQ, randomDemand);
 					iniCash = state.iniCash;
 					iniI = state.getIniInventory();
 					nextPrices = gettTArray(prices, t + 1, r);
-					try {
-						nextSampleNums = gettTArray(sampleNums, t + 1, r);
-					} catch (Exception e) {
-						System.out.println();
-					}
+					nextSampleNums = gettTArray(sampleNums, t + 1, r);
+
 					nextVariCostUnits = gettTArray(variCostUnits, t + 1, r);
 					nexDistributions = gettTArray(distributions, t + 1, r);
 					nextOverheadCosts = gettTArray(overheadCosts, t + 1, r);
@@ -834,7 +835,9 @@ public class CashSimulation {
 					model = new LostSaleChance(nexDistributions, nextSampleNums, iniCash, iniI, nextPrices, nextVariCostUnits, 
 							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
 
+//					result = model.solveSortWhole();
 					result = model.solveMaxSurvival();
+//					result = model.solveScenario();
 					optQ = result[0];
 					thisServiceRate = nextServiceRate;
 				}			

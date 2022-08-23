@@ -55,25 +55,71 @@ public class StaffRecursion {
 		return pmf;
 	}
 	
+	/**
+	 * binomial demand is related with y
+	 * @date ：2022 Aug 22 16:21:10
+	 * @param state
+	 * @return
+	 */
 	public double getExpectedValue(StaffState state) {
 		return this.cacheValues.computeIfAbsent(state, s -> {	
 			int[] feasibleActions = getFeasibleAction.apply(state);
 			int iniStaffNum = state.iniStaffNum;
 			int t = state.period - 1;
-			double[][] pmf = {{0, 1}};; 
+			
+			int bestHireQty = 0;
+			double[] QValues = new double[feasibleActions.length];
+			double val = Double.MAX_VALUE;
+			for (int i = 0; i < feasibleActions.length; i++) {
+				int orderQty = feasibleActions[i];
+				double[][] pmf = {{0, 1}};
+				if (iniStaffNum + orderQty > 0) {
+					Distribution distribution = new BinomialDist(iniStaffNum + orderQty, dimissionRate[t]);
+					pmf = getPmf(distribution);
+				}
+				
+				double thisQValue = 0;								
+				for (int j = 0; j < pmf.length; j++) {
+					double thisValue = immediateValue.apply(s, orderQty, (int)pmf[j][0]);
+					thisQValue += pmf[j][1] * thisValue;
+
+					if (s.period < dimissionRate.length) {
+						StaffState newState = stateTransition.apply(s, orderQty, (int) pmf[j][0]);
+						thisQValue += pmf[j][1] * getExpectedValue(newState);
+					}
+				}
+				QValues[i] = thisQValue;
+				if (QValues[i] < val) {
+					val = QValues[i];
+					bestHireQty = orderQty;
+				}
+			}
+			
+			this.cacheActions.putIfAbsent(s, bestHireQty);
+			return val;
+		});
+	}
+	
+	/**
+	 * binomial demand is related with x
+	 * @date ：2022 Aug 22 16:21:10
+	 * @param state
+	 * @return
+	 */
+	public double getExpectedValue2(StaffState state) {
+		return this.cacheValues.computeIfAbsent(state, s -> {	
+			int[] feasibleActions = getFeasibleAction.apply(state);
+			int iniStaffNum = state.iniStaffNum;
+			int t = state.period - 1;
+			double[][] pmf = {{0, 1}};
 			if (iniStaffNum > 0) {
 				Distribution distribution = new BinomialDist(iniStaffNum, dimissionRate[t]);
 				pmf = getPmf(distribution);
-			}
-			else {
-				
 			}
 			
 			int bestHireQty = 0;
 			double[] QValues = new double[feasibleActions.length];
 			double val = Double.MAX_VALUE;
-//			if (t == 1 && Math.abs(state.iniStaffNum - 93) < 0.1)
-//				System.out.println(state.iniStaffNum);
 			for (int i = 0; i < feasibleActions.length; i++) {
 				int orderQty = feasibleActions[i];
 				double thisQValue = 0;								
@@ -84,6 +130,113 @@ public class StaffRecursion {
 					} catch (Exception e) {
 						System.out.println();
 					}
+
+					if (s.period < dimissionRate.length) {
+						StaffState newState = stateTransition.apply(s, orderQty, (int) pmf[j][0]);
+						thisQValue += pmf[j][1] * getExpectedValue2(newState);
+					}
+				}
+				QValues[i] = thisQValue;
+				if (QValues[i] < val) {
+					val = QValues[i];
+					bestHireQty = orderQty;
+				}
+			}
+			
+			this.cacheActions.putIfAbsent(s, bestHireQty);
+			return val;
+		});
+	}
+	
+	/**
+	 * for drawing G(y), demand is related with y
+	 * @date ：2022 Aug 22 17:00:00
+	 * @param state
+	 * @param hireUpStaffNum
+	 * @return
+	 */
+	public double getExpectedValue(StaffState state, int hireUpStaffNum) {
+		return this.cacheValues.computeIfAbsent(state, s -> {	
+			int[] feasibleActions = getFeasibleAction.apply(s);
+			int iniStaffNum = s.period == 1 ? hireUpStaffNum : s.iniStaffNum;
+			int t = state.period - 1;
+					
+			int bestHireQty = 0;
+			double[] QValues = new double[feasibleActions.length];
+			double val = Double.MAX_VALUE;
+			for (int i = 0; i < feasibleActions.length; i++) {
+				int orderQty = feasibleActions[i];
+				double[][] pmf = {{0, 1}};
+				if (s.period == 1) {
+					if (iniStaffNum > 0) {
+						Distribution distribution = new BinomialDist(s.iniStaffNum, dimissionRate[t]);
+						pmf = getPmf(distribution);
+					}
+				}
+				else {
+					if (iniStaffNum + orderQty > 0) {
+						Distribution distribution = new BinomialDist(s.iniStaffNum + orderQty, dimissionRate[t]);
+						pmf = getPmf(distribution);
+					}
+				}
+				
+				double thisQValue = 0;								
+				for (int j = 0; j < pmf.length; j++) {
+					double thisValue = immediateValue.apply(s, orderQty, (int)pmf[j][0]);
+					thisQValue += pmf[j][1] * thisValue;
+					
+					if (s.period < dimissionRate.length) {
+						StaffState newState = stateTransition.apply(s, orderQty, (int) pmf[j][0]);
+						thisQValue += pmf[j][1] * getExpectedValue(newState);
+					}
+				}
+				QValues[i] = thisQValue;
+				if (QValues[i] < val) {
+					val = QValues[i];
+					bestHireQty = orderQty;
+				}
+			}
+			
+			this.cacheActions.putIfAbsent(s, bestHireQty);
+			return val;
+		});
+	}
+	
+	/**
+	 * for drawing G(y), demand is related with x, x is realStaffNum
+	 * @date ：2022 Aug 22 17:00:00
+	 * @param state
+	 * @param hireUpStaffNum
+	 * @return
+	 */
+	public double getExpectedValue2(StaffState state, int realStaffNum) {
+		return this.cacheValues.computeIfAbsent(state, s -> {	
+			int[] feasibleActions = getFeasibleAction.apply(s);
+			int iniStaffNum = s.period == 1 ? realStaffNum : s.iniStaffNum;
+			int t = state.period - 1;
+			double[][] pmf = {{0, 1}};
+			if (s.period == 1) {
+				if (realStaffNum > 0) {
+					Distribution distribution = new BinomialDist(realStaffNum , dimissionRate[t]);
+					pmf = getPmf(distribution);
+				}
+			}
+			else {
+				if (iniStaffNum > 0) {
+				Distribution distribution = new BinomialDist(iniStaffNum, dimissionRate[t]);
+				pmf = getPmf(distribution);
+				}
+			}		
+			
+			int bestHireQty = 0;
+			double[] QValues = new double[feasibleActions.length];
+			double val = Double.MAX_VALUE;
+			for (int i = 0; i < feasibleActions.length; i++) {
+				int orderQty = feasibleActions[i];
+				double thisQValue = 0;								
+				for (int j = 0; j < pmf.length; j++) {
+					double thisValue = immediateValue.apply(s, orderQty, (int)pmf[j][0]);
+					thisQValue += pmf[j][1] * thisValue;
 
 					if (s.period < dimissionRate.length) {
 						StaffState newState = stateTransition.apply(s, orderQty, (int) pmf[j][0]);

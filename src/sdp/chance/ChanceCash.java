@@ -94,8 +94,8 @@ public class ChanceCash {
 //		         + "simRollingObj" + "\t" + "simRollingService";
 //		wr.writeToFile(fileName, headString);
 		
-		double[] meanDemand = {10, 20, 10, 20};
-		double iniCash = 120;
+		double[] meanDemand = {5,15,46,140,80,147,134,74,84,109,47,88};
+		double iniCash = 40;
 		int T = meanDemand.length;
 		
 		double minInventoryState = 0;
@@ -107,21 +107,21 @@ public class ChanceCash {
 		double iniI = 0;
 		double trunQuantile = 0.99;
 		
-		double serviceRate = 0.9; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
-		int etaFrac = 1;
+		double serviceRate = 0.7; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
+		int etaFrac = 2;
 		double serviceRateSAA = 1 - (1- serviceRate)/etaFrac;
 		
-		int sampleNumPeriod = 5;
+		int sampleNumPeriod = 17;
 		int[] sampleNumSims = new int[T]; // sample number in each period, the number of samples in the first period can have big influence		
 		int[] sampleNumSimsRolling = new int[T];
 		Arrays.fill(sampleNumSimsRolling, sampleNumPeriod);
 		Arrays.fill(sampleNumSims, sampleNumPeriod);
-		int rollingLength = 2; // rolling horizon length
+		
+		int rollingLength = 1; // rolling horizon length
 		double meanDemandSum = Arrays.stream(meanDemand).sum();
 		double rollingDemandSum = Arrays.stream(meanDemand).limit(rollingLength).sum();
 		double portion = rollingDemandSum / meanDemandSum;
-		double rollingServiceRate = Math.pow(serviceRateSAA, portion);
-		
+		double rollingServiceRate = Math.pow(serviceRateSAA, portion);		
 		int sampleNumSim = 100;  // simulating sample number in testing SAA and extended SAA
 		
 		double holdCostUnit = 0.5;
@@ -141,7 +141,7 @@ public class ChanceCash {
 		double sigmaCoe = 0.25;
 		
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				// .mapToObj(i -> new NormalDist(meanDemand[i], sigmaCoe * meanDemand[i])).toArray(Distribution[]::new);// can be changed to other distributions
+				//.mapToObj(i -> new NormalDist(meanDemand[i], sigmaCoe * meanDemand[i])).toArray(Distribution[]::new);// can be changed to other distributions
 				.mapToObj(i -> new PoissonDist(meanDemand[i])).toArray(Distribution[]::new);
 		
 //		for (int runTime = 0; runTime < 10; runTime++) {
@@ -170,23 +170,23 @@ public class ChanceCash {
 
 		LostSaleChance model = new LostSaleChance(distributions, sampleNumSims, iniCash, iniI, prices, variCostUnits, 
 				salvageValueUnit, holdCostUnit, overheadCosts, serviceRateSAA, scenarios);
-        result = model.solveMaxSurvival();				
-		time1 = (System.currentTimeMillis() - currTime) / 1000.00;
-	    currTime = System.currentTimeMillis();	    
-	    System.out.println("*********************************************************************");
-	    System.out.println("result of SAA before sorting scenarios: ");
-	    System.out.println("running time is " + time1 + "s");	
-	    System.out.printf("first stage decison Q is: %.2f\n", result[0]);
-	    positiveScenario = result[1];
-	    System.out.printf("Objective value is: %.0f in %d scenarios\n", result[1], sampleNumSimTotal);
-	    ObjSAA = 100 * result[1] / sampleNumSimTotal;
-	    System.out.printf("Survival probability is: %.5f%%\n", ObjSAA);
-	    System.out.println("lost sale scenario number in the solution is : " + result[2]);
-	    System.out.println("maximum lost sale scenario number allowed is: " + negativeScenarioNumRequire);
-	    lostRate = result[2] / (double) sampleNumSimTotal;
-	    System.out.println("lost sale rate of SAA is: " + nf.format(lostRate));
-	    System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
-	    System.out.println();
+//        result = model.solveMaxSurvival();				
+//		time1 = (System.currentTimeMillis() - currTime) / 1000.00;
+//	    currTime = System.currentTimeMillis();	    
+//	    System.out.println("*********************************************************************");
+//	    System.out.println("result of SAA before sorting scenarios: ");
+//	    System.out.println("running time is " + time1 + "s");	
+//	    System.out.printf("first stage decison Q is: %.2f\n", result[0]);
+//	    positiveScenario = result[1];
+//	    System.out.printf("Objective value is: %.0f in %d scenarios\n", result[1], sampleNumSimTotal);
+//	    ObjSAA = 100 * result[1] / sampleNumSimTotal;
+//	    System.out.printf("Survival probability is: %.5f%%\n", ObjSAA);
+//	    System.out.println("lost sale scenario number in the solution is : " + result[2]);
+//	    System.out.println("maximum lost sale scenario number allowed is: " + negativeScenarioNumRequire);
+//	    lostRate = result[2] / (double) sampleNumSimTotal;
+//	    System.out.println("lost sale rate of SAA is: " + nf.format(lostRate));
+//	    System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
+//	    System.out.println();
 	    
 	    /**
 		 * Simulate the restult of SAA
@@ -233,52 +233,52 @@ public class ChanceCash {
 	    CashSimulation simulation1 = new CashSimulation(distributions, sampleNumSim, immediateValue, stateTransition); // no need to add overheadCost in this class
 	    double error;
 	    
-	    double SAAServiceSim;	    
-	    currTime = System.currentTimeMillis();
-	    resultSim = simulation1.simulateSAA(initialState, result[0], serviceRateSAA, sampleNumSims, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
-	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;  
-	    System.out.println("running time is " + time1 + "s");
-	    double objSAASim = resultSim[0];
-	    System.out.println("final simulated survival probability of SAA in " + df.format(sampleNumSim) + " samples is: " + nf.format(objSAASim));
-		error  = 1.96 * Math.sqrt(resultSim[1]*(1 - resultSim[1]) / sampleNumSim);
-		SAAServiceSim = 1-resultSim[1];
-		System.out.println("final simulated service sale rate of SAA " + " is: " + nf.format(SAAServiceSim) + " with error " + nf.format(error)); 
+//	    double SAAServiceSim;	    
+//	    currTime = System.currentTimeMillis();
+//	    resultSim = simulation1.simulateSAA(initialState, result[0], serviceRateSAA, sampleNumSims, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
+//	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;  
+//	    System.out.println("running time is " + time1 + "s");
+//	    double objSAASim = resultSim[0];
+//	    System.out.println("final simulated survival probability of SAA in " + df.format(sampleNumSim) + " samples is: " + nf.format(objSAASim));
+//		error  = 1.96 * Math.sqrt(resultSim[1]*(1 - resultSim[1]) / sampleNumSim);
+//		SAAServiceSim = 1-resultSim[1];
+//		System.out.println("final simulated service sale rate of SAA " + " is: " + nf.format(SAAServiceSim) + " with error " + nf.format(error)); 
 	    
 		/**
 		 * solve the problem by scenario tree
 		 */
-		currTime = System.currentTimeMillis();
-		result = model.solveScenario();	// same result with soveSort or solveSort2, but less computational time
-		                                   // former name is solveSortFurther()
-		
-		time1 = (System.currentTimeMillis() - currTime) / 1000.00;    
-	    System.out.println("**************************************************************");
-	    System.out.println("result of scenario tree: ");
-	    System.out.println("running time is " + time1 + "s");	
-	    System.out.printf("first stage decison Q is: %.2f\n", result[0]);
-	    positiveScenario = result[1];
-	    System.out.printf("Objective value is: %.0f in %d scenarios\n", positiveScenario, sampleNumSimTotal);
-	    double ObjScenario = 100 * result[1] / sampleNumSimTotal;
-	    System.out.printf("Survival probability is: %.5f%%\n", ObjScenario);
-	    System.out.println("lost sale scenario number in the solution is : " + result[2]);
-	    System.out.println("maximum lost sale scenario number allowed is: " + negativeScenarioNumRequire);
-	    lostRate = result[2] / (double) sampleNumSimTotal;
-	    System.out.println("lost sale rate of scenario tree model is: " + nf.format(lostRate));
-	    System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
-	    System.out.println();
+//		currTime = System.currentTimeMillis();
+//		result = model.solveScenario();	// same result with soveSort or solveSort2, but less computational time
+//		                                   // former name is solveSortFurther()
+//		
+//		time1 = (System.currentTimeMillis() - currTime) / 1000.00;    
+//	    System.out.println("**************************************************************");
+//	    System.out.println("result of scenario tree: ");
+//	    System.out.println("running time is " + time1 + "s");	
+//	    System.out.printf("first stage decison Q is: %.2f\n", result[0]);
+//	    positiveScenario = result[1];
+//	    System.out.printf("Objective value is: %.0f in %d scenarios\n", positiveScenario, sampleNumSimTotal);
+//	    double ObjScenario = 100 * result[1] / sampleNumSimTotal;
+//	    System.out.printf("Survival probability is: %.5f%%\n", ObjScenario);
+//	    System.out.println("lost sale scenario number in the solution is : " + result[2]);
+//	    System.out.println("maximum lost sale scenario number allowed is: " + negativeScenarioNumRequire);
+//	    lostRate = result[2] / (double) sampleNumSimTotal;
+//	    System.out.println("lost sale rate of scenario tree model is: " + nf.format(lostRate));
+//	    System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
+//	    System.out.println();
 	    
 	    /**
 		 * Simulate the result of scenario tree
 		 */	   
-	    currTime = System.currentTimeMillis();
-	    resultSim = simulation1.simulateScenarioTree(initialState, result[0], serviceRateSAA, sampleNumSims, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
-	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;  
-	    double ObjScenarioSim = resultSim[0];
-	    System.out.println("running time is " + time1 + "s");
-	    System.out.println("final simulated survival probability of scenario tree model in " + df.format(sampleNumSim) + " samples is: " + nf.format(resultSim[0]));
-		error  = 1.96 * Math.sqrt(resultSim[1]*(1 - resultSim[1]) / sampleNumSim);
-		double ScenarioServiceSim = 1 - resultSim[1];
-		System.out.println("final simulated service rate of scenario tree model " + " is: " + nf.format(ScenarioServiceSim) + " with error " + nf.format(error));
+//	    currTime = System.currentTimeMillis();
+//	    resultSim = simulation1.simulateScenarioTree(initialState, result[0], serviceRateSAA, sampleNumSims, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
+//	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;  
+//	    double ObjScenarioSim = resultSim[0];
+//	    System.out.println("running time is " + time1 + "s");
+//	    System.out.println("final simulated survival probability of scenario tree model in " + df.format(sampleNumSim) + " samples is: " + nf.format(resultSim[0]));
+//		error  = 1.96 * Math.sqrt(resultSim[1]*(1 - resultSim[1]) / sampleNumSim);
+//		double ScenarioServiceSim = 1 - resultSim[1];
+//		System.out.println("final simulated service rate of scenario tree model " + " is: " + nf.format(ScenarioServiceSim) + " with error " + nf.format(error));
 		
 		
 		/**
@@ -335,7 +335,7 @@ public class ChanceCash {
 				immediateValue, discountFactor);
 		double finalValue;
 		double time;
-		
+//		
 //		currTime = System.currentTimeMillis();
 //		recursion.setTreeMapCacheAction();
 //		finalValue = recursion.getSurvProb(initialState);
@@ -398,24 +398,24 @@ public class ChanceCash {
 		 * solve the problem by rolling horizon of further SAA
 		 * 
 		 */
-//		sampleNumSim = 100; // number of scenarios for rolling SAA
-//	    currTime = System.currentTimeMillis();
-//	    System.out.println("**********************************************");
-//	    scenarios = sampling.generateLHSamples(distributions, sampleNumSimsRolling);
-//	    resultSim = simulation1.rollingHoirzonFurtherExtendSAA(rollingLength, initialState, rollingServiceRate, sampleNumSimsRolling, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
-//	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;	    
-//	    System.out.println("after rolling horizon for length " + rollingLength +", " + "total horizon length is " + T + ", result is: ");
-//	    System.out.println("running time is " + time1 + "s");
-//	    System.out.println("final simulated survival probability of rolling extended SAA in " + df.format(sampleNumSim) + " samples is: " + nf.format(resultSim[0]));
-//	    double sigma2 = Math.sqrt(resultSim[1]*(1 - resultSim[1])/sampleNumSim);
-//		double error2  = 1.96*sigma2;
-//		double serviceRate2 = 1 - resultSim[1];
-//		double objRolling = resultSim[0];
-//		double serviceRolling = 1 - resultSim[1];
-//		System.out.printf("the service rate for simulated extended SAA rolling horizon is %.4f, with error %.4f\n", serviceRate2, error2);
+		sampleNumSim = 100; // number of scenarios for rolling SAA
+	    currTime = System.currentTimeMillis();
+	    System.out.println("**********************************************");
+	    scenarios = sampling.generateLHSamples(distributions, sampleNumSimsRolling);
+	    resultSim = simulation1.rollingHoirzonFurtherExtendSAA(rollingLength, initialState, rollingServiceRate, sampleNumSimsRolling, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
+	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;	    
+	    System.out.println("after rolling horizon for length " + rollingLength +", " + "total horizon length is " + T + ", result is: ");
+	    System.out.println("running time is " + time1 + "s");
+	    System.out.println("final simulated survival probability of rolling extended SAA in " + df.format(sampleNumSim) + " samples is: " + nf.format(resultSim[0]));
+	    double sigma2 = Math.sqrt(resultSim[1]*(1 - resultSim[1])/sampleNumSim);
+		double error2  = 1.96*sigma2;
+		double serviceRate2 = 1 - resultSim[1];
+		double objRolling = resultSim[0];
+		double serviceRolling = 1 - resultSim[1];
+		System.out.printf("the service rate for simulated extended SAA rolling horizon is %.4f, with error %.4f\n", serviceRate2, error2);
 						
 		/**
-		 * solve the problem by rolling horizon of further SAA
+		 * output to excel
 		 * 
 		 */
 //		double[] out = new double[]{sampleNumSimTotal, etaFrac, 1-serviceRateSAA, ObjSAA/100.0, objSAASim, SAAServiceSim, ObjScenario/100.0, ObjScenarioSim, 

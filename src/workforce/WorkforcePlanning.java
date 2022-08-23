@@ -24,22 +24,22 @@ import umontreal.ssj.probdist.Distribution;
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] dimissionRate = {0.5, 0.2, 0.5, 0.3};
+		double[] dimissionRate = {0.1, 0.1, 0.1, 0.1};
 		int T = dimissionRate.length;
-		int iniStaffNum = 80;
-		double fixCost = 10000;
-		double unitVariCost = 1000;
-		double salary = 3000;
-		double unitPenalty = 5000;		
-		int[] minStaffNum = {90, 90, 90, 90};	
+		int iniStaffNum = 30;
+		double fixCost = 151;
+		double unitVariCost = 0;
+		double salary = 1;
+		double unitPenalty = 15;		
+		int[] minStaffNum = {96,50,74,24};	
 		
-		int maxHireNum = 300;
+		int maxHireNum = 200;
 		int stepSize = 1;
-		double truncQuantile = 0.999;
+		double truncQuantile = 0.99;
 		boolean isForDrawGy = true;
 		
-		int minX = 10;
-		int maxX = 300; // for drawing pictures
+		int minX = iniStaffNum;
+		int maxX = 200; // for drawing pictures
 		
 		// feasible actions
 		Function<StaffState, int[]> getFeasibleAction = s -> {
@@ -60,7 +60,7 @@ public class WorkforcePlanning {
 		
 		// immediate value function
 		ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue = (state, action, randomDemand) -> {
-			double fixHireCost = action > 0 ? fixCost: 0;
+			double fixHireCost = action > 0 ? fixCost : 0;
 			double variHireCost = unitVariCost * action;
 			int nextStaffNum = state.iniStaffNum + action - randomDemand;
 			double salaryCost = salary * nextStaffNum;
@@ -87,6 +87,7 @@ public class WorkforcePlanning {
 		
 		/*******************************************************************
 		 * Drawing
+		 * xQ
 		 */
 		int xLength = maxX - minX + 1;
 		double[][] xQ = new double[xLength][2];
@@ -100,18 +101,31 @@ public class WorkforcePlanning {
 		}
 		Drawing.drawXQ(xQ);
 		
-		// since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again
-		// must redefine stateTransition function and immediate Function;
+		/*******************************************************************
+		 * Drawing
+		 * G(y, x), G should also related with x since x affected the demand distribution.
+		 * since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again.
+		 * must redefine stateTransition function and immediate Function.
+		 */
 		StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
-			int nextStaffNum = isForDrawGy && state.period == 1 ? state.iniStaffNum - randomDemand
-					: state.iniStaffNum + action - randomDemand;
+			int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
 			return new StaffState(state.period + 1, nextStaffNum);
 		};
 
 		ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
-			double fixHireCost = 0;
-			double variHireCost = unitVariCost * action;
-			int nextStaffNum = state.iniStaffNum + action - randomDemand;
+			double fixHireCost;
+			double variHireCost;
+			int nextStaffNum;
+			if (state.period == 1) {
+				fixHireCost = 0;
+				variHireCost = unitVariCost * state.iniStaffNum;
+				nextStaffNum = state.iniStaffNum - randomDemand;
+			}
+			else {
+				fixHireCost = action > 0 ? fixCost : 0;
+				variHireCost = unitVariCost * action;
+				nextStaffNum = state.iniStaffNum + action - randomDemand;
+			}
 			double salaryCost = salary * nextStaffNum;
 			int t = state.period - 1;
 			double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
@@ -125,7 +139,7 @@ public class WorkforcePlanning {
 		index = 0;
 		for (int initialStaff = minX; initialStaff <= maxX; initialStaff++) {
 			yG[index][0] = initialStaff;
-			yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff));
+			yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff), iniStaffNum);
 			index++;
 		}
 		CheckKConvexity.check(yG, fixCost);

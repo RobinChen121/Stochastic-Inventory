@@ -326,7 +326,7 @@ public class Drawing {
 		XYSeriesCollection seriesCollection = new XYSeriesCollection();
 		seriesCollection.addSeries(seriesG);
 
-		JFreeChart chart = ChartFactory.createXYLineChart("G(y) with different order-up-to level y", // chart title
+		JFreeChart chart = ChartFactory.createXYLineChart("G(y) with different hire-up-to level y", // chart title
 				"y", // x axis label
 				"G(y)", // y axis label
 				seriesCollection, // data
