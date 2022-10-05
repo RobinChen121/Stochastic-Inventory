@@ -51,7 +51,7 @@ public class ChanceCashTestingRollingHorizon {
 		
 		double[][] meanDemands = {{30,30,30,30,30,30,30, 30, 30, 30, 30, 30},
 				{46,49,50,50,49,46,42,38,33,28,23,18},
-				{8, 11, 14, 18, 23, 28, 33, 38, 42, 46, 49, 50},
+				{11, 14, 18, 23, 28, 33, 38, 42, 46, 49, 50, 49},
 				{47,30,13,6,13,30,47,54,47,30,13,6},
 				{36,30,24,21,24,30,36,39,36,30,24,21},
 				{63,27,10,24,1,23,33,35,67,7,14,41},
@@ -95,7 +95,7 @@ public class ChanceCashTestingRollingHorizon {
 		int rollingLength = 3; // rolling horizon length		
 		int instanceNum = meanDemands.length;
 		double iniCash = 100;
-		for (int m = 3; m < 10; m++) {
+		for (int m = 2; m < 3; m++) {
 			for(int kk = 0; kk < 10; kk++) {	
 			/**
 			 * solve the problem by rolling horizon of extended SAA

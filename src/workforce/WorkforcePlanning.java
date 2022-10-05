@@ -1,14 +1,18 @@
 package workforce;
 
+import java.util.Arrays;
 import java.util.function.Function;
 
 import sdp.inventory.CheckKConvexity;
 import sdp.inventory.Drawing;
+import sdp.inventory.FitsS;
 import sdp.inventory.Recursion;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.Recursion.OptDirection;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import umontreal.ssj.probdist.BinomialDist;
+import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 
@@ -18,28 +22,50 @@ import umontreal.ssj.probdist.Distribution;
 /**
  * @author chen
  * @description: optimal ordering quantity for a single period problem is 
- * F^{-1}((\pi-h-v)/\pi)-x+w.
+ * F^{-1}((\pi-h(1-p)-v)/\pi)-x+w.
  *
  */
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] dimissionRate = {0.1, 0.1, 0.1, 0.1};
+		double[] dimissionRate;
+		dimissionRate = new double[] {0.1, 0.1, 0.1, 0.1,0.1, 0.1};
+		//Arrays.fill(dimissionRate, 0.5);
 		int T = dimissionRate.length;
-		int iniStaffNum = 30;
-		double fixCost = 151;
-		double unitVariCost = 0;
-		double salary = 1;
-		double unitPenalty = 15;		
-		int[] minStaffNum = {96,50,74,24};	
 		
-		int maxHireNum = 200;
+		int iniStaffNum = 0;
+		double fixCost = 1000;
+		double unitVariCost = 0;
+		double salary = 10;
+		double unitPenalty = 50;		
+		int[] minStaffNum = {80, 10, 58, 65, 15, 30, 45, 60, 10, 56, 49, 70};	
+		
+		int maxHireNum = 500;
 		int stepSize = 1;
-		double truncQuantile = 0.99;
 		boolean isForDrawGy = true;
 		
-		int minX = iniStaffNum;
-		int maxX = 200; // for drawing pictures
+		int minX = 0;
+		int maxX = 500; // for drawing pictures
+		int xLength = maxX - minX + 1;
+		
+		// get pmf for every possible x
+		double[][][][] pmf = new double[T][][][];
+		for (int t = 0; t < T; t++) {
+			pmf[t] = new double[xLength][][];
+			for (int i = minX; i <= maxX; i++) {
+				pmf[t][i] = new double[i+1][2];
+				if (i == 0) {
+					pmf[t][0] = new double[][]{{0, 1}};
+				}
+				else {			
+					BinomialDist distribution = new BinomialDist(i, dimissionRate[t]);
+					for (int j = 0; j < i+1; j++) {
+						pmf[t][i][j][0] = j;		
+						pmf[t][i][j][1] = distribution.prob(j);
+					}
+				}			
+			}		
+		}
 		
 		// feasible actions
 		Function<StaffState, int[]> getFeasibleAction = s -> {
@@ -55,6 +81,8 @@ public class WorkforcePlanning {
 		// state transition function
 		StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition = (state, action, randomDemand) -> {
 			int nextStaffNum = state.iniStaffNum + action - randomDemand;
+			nextStaffNum  = nextStaffNum  > maxX ? maxX : nextStaffNum;
+			nextStaffNum  = nextStaffNum  < minX ? minX : nextStaffNum;
 			return new StaffState(state.period + 1, nextStaffNum);
 		};
 		
@@ -73,82 +101,99 @@ public class WorkforcePlanning {
 		/*******************************************************************
 		 * Solve
 		 */
-		StaffRecursion recursion = new StaffRecursion(getFeasibleAction, stateTransition, immediateValue, dimissionRate, truncQuantile);
+		StaffRecursion recursion = new StaffRecursion(getFeasibleAction, stateTransition, immediateValue, pmf, T);
 		int period = 1;
 		StaffState initialState = new StaffState(period, iniStaffNum);
 		long currTime = System.currentTimeMillis();
 		double opt = recursion.getExpectedValue(initialState);
 		System.out.println("final optimal expected cost is: " + opt);
-		System.out.println("optimal hiring number in the first priod is : " + recursion.getAction(initialState));
+		int optQ = recursion.getAction(initialState);
+		System.out.println("optimal hiring number in the first priod is : " + optQ);
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
 		double[][] optTable = recursion.getOptTable();
 		
 		
 		/*******************************************************************
-		 * Drawing
-		 * xQ
+		 * find s and S from SDP and simulate.
+		 * when >= s, not order.
 		 */
-		int xLength = maxX - minX + 1;
-		double[][] xQ = new double[xLength][2];
-		int index = 0;
-		for (int initialInventory = minX; initialInventory <= maxX; initialInventory++) {
-			period = 1;
-			xQ[index][0] = initialInventory;
-			recursion.getExpectedValue(new StaffState(period, initialInventory));
-			xQ[index][1] = recursion.getAction(new StaffState(period, initialInventory));
-			index++;
-		}
-		Drawing.drawXQ(xQ);
+		FitsS findsS = new FitsS(Integer.MAX_VALUE, T);
+		double[][] optsS = findsS.getSinglesS(optTable);
+		System.out.println("single s, S level: " + Arrays.deepToString(optsS));
+		
+//		double sim1 = simuation.simulateSinglesS(initialState, optsS, maxOrderQuantity);
+//		System.out.printf("one level gap is %.2f%%\n", (sim1 - opt)*100/opt);
+		
 		
 		/*******************************************************************
 		 * Drawing
-		 * G(y, x), G should also related with x since x affected the demand distribution.
-		 * since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again.
-		 * must redefine stateTransition function and immediate Function.
+		 * xQ
 		 */
-		StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
-			int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
-			return new StaffState(state.period + 1, nextStaffNum);
-		};
-
-		ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
-			double fixHireCost;
-			double variHireCost;
-			int nextStaffNum;
-			if (state.period == 1) {
-				fixHireCost = 0;
-				variHireCost = unitVariCost * state.iniStaffNum;
-				nextStaffNum = state.iniStaffNum - randomDemand;
-			}
-			else {
-				fixHireCost = action > 0 ? fixCost : 0;
-				variHireCost = unitVariCost * action;
-				nextStaffNum = state.iniStaffNum + action - randomDemand;
-			}
-			double salaryCost = salary * nextStaffNum;
-			int t = state.period - 1;
-			double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
-			double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
-			return totalCosts;
-		};
-
-		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition2, immediateValue2, dimissionRate, truncQuantile);
-		
-		double[][] yG = new double[xLength][2];
-		index = 0;
-		for (int initialStaff = minX; initialStaff <= maxX; initialStaff++) {
-			yG[index][0] = initialStaff;
-			yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff), iniStaffNum);
-			index++;
-		}
-		CheckKConvexity.check(yG, fixCost);
-		Drawing.drawSimpleG(yG);
-		Drawing.drawGAndsS(yG, fixCost);
+//		double[][] xQ = new double[xLength][2];
+//		int index = 0;
+//		for (int initialInventory = minX; initialInventory <= maxX; initialInventory++) {
+//			period = 1;
+//			xQ[index][0] = initialInventory;
+//			recursion.getExpectedValue(new StaffState(period, initialInventory));
+//			xQ[index][1] = recursion.getAction(new StaffState(period, initialInventory));
+//			index++;
+//		}
+//		Drawing.drawXQ(xQ);
+//		
+//		/*******************************************************************
+//		 * Drawing
+//		 * G(y, x), G should also related with x since x affected the demand distribution.
+//		 * since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again.
+//		 * must redefine stateTransition function and immediate Function.
+//		 */
+//		StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
+//			int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
+//			return new StaffState(state.period + 1, nextStaffNum);
+//		};
+//
+//		ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
+//			double fixHireCost;
+//			double variHireCost;
+//			int nextStaffNum;
+//			if (state.period == 1) {
+//				fixHireCost = 0;
+//				variHireCost = unitVariCost * state.iniStaffNum;
+//				nextStaffNum = state.iniStaffNum - randomDemand;
+//			}
+//			else {
+//				fixHireCost = action > 0 ? fixCost : 0;
+//				variHireCost = unitVariCost * action;
+//				nextStaffNum = state.iniStaffNum + action - randomDemand;
+//			}
+//			double salaryCost = salary * nextStaffNum;
+//			int t = state.period - 1;
+//			double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
+//			double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
+//			return totalCosts;
+//		};
+//
+//		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition2, immediateValue2, pmf, T);
+//		
+//		double[][] yG = new double[xLength][2];
+//		index = 0;
+//		for (int initialStaff = minX; initialStaff <= maxX; initialStaff++) {
+//			yG[index][0] = initialStaff;
+//			yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff), iniStaffNum);
+//			index++;
+//		}
+//		CheckKConvexity CheckK = new CheckKConvexity();
+//		CheckK.check(yG, fixCost);
+//		Drawing.drawSimpleG(yG);
+//		Drawing.drawGAndsS(yG, fixCost);
 		
 //		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition, immediateValue, dimissionRate, truncQuantile);
 //		double opt2 = recursion2.getExpectedValueNoHireFirst(initialState);
 //		System.out.println("final optimal expected cost if not hiring in the first period is: " + opt2);
+		
+//		BinomialDist dist = new BinomialDist(optQ, dimissionRate[0]);
+//		int QStar = dist.inverseFInt((unitPenalty-salary*(1-dimissionRate[0])-unitVariCost)/unitPenalty) - iniStaffNum + minStaffNum[0];
+//		System.out.println("the optimal ordering quantity in the first period is: " + QStar);
 	}
 
 }

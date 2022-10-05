@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import milp.MIPFitsS;
 import sdp.inventory.CheckKConvexity;
+import sdp.inventory.FitsS;
 import sdp.inventory.GetPmf;
 import sdp.inventory.Recursion;
 import sdp.inventory.State;
@@ -135,7 +135,7 @@ public class ThreeLevelFitsSTest {
 							int sampleNum = 10000;
 							SimulateFitsS simuation = new SimulateFitsS(distributions, sampleNum, recursion);
 							double[][] optTable = recursion.getOptTable();
-							MIPFitsS findsS = new MIPFitsS(maxOrderQuantity, T);
+							FitsS findsS = new FitsS(maxOrderQuantity, T);
 							double[][] optsS = findsS.getThreesS(optTable);
 							System.out.println(Arrays.deepToString(optsS));
 							simuation.simulateSDPGivenSamplNum(initialState);

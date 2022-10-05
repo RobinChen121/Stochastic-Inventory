@@ -36,7 +36,7 @@ public class CheckKConvexity {
 	}
 	
 	
-	public static String check(double[][] yG, double fixOrderCost) {
+	public Boolean check(double[][] yG, double fixOrderCost) {
 		double minInventorys = yG[0][0];
 		double maxInventorys = yG[yG.length - 1][0]; 
 		int xLength = (int) (maxInventorys - minInventorys + 1);
@@ -56,14 +56,14 @@ public class CheckKConvexity {
 						System.out.printf("x-b = %d, x = %d, x+a = %d", xb, x, xa);
 						System.out.println();
 						System.out.println("not K convex");
-						return "not K convex";
+						return false;
 					}
 				}
 		
 		if (mark == 0) {
 			System.out.println("K convexity holds");
-			return "K convexity holds";
+			return true;
 		}
-		return null;
+		return false;
 	}
 }

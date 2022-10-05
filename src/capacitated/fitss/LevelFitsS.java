@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import milp.MIPFitsS;
 import sdp.inventory.CheckKConvexity;
 import sdp.inventory.GetPmf;
 import sdp.inventory.Drawing;
+import sdp.inventory.FitsS;
 import sdp.inventory.Recursion;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
@@ -125,11 +125,11 @@ public class LevelFitsS {
 		simuation.simulateSDPwithErrorConfidence(initialState, error, confidence);
 		
 		/*******************************************************************
-		 * Fit (s, S) levels
+		 * Fit (s, S) levels by MIP, performing not well for some very special case
 		 */
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();		
-		MIPFitsS findsS = new MIPFitsS(maxOrderQuantity, T);
+		FitsS findsS = new FitsS(maxOrderQuantity, T);
 		double[][] optsS = findsS.getSinglesS(optTable);
 		System.out.println("single s, S level: " + Arrays.deepToString(optsS));
 		optsS = findsS.getTwosS(optTable);

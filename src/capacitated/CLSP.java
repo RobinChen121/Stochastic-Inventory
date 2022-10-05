@@ -160,9 +160,9 @@ public class CLSP {
 		
 		  
 	      double initialInventory = 0; 
-	      double[] meanDemand = {50, 50, 50};
+	      double[] meanDemand = {50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50};
 	      
-	      double truncationQuantile = 0.9999;  // 置信度稍微改一下，泊松分布特殊
+	      double truncationQuantile = 0.9999;  
 	      double stepSize = 1; 
 	      double minState = -150;
 	      double maxState = 300;
