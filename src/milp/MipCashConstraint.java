@@ -24,7 +24,7 @@ import umontreal.ssj.probdist.PoissonDist;
 /** 
 * @author: Zhen Chen
 * @email: okchen321@163.com
-* @date: 2018Äê10ÔÂ19ÈÕ, ÏÂÎç8:47:59 
+* @date: 2018ï¿½ï¿½10ï¿½ï¿½19ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½8:47:59 
 * @email: okchen321@163.com
 * @copyright: MIT licence
 * @description: a heuristic method to obtain values of s, C, S for cash constrained 
@@ -339,6 +339,7 @@ public class MipCashConstraint {
 			// cash flow: B_{t} = B_{t - 1} + p_t(s_t - I_t) - hI_t - v(s_t - I_{t-1}) - Kx_t
 			// s_t >= I_{t-1}
 			// s_t - I_{t-1} <= delta*M
+			// may should also add: s_t-d_t <= delta_t*M
 			// s_t - d_t <= I_{t} + (1-delta_t)M
 			// s_t - d_t >= I_{t} - (1-delta_t)M
 			// I_t <= delta_t M

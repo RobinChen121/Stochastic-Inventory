@@ -3,6 +3,7 @@ package workforce;
 import java.util.Arrays;
 import java.util.function.Function;
 
+import milp.MIPWorkforce;
 import sdp.inventory.CheckKConvexity;
 import sdp.inventory.Drawing;
 import sdp.inventory.FitsS;
@@ -22,30 +23,31 @@ import umontreal.ssj.probdist.Distribution;
 /**
  * @author chen
  * @description: optimal ordering quantity for a single period problem is 
- * F^{-1}((\pi-h(1-p)-v)/\pi)-x+w.
+ * F^{-1}((\pi-h(1-p)-v)/\pi)+w = y*.
  *
+ *not only (s, S) policy optimal, (R, S) may also be optimal 
  */
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] dimissionRate;
-		dimissionRate = new double[] {0.1, 0.1, 0.1, 0.1,0.1, 0.1};
-		//Arrays.fill(dimissionRate, 0.5);
-		int T = dimissionRate.length;
+		double[] turnoverRate;
+		turnoverRate = new double[] {0.5};
+		//Arrays.fill(turnoverRate, 0.5);
+		int T = turnoverRate.length;
 		
 		int iniStaffNum = 0;
 		double fixCost = 1000;
 		double unitVariCost = 0;
 		double salary = 10;
-		double unitPenalty = 50;		
-		int[] minStaffNum = {80, 10, 58, 65, 15, 30, 45, 60, 10, 56, 49, 70};	
+		double unitPenalty = 100;		
+		int[] minStaffNum = {50, 50, 58, 65, 35, 30, 45, 60, 10, 56, 49, 70};	
 		
-		int maxHireNum = 500;
+		int maxHireNum = 300;
+		int maxX = 300; // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
 		
 		int minX = 0;
-		int maxX = 500; // for drawing pictures
 		int xLength = maxX - minX + 1;
 		
 		// get pmf for every possible x
@@ -58,7 +60,7 @@ public class WorkforcePlanning {
 					pmf[t][0] = new double[][]{{0, 1}};
 				}
 				else {			
-					BinomialDist distribution = new BinomialDist(i, dimissionRate[t]);
+					BinomialDist distribution = new BinomialDist(i, turnoverRate[t]);
 					for (int j = 0; j < i+1; j++) {
 						pmf[t][i][j][0] = j;		
 						pmf[t][i][j][1] = distribution.prob(j);
@@ -122,9 +124,30 @@ public class WorkforcePlanning {
 		double[][] optsS = findsS.getSinglesS(optTable);
 		System.out.println("single s, S level: " + Arrays.deepToString(optsS));
 		
-//		double sim1 = simuation.simulateSinglesS(initialState, optsS, maxOrderQuantity);
-//		System.out.printf("one level gap is %.2f%%\n", (sim1 - opt)*100/opt);
+		SimulatesS simulate = new SimulatesS(recursion, T, turnoverRate);
+		double sim  = simulate.simulatesS(initialState, optsS);
 		
+		System.out.printf("simulated value is %.2f\n", sim);
+		System.out.printf("simulated gap is %.2f%%\n", (sim - opt)*100/opt);
+		
+		
+		/*******************************************************************
+		 * find P[j][t] from MIP
+		 */
+		System.out.println("**********************************************");
+		MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
+		int[] z = mip.getZ();
+		System.out.println("z_t are: " + Arrays.toString(z));
+		
+		/*******************************************************************
+		 * piecewise MIP
+		 */
+		System.out.println("**********************************************");
+		double mipObj = mip.pieceApprox(z, 4);
+		
+		BinomialDist dist = new BinomialDist(141, 0.3);
+		double yStar = dist.inverseF(0.93) ;
+		System.out.println("y* is " + yStar);
 		
 		/*******************************************************************
 		 * Drawing
@@ -187,12 +210,12 @@ public class WorkforcePlanning {
 //		Drawing.drawSimpleG(yG);
 //		Drawing.drawGAndsS(yG, fixCost);
 		
-//		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition, immediateValue, dimissionRate, truncQuantile);
+//		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition, immediateValue, turnoverRate, truncQuantile);
 //		double opt2 = recursion2.getExpectedValueNoHireFirst(initialState);
 //		System.out.println("final optimal expected cost if not hiring in the first period is: " + opt2);
 		
-//		BinomialDist dist = new BinomialDist(optQ, dimissionRate[0]);
-//		int QStar = dist.inverseFInt((unitPenalty-salary*(1-dimissionRate[0])-unitVariCost)/unitPenalty) - iniStaffNum + minStaffNum[0];
+//		BinomialDist dist = new BinomialDist(optQ, turnoverRate[0]);
+//		int QStar = dist.inverseFInt((unitPenalty-salary*(1-turnoverRate[0])-unitVariCost)/unitPenalty) - iniStaffNum + minStaffNum[0];
 //		System.out.println("the optimal ordering quantity in the first period is: " + QStar);
 	}
 

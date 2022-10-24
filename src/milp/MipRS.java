@@ -12,7 +12,7 @@ import sdp.inventory.Drawing;
 
 /**
 * @author Zhen Chen
-* @date: 2018年11月1日 上午9:51:52  
+* @date: 2018-11-1, 9:51:52 pm  
 * @email: 15011074486@163.com,
 * @licence: MIT licence. 
 *

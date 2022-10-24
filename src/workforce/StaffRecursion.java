@@ -53,6 +53,14 @@ public class StaffRecursion {
 		this.cacheValues = new ConcurrentSkipListMap<>(keyComparator);
 	}
 	
+	public StateTransitionFunction<StaffState, Integer, Integer, StaffState> getStateTransitionFunction(){
+		return stateTransition;
+	}
+	
+	public ImmediateValueFunction<StaffState, Integer, Integer, Double> getImmediateValueFunction(){
+		return immediateValue;
+	}
+	
 	public double[][] getPmf(Distribution distribution, int n){
 		int demandLength = n + 1;
 		double[][] pmf = new double[demandLength][2];
@@ -81,6 +89,8 @@ public class StaffRecursion {
 			double val = Double.MAX_VALUE;
 			for (int i = 0; i < feasibleActions.length; i++) {
 				int orderQty = feasibleActions[i];
+				if (s.period == 2 ) // for testing (R, S) policy
+					orderQty = 0;
 				if (iniStaffNum + orderQty >= pmfs[t].length)
 					continue;
 				double[][] pmf = pmfs[t][iniStaffNum + orderQty];				

@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 import sdp.inventory.CheckKConvexity;
 import sdp.inventory.Drawing;
+import sdp.inventory.FitsS;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.write.WriteToExcel;
@@ -21,12 +22,12 @@ public class WorkforceTesting {
 		String fileName = "results.xls";
 		String headString =  
 				"turnoverRate" + "\t" + "fixCost" + "\t"  + "salary" + "\t" + "unitPenalty" + "\t" +
-		         "Q*" + "\t" + "ExpectedCosts"  + "\t" + "K-convexity" + "\t" + "time";
+		         "Q*" + "\t" + "ExpectedCosts"  + "\t" + "time"+ "\t" + "simCosts"+ "\t" + "gapPercent";
 		wr.writeToFile(fileName, headString);
 		
 		int m = turnoverRates.length;
-		for (int iRate = 0; iRate < m; iRate++)
-			for (int iFix = 0; iFix < m; iFix++)
+		for (int iRate = 1; iRate < 2; iRate++)
+			for (int iFix = 0; iFix < 1; iFix++)
 				for (int iSalary = 0; iSalary < 1; iSalary ++)
 					for (int iPenalty = 2; iPenalty < m; iPenalty ++) {
 			
@@ -40,12 +41,12 @@ public class WorkforceTesting {
 			double unitPenalty = unitPenaltys[iPenalty];		
 			int[] minStaffNum = {80, 10, 58, 65, 15, 30, 45, 60, 10, 56, 49, 70};	
 			
-			int maxHireNum = 2500;
+			int maxHireNum = 300;
 			int stepSize = 1;
 			boolean isForDrawGy = true;
 			
 			int minX = iniStaffNum;
-			int maxX = 2500; // for drawing pictures
+			int maxX = 300; // for drawing pictures
 			
 			// get pmf for every possible x
 			int xLength = maxX - minX + 1;
@@ -109,8 +110,24 @@ public class WorkforceTesting {
 			System.out.println("optimal hiring number in the first priod is : " + optQ);
 			double time = (System.currentTimeMillis() - currTime) / 1000;
 			System.out.println("running time is " + time + "s");
-			//double[][] optTable = recursion.getOptTable();
+			double[][] optTable = recursion.getOptTable();
 			
+			/*******************************************************************
+			 * find s and S from SDP and simulate.
+			 * when >= s, not order.
+			 */
+			FitsS findsS = new FitsS(Integer.MAX_VALUE, T);
+			double[][] optsS = findsS.getSinglesS(optTable);
+			System.out.println("single s, S level: " + Arrays.deepToString(optsS));
+			
+			SimulatesS simulate = new SimulatesS(recursion, T, turnoverRate);
+			double sim  = simulate.simulatesS(initialState, optsS);
+			
+			System.out.printf("simulated value is %.2f\n", sim);
+			double gapPercent = (sim - opt)*100/opt;
+			System.out.printf("simulated gap is %.2f%%\n", gapPercent);
+			System.out.println("****************************************************");
+			System.out.println();
 						
 			/*******************************************************************
 			 * Drawing
@@ -118,31 +135,31 @@ public class WorkforceTesting {
 			 * since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again.
 			 * must redefine stateTransition function and immediate Function.
 			 */
-			StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
-				int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
-				return new StaffState(state.period + 1, nextStaffNum);
-			};
-	
-			ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
-				double fixHireCost;
-				double variHireCost;
-				int nextStaffNum;
-				if (state.period == 1) {
-					fixHireCost = 0;
-					variHireCost = unitVariCost * state.iniStaffNum;
-					nextStaffNum = state.iniStaffNum - randomDemand;
-				}
-				else {
-					fixHireCost = action > 0 ? fixCost : 0;
-					variHireCost = unitVariCost * action;
-					nextStaffNum = state.iniStaffNum + action - randomDemand;
-				}
-				double salaryCost = salary * nextStaffNum;
-				int t = state.period - 1;
-				double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
-				double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
-				return totalCosts;
-			};
+//			StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
+//				int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
+//				return new StaffState(state.period + 1, nextStaffNum);
+//			};
+//	
+//			ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
+//				double fixHireCost;
+//				double variHireCost;
+//				int nextStaffNum;
+//				if (state.period == 1) {
+//					fixHireCost = 0;
+//					variHireCost = unitVariCost * state.iniStaffNum;
+//					nextStaffNum = state.iniStaffNum - randomDemand;
+//				}
+//				else {
+//					fixHireCost = action > 0 ? fixCost : 0;
+//					variHireCost = unitVariCost * action;
+//					nextStaffNum = state.iniStaffNum + action - randomDemand;
+//				}
+//				double salaryCost = salary * nextStaffNum;
+//				int t = state.period - 1;
+//				double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
+//				double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
+//				return totalCosts;
+//			};
 	
 //			StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition2, immediateValue2, pmf, T);
 //			
@@ -155,9 +172,9 @@ public class WorkforceTesting {
 //				index++;
 //			}
 //			CheckKConvexity CheckK = new CheckKConvexity();
-			Boolean ck = true; //CheckK.check(yG, fixCost);
+//			Boolean ck = true; //CheckK.check(yG, fixCost);
 			
-			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, optQ, opt, ck?1d:0d, time};
+			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, optQ, opt, time, sim, gapPercent};
 			wr.writeToExcelAppend(out, fileName);
 			
 

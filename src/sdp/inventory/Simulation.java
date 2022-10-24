@@ -8,6 +8,7 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.sampling.Sampling;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.stat.Tally;
+import workforce.StaffState;
 
 /**
  *@author: Zhen Chen

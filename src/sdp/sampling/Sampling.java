@@ -2,6 +2,7 @@ package sdp.sampling;
 
 import java.util.Arrays;
 
+import umontreal.ssj.probdist.BinomialDist;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
@@ -97,7 +98,28 @@ public class Sampling {
 				samples[j][i] = distributions[i].inverseF(samples[j][i]);
 			}
 		
-	    shuffle(samples); // ��������
+	    shuffle(samples); 
+		return samples;
+	}
+	
+	/** latin hypercube sampling
+	 * @param one distribution, binomial
+	 * @param sampleNum
+	 * @return a 1D random samples
+	 */
+	public int[] generateLHSamples(BinomialDist distribution, int sampleNum){	
+		int[] samples = new int[sampleNum]; 
+		resetNextSubstream();
+		
+		// generate random possibility in [i/n, (i+1)/n], then get percent point function according to the possibility		
+		for (int j = 0; j < sampleNum; j++) {
+			double a = Math.random();
+			double randomNum = a / (double) sampleNum; //   UniformGen.nextDouble(stream, 0, 1.0/sampleNum);
+			double lowBound = (double) j/ (double) sampleNum;
+			double prob = lowBound + randomNum;
+			samples[j] = distribution.inverseFInt(prob);
+		}		
+	    shuffle(samples); 
 		return samples;
 	}
 	
@@ -183,7 +205,7 @@ public class Sampling {
 	}
 
 	
-	/** latin hypercube sampling for binormal distribution.
+	/** latin hypercube sampling for double normal distribution.
 	 * 
 	 * Since two independent variable, generate two variable independently, and merge the two samples into one
 	 * @param distributions
@@ -309,6 +331,19 @@ public class Sampling {
 			samples[j][i] = samples[mark][i];
 			samples[mark][i] = temp;
 		}
+		return samples;
+	}
+	 
+	 /** shuffle a 1D array
+	  * 
+	  */
+	int[] shuffle(int[] samples){
+		for (int j = 0; j < samples.length; j++){
+			int mark = UniformIntGen.nextInt(stream, 0, samples.length - 1);
+			int temp = samples[j];
+			samples[j] = samples[mark];
+			samples[mark] = temp;
+			}
 		return samples;
 	}
 	 
