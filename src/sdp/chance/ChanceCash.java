@@ -94,30 +94,30 @@ public class ChanceCash {
 //		         + "simRollingObj" + "\t" + "simRollingService";
 //		wr.writeToFile(fileName, headString);
 		
-		double[] meanDemand = {5,15,46,140,80,147,134,74,84,109,47,88};
-		double iniCash = 40;
+		double[] meanDemand = {11, 14, 18, 23, 28};
+		double iniCash = 100;
 		int T = meanDemand.length;
 		
 		double minInventoryState = 0;
-		double maxInventoryState = 500;
-		double minCashState = -1000; // can affect results, should be smaller than minus fixedOrderCost
-		double maxCashState = 2000;
+		double maxInventoryState = 300;
+		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
+		double maxCashState = 200;
 		double discountFactor = 1;		
 		
 		double iniI = 0;
 		double trunQuantile = 0.99;
 		
-		double serviceRate = 0.7; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
+		double serviceRate = 0.8; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
 		int etaFrac = 2;
 		double serviceRateSAA = 1 - (1- serviceRate)/etaFrac;
 		
-		int sampleNumPeriod = 17;
+		int sampleNumPeriod = 7;
 		int[] sampleNumSims = new int[T]; // sample number in each period, the number of samples in the first period can have big influence		
 		int[] sampleNumSimsRolling = new int[T];
 		Arrays.fill(sampleNumSimsRolling, sampleNumPeriod);
 		Arrays.fill(sampleNumSims, sampleNumPeriod);
 		
-		int rollingLength = 1; // rolling horizon length
+		int rollingLength = 2; // rolling horizon length
 		double meanDemandSum = Arrays.stream(meanDemand).sum();
 		double rollingDemandSum = Arrays.stream(meanDemand).limit(rollingLength).sum();
 		double portion = rollingDemandSum / meanDemandSum;
@@ -170,24 +170,24 @@ public class ChanceCash {
 
 		LostSaleChance model = new LostSaleChance(distributions, sampleNumSims, iniCash, iniI, prices, variCostUnits, 
 				salvageValueUnit, holdCostUnit, overheadCosts, serviceRateSAA, scenarios);
-//        result = model.solveMaxSurvival();				
-//		time1 = (System.currentTimeMillis() - currTime) / 1000.00;
-//	    currTime = System.currentTimeMillis();	    
-//	    System.out.println("*********************************************************************");
-//	    System.out.println("result of SAA before sorting scenarios: ");
-//	    System.out.println("running time is " + time1 + "s");	
-//	    System.out.printf("first stage decison Q is: %.2f\n", result[0]);
-//	    positiveScenario = result[1];
-//	    System.out.printf("Objective value is: %.0f in %d scenarios\n", result[1], sampleNumSimTotal);
-//	    ObjSAA = 100 * result[1] / sampleNumSimTotal;
-//	    System.out.printf("Survival probability is: %.5f%%\n", ObjSAA);
-//	    System.out.println("lost sale scenario number in the solution is : " + result[2]);
-//	    System.out.println("maximum lost sale scenario number allowed is: " + negativeScenarioNumRequire);
-//	    lostRate = result[2] / (double) sampleNumSimTotal;
-//	    System.out.println("lost sale rate of SAA is: " + nf.format(lostRate));
-//	    System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
-//	    System.out.println();
-	    
+        result = model.solveMaxSurvival();				
+		time1 = (System.currentTimeMillis() - currTime) / 1000.00;
+	    currTime = System.currentTimeMillis();	    
+	    System.out.println("*********************************************************************");
+	    System.out.println("result of SAA before sorting scenarios: ");
+	    System.out.println("running time is " + time1 + "s");	
+	    System.out.printf("first stage decison Q is: %.2f\n", result[0]);
+	    positiveScenario = result[1];
+	    System.out.printf("Objective value is: %.0f in %d scenarios\n", result[1], sampleNumSimTotal);
+	    ObjSAA = 100 * result[1] / sampleNumSimTotal;
+	    System.out.printf("Survival probability is: %.5f%%\n", ObjSAA);
+	    System.out.println("lost sale scenario number in the solution is : " + result[2]);
+	    System.out.println("maximum lost sale scenario number allowed is: " + negativeScenarioNumRequire);
+	    lostRate = result[2] / (double) sampleNumSimTotal;
+	    System.out.println("lost sale rate of SAA is: " + nf.format(lostRate));
+	    System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
+	    System.out.println();
+//	    
 	    /**
 		 * Simulate the restult of SAA
 		 */
@@ -335,25 +335,25 @@ public class ChanceCash {
 				immediateValue, discountFactor);
 		double finalValue;
 		double time;
-//		
-//		currTime = System.currentTimeMillis();
-//		recursion.setTreeMapCacheAction();
-//		finalValue = recursion.getSurvProb(initialState);
-//		System.out.println("**********************************************");
-//		System.out.println("result of SDP with no service rate constraint is: ");
-//		System.out.println("survival probability for this initial state is: " + nf.format(finalValue));
-//		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
-//		time = (System.currentTimeMillis() - currTime) / 1000;
-//		System.out.println("running time is " + time + "s");
+		
+		currTime = System.currentTimeMillis();
+		recursion.setTreeMapCacheAction();
+		finalValue = recursion.getSurvProb(initialState);
+		System.out.println("**********************************************");
+		System.out.println("result of SDP with no service rate constraint is: ");
+		System.out.println("survival probability for this initial state is: " + nf.format(finalValue));
+		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
+		time = (System.currentTimeMillis() - currTime) / 1000;
+		System.out.println("running time is " + time + "s");
 		
 		/*******************************************************************
 		 * Simulating sdp results
 		 */	
-//		sampleNumSim = 1000;
-//		CashSimulation simulation = new CashSimulation(distributions, sampleNumSim, recursion, discountFactor); // no need to add overheadCost in this class
-//		double[] result2 = simulation.simulateSDPGivenSamplNum(initialState, immediateValue);
-//		System.out.println("final simulated survival probability in " + df.format(sampleNumSim) + " samples is: " + nf.format(result2[0]));
-//		System.out.println("final simulated lost sale rate " + " is: " + nf.format(result2[1])); 
+		sampleNumSim = 1000;
+		CashSimulation simulation = new CashSimulation(distributions, sampleNumSim, recursion, discountFactor); // no need to add overheadCost in this class
+		double[] result2 = simulation.simulateSDPGivenSamplNum(initialState, immediateValue);
+		System.out.println("final simulated survival probability in " + df.format(sampleNumSim) + " samples is: " + nf.format(result2[0]));
+		System.out.println("final simulated lost sale rate " + " is: " + nf.format(result2[1])); 
 		
 		/*******************************************************************
 		 * solve the problem by SDP when there is individual chance constraint approximation
@@ -370,49 +370,49 @@ public class ChanceCash {
 		/*******************************************************************
 		 * Solve
 		 */
-//		recursion = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction2, stateTransition,
-//				immediateValue, discountFactor);
-//		period = 1;		
-//		initialState = new CashState(period, iniI, iniCash);
-//		currTime = System.currentTimeMillis();
-//		recursion.setTreeMapCacheAction();
-//		finalValue = recursion.getSurvProb(initialState);
-//		System.out.println("**********************************************");
-//		System.out.println("result of SDP with service rate constraint is: ");
-//		finalValue = finalValue * 100;
-//		System.out.printf("survival probability for this initial state is: %.2f%%\n", finalValue);
-//		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
-//		time = (System.currentTimeMillis() - currTime) / 1000;
-//		System.out.println("running time is " + time + "s");
+		recursion = new CashRecursion(OptDirection.MAX, pmf, getFeasibleAction2, stateTransition,
+				immediateValue, discountFactor);
+		period = 1;		
+		initialState = new CashState(period, iniI, iniCash);
+		currTime = System.currentTimeMillis();
+		recursion.setTreeMapCacheAction();
+		finalValue = recursion.getSurvProb(initialState);
+		System.out.println("**********************************************");
+		System.out.println("result of SDP with service rate constraint is: ");
+		finalValue = finalValue * 100;
+		System.out.printf("survival probability for this initial state is: %.2f%%\n", finalValue);
+		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
+		time = (System.currentTimeMillis() - currTime) / 1000;
+		System.out.println("running time is " + time + "s");
 		
 		/*******************************************************************
 		 * Simulating sdp results
 		 */		
-//		sampleNumSim = 10000;
-//		simulation = new CashSimulation(distributions, sampleNumSim, recursion, discountFactor); // no need to add overheadCost in this class
-//		result2 = simulation.simulateSDPGivenSamplNum(initialState, immediateValue);
-//		System.out.println("final simulated survival probability in " + df.format(sampleNumSim) + " samples is: " + nf.format(result2[0]));
-//		System.out.println("final simulated lost sale rate " + " is: " + nf.format(result2[1]));	
+		sampleNumSim = 10000;
+		simulation = new CashSimulation(distributions, sampleNumSim, recursion, discountFactor); // no need to add overheadCost in this class
+		result2 = simulation.simulateSDPGivenSamplNum(initialState, immediateValue);
+		System.out.println("final simulated survival probability in " + df.format(sampleNumSim) + " samples is: " + nf.format(result2[0]));
+		System.out.println("final simulated lost sale rate " + " is: " + nf.format(result2[1]));	
 		
 		/**
 		 * solve the problem by rolling horizon of further SAA
 		 * 
 		 */
-		sampleNumSim = 100; // number of scenarios for rolling SAA
-	    currTime = System.currentTimeMillis();
-	    System.out.println("**********************************************");
-	    scenarios = sampling.generateLHSamples(distributions, sampleNumSimsRolling);
-	    resultSim = simulation1.rollingHoirzonFurtherExtendSAA(rollingLength, initialState, rollingServiceRate, sampleNumSimsRolling, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
-	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;	    
-	    System.out.println("after rolling horizon for length " + rollingLength +", " + "total horizon length is " + T + ", result is: ");
-	    System.out.println("running time is " + time1 + "s");
-	    System.out.println("final simulated survival probability of rolling extended SAA in " + df.format(sampleNumSim) + " samples is: " + nf.format(resultSim[0]));
-	    double sigma2 = Math.sqrt(resultSim[1]*(1 - resultSim[1])/sampleNumSim);
-		double error2  = 1.96*sigma2;
-		double serviceRate2 = 1 - resultSim[1];
-		double objRolling = resultSim[0];
-		double serviceRolling = 1 - resultSim[1];
-		System.out.printf("the service rate for simulated extended SAA rolling horizon is %.4f, with error %.4f\n", serviceRate2, error2);
+//		sampleNumSim = 100; // number of scenarios for rolling SAA
+//	    currTime = System.currentTimeMillis();
+//	    System.out.println("**********************************************");
+//	    scenarios = sampling.generateLHSamples(distributions, sampleNumSimsRolling);
+//	    resultSim = simulation1.rollingHoirzonFurtherExtendSAA(rollingLength, initialState, rollingServiceRate, sampleNumSimsRolling, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
+//	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;	    
+//	    System.out.println("after rolling horizon for length " + rollingLength +", " + "total horizon length is " + T + ", result is: ");
+//	    System.out.println("running time is " + time1 + "s");
+//	    System.out.println("final simulated survival probability of rolling extended SAA in " + df.format(sampleNumSim) + " samples is: " + nf.format(resultSim[0]));
+//	    double sigma2 = Math.sqrt(resultSim[1]*(1 - resultSim[1])/sampleNumSim);
+//		double error2  = 1.96*sigma2;
+//		double serviceRate2 = 1 - resultSim[1];
+//		double objRolling = resultSim[0];
+//		double serviceRolling = 1 - resultSim[1];
+//		System.out.printf("the service rate for simulated extended SAA rolling horizon is %.4f, with error %.4f\n", serviceRate2, error2);
 						
 		/**
 		 * output to excel

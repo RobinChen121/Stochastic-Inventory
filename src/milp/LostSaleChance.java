@@ -539,8 +539,9 @@ public class LostSaleChance {
 					GRBLinExpr sumAlphaP = new GRBLinExpr();
 					sumIP.addTerm(sum2, I[t][s]); sumDeltaP.addTerm(sum2, delta[t][s]); 
 					sumAlphaP.addTerm(sum2, alpha[t][s]);
-					model.addConstr(sum1I, GRB.EQUAL, sumIP, null); model.addConstr(sum1alpha, GRB.EQUAL, sumAlphaP, null);
-					model.addConstr(sum1delta, GRB.EQUAL, sumDeltaP, null);
+					model.addConstr(sum1I, GRB.EQUAL, sumIP, null); 
+					//model.addConstr(sum1alpha, GRB.EQUAL, sumAlphaP, null);
+					//model.addConstr(sum1delta, GRB.EQUAL, sumDeltaP, null);
 					if (t > 0 && t < T - 1) {
 						sum2 = 0; 
 						GRBLinExpr sum1Q = new GRBLinExpr();

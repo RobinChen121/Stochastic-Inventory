@@ -98,7 +98,7 @@ public class ChanceCashTestingRollingHorizon {
 		for (int m = 2; m < 3; m++) {
 			for(int kk = 0; kk < 10; kk++) {	
 			/**
-			 * solve the problem by rolling horizon of extended SAA
+			 * solve the problem by rolling horizon of SAA
 			 * 
 			 */
 			

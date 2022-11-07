@@ -45,7 +45,6 @@ public class DemandDistribution {
 		int index = 0;
 		for (int n = 0; n < sum+1; n++) {
 			support[n] = n;
-			partion(n, T, T); // partition integer k into T parts
 			double prob = 0;
 			int[] d = new int[T];
 			
@@ -73,8 +72,8 @@ public class DemandDistribution {
 						probt *= y != 0 ? dists[y].prob(d[t]) : 1;
 					}	
 					prob += probt;
-					int temp = n-j;
-					System.out.println(j + " " + temp);
+//					int temp = n-j;
+//					System.out.println(j + " " + temp);
 					index++;
 				}
 			}
@@ -92,8 +91,8 @@ public class DemandDistribution {
 						p2 = y == 0 ? 1 : dists[y].prob(j);
 						p3 = y - d[1] + Q[2] == 0 ? 1 : dists[y - d[1] + Q[2]].prob(n-i-j);
 						prob += p1*p2*p3;
-						int temp = n-i-j;
-						System.out.println(i + " " + j + " " + temp);
+//						int temp = n-i-j;
+//						System.out.println(i + " " + j + " " + temp);
 						index++;
 					}
 				}
@@ -123,8 +122,7 @@ public class DemandDistribution {
 		for (int k = 0; k < sum+1; k++) {
 			support[k] = k;
 			double prob = 0;
-			int[] d = new int[T];
-			partion(k, T, T); // partition integer k into T parts		
+			int[] d = new int[T];	
 		
 //			for (int i = 0; i < arrayList.size(); i++) {
 //				d = arrayList.get(i);
@@ -139,8 +137,8 @@ public class DemandDistribution {
 					if (k-j> Q[1])
 						continue;
 					prob += dist[0].prob(j) * dist[1].prob(k-j);
-					int temp = k-j;
-					System.out.println(j + " " + temp);
+//					int temp = k-j;
+//					System.out.println(j + " " + temp);
 				}
 			}
 			else if (T == 3) {
@@ -149,8 +147,8 @@ public class DemandDistribution {
 						if (k-i-j > Q[2] || k-i-j <0)
 							continue;
 						prob += dist[0].prob(j) * dist[1].prob(j)*dist[2].prob(k-i-j);
-						int temp = k-i-j;
-						System.out.println(i + " " + j + " " + temp);
+//						int temp = k-i-j;
+//						System.out.println(i + " " + j + " " + temp);
 						index++;
 					}
 			}
@@ -162,45 +160,7 @@ public class DemandDistribution {
 		return probs;
 	}
 	
-	public void partion(int n, int k, int K) {
-		count = 0;
-		
-		int[] array = new int[k];
-		if (n == 0) {
-//			System.out.println(Arrays.toString(array));
-		}
-		else {
-			ArrayList<Integer> d = new ArrayList<>();
-			partion(n, k, K, d, "");
-		}
-	}
-	public void partion(int n, int k, int K, ArrayList<Integer> d, String str) {		
-		if (k == 0) {
-			return;
-		}
-		
-		if (k == 1) {
-			str = str + " " + n;
-			d.add(n);
-			arr.add(d);
-			System.out.println(str);
-			count++;
-			return;
-		}
-		int y = 0; // make the partition in each period less than its available number
-		for (int t = 0; t < K - k; t++) {
-			y  = t == 0 ? Q[t] : y + Q[t]- d.get(t);
-		}
-		
-		for (int i = 0; i <= Math.min(y, n); i++) { // the upper bound is y
-			if (i == 1 && k == 3)
-				System.out.println();
-			str = str + " " + i;
-			d.add(i);
-			partion(n-i, k-1, K, d, str);
-			
-		}
-	}
+
 	
 	public void drawPic(double[] pmf) {
 		int sum = Arrays.stream(Q).sum();
@@ -236,16 +196,16 @@ public class DemandDistribution {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	public static void main(String[] args) {
-		int[] Q = {1, 1, 0};
+		int[] Q = {10, 10, 10};
 		double turnoverRate = 0.5;
 		
 		DemandDistribution dist = new DemandDistribution(Q, turnoverRate);
-		int k = 3;
-		int sum = Arrays.stream(Q).sum();
-		dist.partion(2, k, k);
+//		int k = 3;
+//		int sum = Arrays.stream(Q).sum();
+//		dist.partion(2, k, k);
 		
-//		double[] pmf = dist.pmf(Q, turnoverRate);
-//		dist.drawPic(pmf);
+		double[] pmf = dist.pmf(Q, turnoverRate);
+		dist.drawPic(pmf);
 		System.out.println();
 	}
 	
