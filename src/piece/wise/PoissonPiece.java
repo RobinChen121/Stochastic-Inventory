@@ -5,10 +5,11 @@ import umontreal.ssj.probdist.PoissonDist;
 /*
 * @author chen
 * @date 2022 Nov 7, 22:11:44
-* @describe: piecewise approximation for the complementary loss function of the Poisson distribution
+* @describe: piecewise approximation for the complementary loss function of the Poisson distribution,
+* the heuristic idea is from Roberto Rossi.
 *
 */
-public class Poisson {
+public class PoissonPiece{
 	public double[][] partition(double lambda, int segNum) {
 		PoissonDist dist = new PoissonDist(lambda);
 		double[][] result = new double[2][segNum];
