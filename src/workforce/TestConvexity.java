@@ -55,10 +55,50 @@ public class TestConvexity {
 			if (a > b)
 				return false;
 		}
+		drawPicForward(forwardDifference);
 		return true;
 	}
 	
-	public void drawPic() {
+	public void drawPicForward(double[] forwardDifference) {
+		double[] values = new double[ymax - ymin + 1];
+		int index = 0;
+		int[] support = new int[ymax - ymin + 1];
+		for (int y = ymin; y < ymax; y++) {
+			values[index] = forwardDifference[index];
+			support[index] = y;
+			index++;
+		}
+			
+		XYSeries series = new XYSeries("forward difference");
+		for (int k = 0; k < index; k++) {
+			series.add((double) support[k], values[k]);
+		}
+		
+		XYSeriesCollection dataset = new XYSeriesCollection();
+		dataset.addSeries(series);
+		String title = "turnover rate "+  Double.toString(p) + ", " + "W = " + Integer.toString(w);
+		JFreeChart chart = ChartFactory.createXYLineChart(
+				title, // chart title
+				"y", // x axis label
+				"forward difference", // y axis label
+				dataset, // data
+				PlotOrientation.VERTICAL,
+				true, // include legend
+				false, // tooltips
+				false // urls
+				);
+		XYPlot plot = (XYPlot)chart.getPlot();
+		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+		renderer.setSeriesLinesVisible(0, true); // 设置连线不可见
+	        plot.setRenderer(renderer);
+		
+		ChartFrame frame = new ChartFrame("sum of binomial", chart);
+		frame.pack(); // fit window to figure size
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	public void drawPicL() {
 		double[] values = new double[ymax - ymin + 1];
 		int index = 0;
 		int[] support = new int[ymax - ymin + 1];
@@ -78,8 +118,8 @@ public class TestConvexity {
 		String title = "turnover rate "+  Double.toString(p) + ", " + "W = " + Integer.toString(w);
 		JFreeChart chart = ChartFactory.createXYLineChart(
 				title, // chart title
-				"k", // x axis label
-				"pmf", // y axis label
+				"y", // x axis label
+				"loss function", // y axis label
 				dataset, // data
 				PlotOrientation.VERTICAL,
 				true, // include legend
@@ -101,7 +141,7 @@ public class TestConvexity {
 		BinomialDist dist = new BinomialDist(y, p);
 		double value = 0;
 		for (int i = Math.max(y - w, 0); i <= y; i++) {
-			value += dist.prob(i) * (double) (i + w - y);
+			value += dist.prob(i) * (double) (i+w-y);
 		}
 		return value;
 	}
@@ -116,15 +156,15 @@ public class TestConvexity {
 	}
 	
 	public static void main(String[] args) {
-		int w = 40;
-		double p = 0.9;
+		int w = 80;
+		double p = 0.2;
 		int ymin = w - 30;
 		int ymax = w + 100;
 		
 		TestConvexity testConvexity = new TestConvexity(w, p, ymax, ymin);
 		boolean result = testConvexity.test();
 		
-		testConvexity.drawPic();
+		testConvexity.drawPicL();
 		double[] values = testConvexity.lossFunctoin2(100);
 		System.out.println(result);
 
