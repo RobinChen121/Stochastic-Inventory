@@ -3,10 +3,13 @@
  */
 package workforce;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.util.Arrays;
 
 import javax.swing.JFrame;
 
+import org.apache.poi.xssf.usermodel.charts.AbstractXSSFChartSeries;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartFrame;
 import org.jfree.chart.JFreeChart;
@@ -15,8 +18,11 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.openxmlformats.schemas.drawingml.x2006.main.CTRegularTextRun;
 
+import cern.colt.function.IntIntDoubleFunction;
 import milp.ComplementaryFirstOrderLossFunction;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.BinomialDist;
 
 /**
@@ -30,32 +36,119 @@ public class TestConvexity {
 	double p;
 	int ymax;
 	int ymin;
+	int segmentNum;
 	
-	public TestConvexity(int w, double p, int ymax, int ymin) {
+	public TestConvexity(int w, double p, int ymax, int ymin, int segment) {
 		this.w = w;
 		this.p = p;
 		this.ymax = ymax;
 		this.ymin = ymin;
+		this.segmentNum = segment;
 	}
-
+	
+	public double[][] piecewise() {
+		double[] slope = new double[segmentNum + 1];
+		double[] intercept = new double[segmentNum + 1];
+		double[] tanPointXcoe = new double[segmentNum + 1];
+		double[] tanPointYcoe = new double[segmentNum + 1];
+		double[] intsPointXcoe = new double[segmentNum];
+		double[] intsPointYcoe = new double[segmentNum];
+		double[][] result = new double[6][];
+		
+		int endX = 0;
+		for (int k = w; k < w*10; k ++) {
+			if (Fy(k) > 0.9999) {
+				endX = k;
+				break;
+			}
+		}
+		
+		slope[segmentNum] = 0;
+		tanPointXcoe[segmentNum] = endX;
+		tanPointYcoe[segmentNum] = 0;
+		intercept[segmentNum] = 0;
+		for (int i = 0; i < segmentNum; i++) {
+			if (i == 0) {
+				slope[i] = p - 1;
+				tanPointXcoe[0] = w - 1;
+				tanPointYcoe[0] = (w - 1) * p + 1;
+				intercept[0] = w;
+			}
+			else {
+				int a = (int)tanPointXcoe[i-1];
+				for (int j = a; j <= endX; j++) {
+					if (Fy(j) - Fy(a) > 1 /(double)segmentNum) {
+						tanPointXcoe[i] = j;
+						int b = (int)tanPointXcoe[i];
+						tanPointYcoe[i] = lossFunction(b);
+						slope[i] = -(1 - p)*(1 - Fy(b));
+						intercept[i] = -slope[i] * tanPointXcoe[i] + tanPointYcoe[i];
+						break;
+					}
+				}			
+			}
+		}
+		for (int i = 0; i < segmentNum; i++) {
+			intsPointXcoe[i] = tanPointYcoe[i+1] - tanPointYcoe[i] + slope[i]*tanPointXcoe[i] - slope[i+1]*tanPointXcoe[i+1];
+			intsPointXcoe[i] = intsPointXcoe[i] / (slope[i] -  slope[i+1]);
+			intsPointYcoe[i] = slope[i]*(intsPointXcoe[i] - tanPointXcoe[i]) + tanPointYcoe[i];
+		}
+		result[0] = slope;
+		result[1] = intercept;
+		result[2] = tanPointXcoe;
+		result[3] = tanPointYcoe;
+		result[4] = intsPointXcoe;
+		result[5] = intsPointYcoe;
+		return result;
+	}
+	
+	/**
+	 * @param y
+	 * @return F_y(y-W)
+	 */
+	public double Fy(int y) {
+		BinomialDist dist = new BinomialDist(y, p);
+		return dist.cdf(y - w);
+	}
+	
 	public boolean test() {
 		double[] values = new double[ymax - ymin + 1];
 		int index = 0;
 		for (int y = ymin; y < ymax; y++) {
-			values[index] = lossFunctoin(y);
+			values[index] = lossFunction(y);
 			index++;
 		}
 		double[] forwardDifference = new double[ymax - ymin + 1];
 		for (int i = 0; i < index; i++) {
-			forwardDifference[i] =  i == index ? 0 : lossFunctoin(i + 1 + ymin) - lossFunctoin(i + ymin);
-		}
+			forwardDifference[i] = i == index ? 0 : lossFunction(i + 1 + ymin) - lossFunction(i + ymin);
+		}		
+		System.out.println("forward difference increasing is " + checkForwardDifference2());
+		drawPicForward(forwardDifference);
 		for (int i = 0; i < index-1; i++) {
 			double a = forwardDifference[i];
 			double b = forwardDifference[i+1] + 0.01;
 			if (a > b)
 				return false;
+		}	
+		return true;
+	}
+	
+	/**
+	 * check forward difference increasing by the transformed formula
+	 * @return
+	 */
+	public boolean checkForwardDifference2(){
+		for (int y = ymin; y < ymax; y++) {
+			double value1 = 0; // g(y+1)-g(y)
+			double value2 = 0; // g(y)-g(y-1)
+			BinomialDist dist = new BinomialDist(y, p);
+			for (int m = 0; m <= w; m++) {
+				value1 +=  ((y+1)*p/(y+m-w+1)-1); // m * dist.prob(y + m - w) *
+				value2 +=  (1 - (y+m-w)/(y*p)); // m * dist.prob(y + m - w) *
+			}
+			if (value1 < value2)
+				return false;
 		}
-		drawPicForward(forwardDifference);
 		return true;
 	}
 	
@@ -89,8 +182,8 @@ public class TestConvexity {
 				);
 		XYPlot plot = (XYPlot)chart.getPlot();
 		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-		renderer.setSeriesLinesVisible(0, true); // 设置连线不可见
-	        plot.setRenderer(renderer);
+		renderer.setSeriesLinesVisible(0, false); // 散点图，设置连线不可见
+	    plot.setRenderer(renderer);
 		
 		ChartFrame frame = new ChartFrame("sum of binomial", chart);
 		frame.pack(); // fit window to figure size
@@ -102,12 +195,23 @@ public class TestConvexity {
 		double[] values = new double[ymax - ymin + 1];
 		int index = 0;
 		int[] support = new int[ymax - ymin + 1];
+		double[][] gy = new double[ymax - ymin + 1][2];
 		for (int y = ymin; y < ymax; y++) {
-			values[index] = lossFunctoin(y);
+			values[index] = lossFunction(y);
 			support[index] = y;
+			gy[index][0] = y;
+			gy[index][1] = values[index];
 			index++;
 		}
-			
+		
+		WriteToExcelTxt write = new WriteToExcelTxt();
+		write.writeArrayToTxt(gy, "gy.txt");
+		
+		double[][] result = piecewise();
+		double[] slope = result[0];
+		double[] intercept = result[1];
+		double[] intsPointX = result[4];
+		
 		XYSeries series = new XYSeries("loss function");
 		for (int k = 0; k < index; k++) {
 			series.add((double) support[k], values[k]);
@@ -115,6 +219,23 @@ public class TestConvexity {
 		
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		dataset.addSeries(series);
+		
+		XYSeries seriesLine1 = new XYSeries("line1");
+		for (double i = ymin; i <= intsPointX[0]; i = i + 0.1)
+			seriesLine1.add(i, i * slope[0] + intercept[0]);
+		XYSeries[] seriesLines = new XYSeries[segmentNum + 1];
+		for (int k = 0; k < segmentNum + 1; k++) {
+			int m = k + 1;
+			seriesLines[k] = new XYSeries("line" + m);
+			double b = k < segmentNum ? intsPointX[k] : ymax;
+			double a = k == 0 ? ymin : intsPointX[k-1];
+			for (double i = a; i <= b; i = i + 0.1)
+				seriesLines[k].add(i, i * slope[k] + intercept[k]);
+			dataset.addSeries(seriesLines[k]);
+		}
+		
+		
+		
 		String title = "turnover rate "+  Double.toString(p) + ", " + "W = " + Integer.toString(w);
 		JFreeChart chart = ChartFactory.createXYLineChart(
 				title, // chart title
@@ -128,8 +249,13 @@ public class TestConvexity {
 				);
 		XYPlot plot = (XYPlot)chart.getPlot();
 		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-		renderer.setSeriesLinesVisible(0, true); // 设置连线不可见
-	        plot.setRenderer(renderer);
+		renderer.setSeriesLinesVisible(0, false); // 0 is the series number
+		//renderer.setSeriesPaint(1, Color.black);
+		renderer.setSeriesStroke(0, new BasicStroke(50));
+		renderer.setSeriesStroke(1, new BasicStroke(1));
+		
+		
+	    plot.setRenderer(renderer);
 		
 		ChartFrame frame = new ChartFrame("sum of binomial", chart);
 		frame.pack(); // fit window to figure size
@@ -137,37 +263,49 @@ public class TestConvexity {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
-	public double lossFunctoin(int y) {
+	/**
+	 * original formulation of the loss function
+	 * @param y
+	 * @return
+	 */
+	public double lossFunction(int y) {
 		BinomialDist dist = new BinomialDist(y, p);
 		double value = 0;
-		for (int i = Math.max(y - w, 0); i <= y; i++) {
+		int imin = Math.max(y - w, 0); 
+		for (int i = imin; i <= y; i++) {
 			value += dist.prob(i) * (double) (i+w-y);
 		}
 		return value;
 	}
 	
-	public double[] lossFunctoin2(int y) {
+	/**
+	 * an equally transformation of the loss function support
+	 * @param y
+	 * @return
+	 */
+	public double lossFunctoin2(int y) {
 		BinomialDist dist = new BinomialDist(y, p);
-		double[] values = new double[y + 1];
-		for (int i = 0; i <= y; i++) {
-			values[i] = i * dist.prob(i);
+		double value = 0;
+		for (int i = 0; i <= w; i++) {
+			value += i * dist.prob(i+y-w);
 		}
-		return values;
+		return value;
 	}
 	
 	public static void main(String[] args) {
-		int w = 80;
-		double p = 0.2;
-		int ymin = w - 30;
-		int ymax = w + 100;
+		int w = 50;
+		double p = 0.3;
+		int ymin = w-10;
+		int ymax = w+50;
+		int segNum = 2;
 		
-		TestConvexity testConvexity = new TestConvexity(w, p, ymax, ymin);
-		boolean result = testConvexity.test();
+		TestConvexity test = new TestConvexity(w, p, ymax, ymin, segNum);
+		boolean result = test.test();
 		
-		testConvexity.drawPicL();
-		double[] values = testConvexity.lossFunctoin2(100);
+		double[][] result2 = test.piecewise();
+		test.drawPicL();
 		System.out.println(result);
-
+		System.out.println(Arrays.deepToString(result2));
 	}
 
 }

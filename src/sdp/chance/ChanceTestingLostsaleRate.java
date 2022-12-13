@@ -16,7 +16,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.sampling.Sampling;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.NormalDist;
 
@@ -30,7 +30,7 @@ import umontreal.ssj.probdist.NormalDist;
 public class ChanceTestingLostsaleRate {
 
 	public static void main(String[] args) {
-		WriteToExcel wr = new WriteToExcel();
+		WriteToExcelTxt wr = new WriteToExcelTxt();
 		String fileName = "JointChanceSAA.xls";
 		String headString =  
 				"demand mode" + "\t" + "rolling length" + "\t"  + "serviceRate" + "\t" + "sample one period" +  "\t"+ "scenario number" + "\t" + "iniCash" + "\t" + "price" + "\t" + "variCost" + "\t" + "rolling time" + "\t" + "rolling obj" + "\t" +

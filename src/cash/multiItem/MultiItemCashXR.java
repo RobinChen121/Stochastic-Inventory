@@ -23,7 +23,7 @@ import sdp.cash.multiItem.CashStateMultiXR;
 import sdp.cash.multiItem.GetPmfMulti;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;

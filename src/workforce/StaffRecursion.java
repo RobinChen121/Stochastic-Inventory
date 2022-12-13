@@ -89,8 +89,6 @@ public class StaffRecursion {
 			double val = Double.MAX_VALUE;
 			for (int i = 0; i < feasibleActions.length; i++) {
 				int orderQty = feasibleActions[i];
-				if (s.period == 2 ) // for testing (R, S) policy
-					orderQty = 0;
 				if (iniStaffNum + orderQty >= pmfs[t].length)
 					continue;
 				double[][] pmf = pmfs[t][iniStaffNum + orderQty];				

@@ -17,7 +17,7 @@ import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.write.WriteToCsv;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import sdp.cash.CashStateXR;
 import sdp.cash.RecursionG;
 import umontreal.ssj.probdist.DiscreteDistribution;

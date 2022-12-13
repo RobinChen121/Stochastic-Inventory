@@ -23,7 +23,7 @@ import sdp.inventory.Recursion;
 import sdp.inventory.State;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.inventory.Recursion.OptDirection;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdistmulti.BiNormalDist;

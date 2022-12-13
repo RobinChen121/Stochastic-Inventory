@@ -24,7 +24,7 @@ import sdp.cash.multiItem.GetPmfMulti;
 import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
 import umontreal.ssj.probdistmulti.BiNormalDist;
@@ -176,7 +176,7 @@ public class MultiItemCashLookPolicy {
 		}
 		System.out.println("**************************************************");
 		
-		WriteToExcel wr = new WriteToExcel();
+		WriteToExcelTxt wr = new WriteToExcelTxt();
 		String fileName = "optTable2.xls";
 		String headString =  "x1" + "\t" + "x2" + "\t" + "R" + "\t" + "Q1"+ "\t" + "Q2";
 		wr.writeArrayToExcel(optResults, fileName, headString);

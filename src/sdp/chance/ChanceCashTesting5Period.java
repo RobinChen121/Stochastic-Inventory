@@ -26,7 +26,7 @@ import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.sampling.CartesianProduct;
 import sdp.sampling.Sampling;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.charts.SSJCategorySeriesCollection;
 import umontreal.ssj.probdist.BernoulliDist;
 import umontreal.ssj.probdist.BinomialDist;
@@ -50,7 +50,7 @@ import umontreal.ssj.rng.RandomStream;
 public class ChanceCashTesting5Period {
 	
 	public static void main(String[] args) {
-		WriteToExcel wr = new WriteToExcel();
+		WriteToExcelTxt wr = new WriteToExcelTxt();
 		String fileName = "JointChanceSAA5Periods.xls";
 		String headString =  
 				"demand mode" + "\t" + "serviceRate" + "\t" + "scenario number" + "\t" + "iniCash" + "\t" + "price" + "\t" + "variCost" + "\t" + "SAA obj" + "\t" + "time" + "\t" + "sim SAA obj" + "\t" +

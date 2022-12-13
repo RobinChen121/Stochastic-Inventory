@@ -23,7 +23,7 @@ import umontreal.ssj.probdist.Distribution;
 /**
  * @author chen
  * @description: optimal ordering quantity for a single period problem is 
- * F^{-1}((\pi-h(1-p)-v)/\pi)+w = y*.
+ * F^{-1}(((\pi-h)(1-p)-v)/(\pi(1-p)))+w = y*.
  *
  *not only (s, S) policy optimal, (R, S) may also be optimal 
  */
@@ -31,21 +31,22 @@ public class WorkforcePlanning {
 
 	public static void main(String[] args) {
 		double[] turnoverRate;
-		turnoverRate = new double[] {0.5};
+		turnoverRate = new double[] {0.3, 0.2, 0.1};
 		//Arrays.fill(turnoverRate, 0.5);
 		int T = turnoverRate.length;
 		
 		int iniStaffNum = 0;
-		double fixCost = 1000;
+		double fixCost = 100;
 		double unitVariCost = 0;
-		double salary = 10;
-		double unitPenalty = 100;		
-		int[] minStaffNum = {50, 50, 58, 65, 35, 30, 45, 60, 10, 56, 49, 70};	
+		double salary = 70;
+		double unitPenalty = 80;		
+		int[] minStaffNum = {20, 30, 50};	
 		
 		int maxHireNum = 300;
 		int maxX = 300; // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
+		int segmentNum = 5;
 		
 		int minX = 0;
 		int xLength = maxX - minX + 1;
@@ -132,21 +133,16 @@ public class WorkforcePlanning {
 		
 		
 		/*******************************************************************
-		 * find P[j][t] from MIP
-		 */
-		System.out.println("**********************************************");
-		MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
-		int[] z = mip.getZ();
-		System.out.println("z_t are: " + Arrays.toString(z));
-		
-		/*******************************************************************
 		 * piecewise MIP
 		 */
 		System.out.println("**********************************************");
-		double mipObj = mip.pieceApprox(z, 4);
+		MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
 		
-		BinomialDist dist = new BinomialDist(141, 0.3);
-		double yStar = dist.inverseF(0.93) ;
+		double mipObj = mip.pieceApprox(segmentNum);
+		
+		BinomialDist dist = new BinomialDist(68, turnoverRate[0]);
+		double frac = ((unitPenalty - salary) * (1 - turnoverRate[0]) - unitVariCost) / (unitPenalty*(1 - turnoverRate[0]));
+		double yStar = dist.inverseF(frac) + minStaffNum[0];
 		System.out.println("y* is " + yStar);
 		
 		/*******************************************************************

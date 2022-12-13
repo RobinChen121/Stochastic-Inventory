@@ -21,7 +21,7 @@ import sdp.inventory.FinalCash.BoundaryFuncton;
 import sdp.inventory.ImmediateValue.ImmediateValueFunctionV;
 import sdp.inventory.StateTransition.StateTransitionFunctionV;
 import sdp.write.ReadExcel;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;

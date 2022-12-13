@@ -14,7 +14,7 @@ import sdp.inventory.FinalCash.BoundaryFuncton;
 import sdp.inventory.GetPmf;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.write.ReadExcel;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.UniformIntDist;
@@ -226,7 +226,7 @@ public class MultiItemCashXWTesting {
 		double[][] optTable = recursion.getOptTableDetail(mean, variance, price, opta1, opta2);
 		
 		double[] gaps = new double[] {gap};
-		WriteToExcel wr = new WriteToExcel();
+		WriteToExcelTxt wr = new WriteToExcelTxt();
 		String fileName = "run" + (int) paraSettings[runTime][0] + ".xls";
 		String headString =  
 					"meanD1" + "\t" + "meanD2" + "\t" + "variance1" + "\t" + "variance2" + "\t" +

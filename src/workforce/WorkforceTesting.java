@@ -8,7 +8,7 @@ import sdp.inventory.Drawing;
 import sdp.inventory.FitsS;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.BinomialDist;
 
 public class WorkforceTesting {
@@ -18,7 +18,7 @@ public class WorkforceTesting {
 		double[] salarys = {10, 100, 200};
 		double[] unitPenaltys = {50, 250, 2200};
 		
-		WriteToExcel wr = new WriteToExcel();
+		WriteToExcelTxt wr = new WriteToExcelTxt();
 		String fileName = "results.xls";
 		String headString =  
 				"turnoverRate" + "\t" + "fixCost" + "\t"  + "salary" + "\t" + "unitPenalty" + "\t" +

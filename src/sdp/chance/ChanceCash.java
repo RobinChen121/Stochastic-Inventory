@@ -41,7 +41,7 @@ import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.sampling.CartesianProduct;
 import sdp.sampling.Sampling;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.LognormalDist;
 import umontreal.ssj.probdist.NormalDist;

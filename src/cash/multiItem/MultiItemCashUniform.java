@@ -16,7 +16,7 @@ import sdp.cash.multiItem.GetPmfMulti;
 import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
 
@@ -161,7 +161,7 @@ public class MultiItemCashUniform {
 		 */
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable(variCost);
-		WriteToExcel wr = new WriteToExcel();
+		WriteToExcelTxt wr = new WriteToExcelTxt();
 		String fileName = "optTable" + "_c1=" + variCost[0] + "c2=" + variCost[1] + ".xls";
 		String headString =  "period" + "\t" + "x1" + "\t" + "x2" + "\t" + "w"+ "\t" + "R" + "\t" + "is limited cash and both ordering" + "\t" + "alpha"
 				 				+ "\t" + "y1"+ "\t" + "y2" + "\t" + "c1" + "\t" + "c2";

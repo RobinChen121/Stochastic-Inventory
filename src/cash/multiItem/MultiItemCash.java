@@ -21,7 +21,7 @@ import sdp.cash.multiItem.Demands;
 import sdp.cash.multiItem.GetPmfMulti;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.write.WriteToExcel;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 
 
