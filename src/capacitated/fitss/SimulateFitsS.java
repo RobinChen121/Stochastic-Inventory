@@ -40,7 +40,7 @@ public class SimulateFitsS extends Simulation{
 			{
 				double optQ;
 				if ( t== 0) 
-					optQ = optsS[t][1];
+					optQ = optsS[t][1] - iniState.getIniInventory();
 				else 
 					optQ =  state.getIniInventory() >= optsS[t][0] ? 0 : Math.min(maxOrderQuantity, optsS[t][1] - state.getIniInventory());;
 				sum += immediateValue.apply(state, optQ, samples[i][t]);
@@ -71,7 +71,7 @@ public class SimulateFitsS extends Simulation{
 			{
 				double optQ;
 				if ( t== 0) 
-					optQ = optsS[t][1];
+					optQ = optsS[t][1] - iniState.getIniInventory();
 				else {
 					if (state.getIniInventory() < optsS[t][0])
 						optQ = Math.min(maxOrderQuantity, optsS[t][1] - state.getIniInventory());
@@ -108,7 +108,7 @@ public class SimulateFitsS extends Simulation{
 			{
 				double optQ;
 				if ( t== 0) 
-					optQ = optsS[t][1];
+					optQ = optsS[t][1] - iniState.getIniInventory();
 				else {
 					if (state.getIniInventory() < optsS[t][0])
 						optQ = Math.min(maxOrderQuantity, optsS[t][1] - state.getIniInventory());

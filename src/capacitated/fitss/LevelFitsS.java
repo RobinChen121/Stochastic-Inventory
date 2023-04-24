@@ -32,9 +32,10 @@ import umontreal.ssj.probdist.PoissonDist;
 
 public class LevelFitsS {
 	public static void main(String[] args) {
+		System.out.println(System.getProperty("java.library.path"));
 		double truncationQuantile = 0.9999;
 		double stepSize = 1;
-		double minInventory = -500;
+		double minInventory = -1000;
 		double maxInventory = 1000;
 
 		double fixedOrderingCost = 250;
@@ -105,7 +106,7 @@ public class LevelFitsS {
 		 */
 		Recursion recursion = new Recursion(OptDirection.MIN, pmf, getFeasibleAction, stateTransition, immediateValue);
 		int period = 1;
-		double iniInventory = 500;
+		double iniInventory = 610;
 		State initialState = new State(period, iniInventory);
 		long currTime = System.currentTimeMillis();
 		double opt = recursion.getExpectedValue(initialState);
@@ -131,6 +132,7 @@ public class LevelFitsS {
 		double[][] optTable = recursion.getOptTable();		
 		FitsS findsS = new FitsS(maxOrderQuantity, T);
 		double[][] optsS = findsS.getSinglesS(optTable);
+		optsS[0] = new double[]{619, 659};
 		System.out.println("single s, S level: " + Arrays.deepToString(optsS));
 		optsS = findsS.getTwosS(optTable);
 		System.out.println("two s, S level: " + Arrays.deepToString(optsS));

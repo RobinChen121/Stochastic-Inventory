@@ -274,8 +274,8 @@ public class SimOpt {
 	}
 
 	public static void main(String[] args) {
-//		runSingleCase();
-		runMultiCases();
+		runSingleCase();
+//		runMultiCases();
 	}
 
 }

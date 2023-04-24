@@ -46,19 +46,19 @@ public class CLSPforDraw {
 		boolean isForDrawGy = true;
 
 		// get demand possibilities for each period
-		int T = meanDemand.length;
-		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new NormalDist(meanDemand[i], 0.25*meanDemand[i])) // can be changed to other distributions
-				.toArray(Distribution[]::new);
-		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
-		
-//		int T = 4;
-//		double[][] values = {{34, 159, 281, 286}, {14, 223, 225, 232}, {5, 64, 115, 171}, {35, 48, 145, 210}};
-//		double[][] probs = {{0.018, 0.888, 0.046, 0.048}, {0.028, 0.271, 0.17, 0.531}, {0.041, 0.027, 0.889, 0.043}, {0.069, 0.008, 0.019, 0.904}};
+//		int T = meanDemand.length;
 //		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-//		.mapToObj(i -> new DiscreteDistribution(values[i], probs[i], values[i].length)) // can be changed to other distributions
-//		.toArray(DiscreteDistribution[]::new);	
+//				.mapToObj(i -> new NormalDist(meanDemand[i], 0.25*meanDemand[i])) // can be changed to other distributions
+//				.toArray(Distribution[]::new);
 //		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
+		
+		int T = 4;
+		double[][] values = {{34, 159, 281, 286}, {14, 223, 225, 232}, {5, 64, 115, 171}, {35, 48, 145, 210}};
+		double[][] probs = {{0.018, 0.888, 0.046, 0.048}, {0.028, 0.271, 0.17, 0.531}, {0.041, 0.027, 0.889, 0.043}, {0.069, 0.008, 0.019, 0.904}};
+		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+		.mapToObj(i -> new DiscreteDistribution(values[i], probs[i], values[i].length)) // can be changed to other distributions
+		.toArray(DiscreteDistribution[]::new);	
+		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 		
 		// feasible actions
 		Function<State, double[]> getFeasibleAction = s -> {
@@ -68,6 +68,8 @@ public class CLSPforDraw {
 				feasibleActions[index] = i;
 				index++;
 			}
+//			if (s.getPeriod() == 1)
+//				return new double[] {40};
 			return feasibleActions;
 		};
 
@@ -96,7 +98,7 @@ public class CLSPforDraw {
 		 */
 		Recursion recursion = new Recursion(OptDirection.MIN, pmf, getFeasibleAction, stateTransition, immediateValue);
 		int period = 1;
-		double iniInventory = 0;
+		double iniInventory = 400;
 		State initialState = new State(period, iniInventory);
 		long currTime = System.currentTimeMillis();
 		System.out.println("final optimal expected value is: " + recursion.getExpectedValue(initialState));

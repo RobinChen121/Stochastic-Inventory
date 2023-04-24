@@ -53,15 +53,15 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 10};
+		double[] meanDemand = {10, 20};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 0;
+		double iniCash = 5;
 		double fixOrderCost = 0;
-		double variCost = 2;
-		double price = 6;
+		double variCost = 1;
+		double price = 10;
 		double depositeRate = 0;
-		double salvageValue = 1;
+		double salvageValue = 0;
 		double holdingCost = 0;	
 		FindCCrieria criteria = FindCCrieria.XRELATE;		
 		double overheadCost = 0; // costs like wages or rents which is required to pay in each period
@@ -103,8 +103,8 @@ public class CashConstraint {
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
 			double maxQ = 
-					maxOrderQuantity; 
-//			         (int) Math.min(maxOrderQuantity, Math.max(0, (s.getIniCash() - overheadCost - fixOrderCost) / variCost));
+//						maxOrderQuantity;
+			         (int) Math.min(maxOrderQuantity, Math.max(0, (s.getIniCash() - overheadCost - fixOrderCost) / variCost));
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -170,25 +170,25 @@ public class CashConstraint {
 		double error = 0.0001; 
 		double confidence = 0.95;
 		simulation.simulateSDPwithErrorConfidence(initialState, error, confidence);
-		double defaultRisk = simulation.simulateDefaultProb(initialState);
-		System.out.println("default risk is " + defaultRisk);
+//		double defaultRisk = simulation.simulateDefaultProb(initialState);
+//		System.out.println("default risk is " + defaultRisk);
 		
 		/*******************************************************************
 		 * Find (s, C1, C2 S) by SDP and simulate
 		 */
-		System.out.println("");
-		double[][] optTable = recursion.getOptTable();
-		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
-		double[][] optsC12S = findsCS.getsC12S(optTable, overheadCost, criteria);
-		Map<State, Double> cacheC1Values = new TreeMap<>();
-		Map<State, Double> cacheC2Values = new TreeMap<>();
- 		
-		
-		double simsCSFinalValue = simulation.simulatesCS(initialState, optsC12S, cacheC1Values, cacheC2Values,
-				overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
-		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;
-		System.out.printf("Optimality gap for (s, C1, C2 S) is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
+//		System.out.println("");
+//		double[][] optTable = recursion.getOptTable();
+//		FindsCS findsCS = new FindsCS(iniCash, distributions, fixOrderCost, price, variCost, holdingCost, salvageValue);
+//		double[][] optsC12S = findsCS.getsC12S(optTable, overheadCost, criteria);
+//		Map<State, Double> cacheC1Values = new TreeMap<>();
+//		Map<State, Double> cacheC2Values = new TreeMap<>();
+// 		
+//		
+//		double simsCSFinalValue = simulation.simulatesCS(initialState, optsC12S, cacheC1Values, cacheC2Values,
+//				overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+//		double gap1 = (finalValue -simsCSFinalValue)/finalValue;
+//		double gap2 = (simFinalValue -simsCSFinalValue)/simFinalValue;
+//		System.out.printf("Optimality gap for (s, C1, C2 S) is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 //
 //		/*******************************************************************
 //		 * Find (s, C1, S) by SDP and simulate
@@ -231,15 +231,15 @@ public class CashConstraint {
  		/*******************************************************************
 		 * Find (s, C, S) by MIP and simulate
 		 */
-//		System.out.println("************************************************");
-// 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
-// 		double[][] sCS = mipHeuristic.findsCSPieceWise(); 
-// 		Map<State, Double> cacheCValues = new TreeMap<>();
-// 		cacheCValues = mipHeuristic.cacheC1Values;
-// 		double simsCSMIPValue = simulation.simulatesCS(initialState, sCS, cacheCValues, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
-//		double gap1 = (finalValue - simsCSMIPValue)/finalValue;
-//		double gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
-//		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
+		System.out.println("************************************************");
+ 		MipCashConstraint mipHeuristic = new MipCashConstraint(iniInventory, iniCash, fixOrderCost, variCost, holdingCost, price, salvageValue, distributions, overheadCost);
+ 		double[][] sCS = mipHeuristic.findsCSPieceWise(); 
+ 		Map<State, Double> cacheCValues = new TreeMap<>();
+ 		cacheCValues = mipHeuristic.cacheC1Values;
+ 		double simsCSMIPValue = simulation.simulatesCS(initialState, sCS, cacheCValues, overheadCost, maxOrderQuantity, fixOrderCost, variCost);
+		double gap1 = (finalValue - simsCSMIPValue)/finalValue;
+		double gap2 = (simFinalValue - simsCSMIPValue)/simFinalValue;	
+		System.out.printf("Optimality gap is: %.2f%% or %.2f%%\n", gap1 * 100, gap2 * 100);
 		
  		
 // 		/*******************************************************************

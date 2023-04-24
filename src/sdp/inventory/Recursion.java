@@ -133,7 +133,7 @@ public class Recursion {
 														  : -Double.MAX_VALUE;
 			double bestOrderQty = 0;
 			for (int i = 0; i < feasibleActions.length; i++) {
-				double orderQty = feasibleActions[i];
+				double orderQty = feasibleActions[i]; //s.period == 1 ? 41 :
 				double thisQValue = 0;								
 				for (int j = 0; j < dAndP.length; j++) {
 					thisQValue += dAndP[j][1] * immediateValue.apply(s, orderQty, dAndP[j][0]);
