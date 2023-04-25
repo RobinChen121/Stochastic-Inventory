@@ -15,23 +15,28 @@ public class WorkforceTesting {
 	public static void main(String[] args) {
 		double[] turnoverRates = {0.1, 0.5, 0.9};
 		double[] fixCosts = {50, 1000, 2000};
-		double[] salarys = {10, 100, 200};
+		double[] salarys = {30, 100, 200};
 		double[] unitPenaltys = {50, 250, 2200};
+		int[][] minStaffs = {{40, 40, 40, 40, 40, 40, 40, 40},
+				{10, 20, 30, 40, 50, 60, 70, 80},
+				{80, 70, 60, 50, 40, 30, 20, 10},
+		};
 		
 		WriteToExcelTxt wr = new WriteToExcelTxt();
 		String fileName = "results.xls";
 		String headString =  
-				"turnoverRate" + "\t" + "fixCost" + "\t"  + "salary" + "\t" + "unitPenalty" + "\t" +
+				"turnoverRate" + "\t" + "fixCost" + "\t"  + "salary" + "\t" + "unitPenalty" + "\t" + "iMinStaff" + "\t" +
 		         "Q*" + "\t" + "ExpectedCosts"  + "\t" + "time"+ "\t" + "simCosts"+ "\t" + "gapPercent";
 		wr.writeToFile(fileName, headString);
 		
 		int m = turnoverRates.length;
-		for (int iRate = 1; iRate < 2; iRate++)
-			for (int iFix = 0; iFix < 1; iFix++)
-				for (int iSalary = 0; iSalary < 1; iSalary ++)
-					for (int iPenalty = 2; iPenalty < m; iPenalty ++) {
+		for (int iRate = 0; iRate < m; iRate++)
+			for (int iFix = 0; iFix < m; iFix++)
+				for (int iSalary = 0; iSalary < m; iSalary ++)
+					for (int iPenalty = 0; iPenalty < m; iPenalty ++) 
+						for (int iMinStaff = 0; iMinStaff < m + 1; iMinStaff ++) {
 			
-			int T = 12;
+			int T = 8;
 			double[] turnoverRate = new double[T];
 			Arrays.fill(turnoverRate, turnoverRates[iRate]);
 			int iniStaffNum = 0;
@@ -39,7 +44,7 @@ public class WorkforceTesting {
 			double unitVariCost = 0;
 			double salary = salarys[iSalary];
 			double unitPenalty = unitPenaltys[iPenalty];		
-			int[] minStaffNum = {80, 10, 58, 65, 15, 30, 45, 60, 10, 56, 49, 70};	
+			int[] minStaffNum = minStaffs[iMinStaff];	
 			
 			int maxHireNum = 300;
 			int stepSize = 1;
@@ -127,54 +132,14 @@ public class WorkforceTesting {
 			double gapPercent = (sim - opt)*100/opt;
 			System.out.printf("simulated gap is %.2f%%\n", gapPercent);
 			System.out.println("****************************************************");
-			System.out.println();
-						
-			/*******************************************************************
-			 * Drawing
-			 * G(y, x), G should also related with x since x affected the demand distribution.
-			 * since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again.
-			 * must redefine stateTransition function and immediate Function.
-			 */
-//			StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
-//				int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
-//				return new StaffState(state.period + 1, nextStaffNum);
-//			};
-//	
-//			ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
-//				double fixHireCost;
-//				double variHireCost;
-//				int nextStaffNum;
-//				if (state.period == 1) {
-//					fixHireCost = 0;
-//					variHireCost = unitVariCost * state.iniStaffNum;
-//					nextStaffNum = state.iniStaffNum - randomDemand;
-//				}
-//				else {
-//					fixHireCost = action > 0 ? fixCost : 0;
-//					variHireCost = unitVariCost * action;
-//					nextStaffNum = state.iniStaffNum + action - randomDemand;
-//				}
-//				double salaryCost = salary * nextStaffNum;
-//				int t = state.period - 1;
-//				double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
-//				double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
-//				return totalCosts;
-//			};
-	
-//			StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition2, immediateValue2, pmf, T);
-//			
-//			
-//			double[][] yG = new double[xLength][2];
-//			int index = 0;
-//			for (int initialStaff = minX; initialStaff <= maxX; initialStaff++) {
-//				yG[index][0] = initialStaff;
-//				yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff), iniStaffNum);
-//				index++;
-//			}
-//			CheckKConvexity CheckK = new CheckKConvexity();
-//			Boolean ck = true; //CheckK.check(yG, fixCost);
+			System.out.println();		
 			
-			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, optQ, opt, time, sim, gapPercent};
+			/*******************************************************************
+			 * find s and S from MIP and simulate.
+			 * when >= s, not order.
+			 */
+			
+			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, iMinStaff, optQ, opt, time, sim, gapPercent};
 			wr.writeToExcelAppend(out, fileName);
 			
 

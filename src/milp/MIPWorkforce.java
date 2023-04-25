@@ -146,7 +146,7 @@ public class MIPWorkforce {
 			
 			// Create empty model
 			GRBModel model = new GRBModel(env);			
-			//model.set(GRB.IntParam.LogToConsole, 0); // disable console logging
+			model.set(GRB.IntParam.LogToConsole, 0); // disable console logging
 			
 			// Create variables
 		    GRBVar[] y = new GRBVar[T];
@@ -169,8 +169,11 @@ public class MIPWorkforce {
 		    GRBLinExpr obj = new GRBLinExpr();
 		    for (int t = 0; t < T; t++) {
 		    	obj.addTerm(fixCost, z[t]);
-		    	if (t == 0)
+		    	if (t == 0) {
 		    		obj.addTerm(unitVariCost, y[t]);
+		    		obj.addConstant(-unitVariCost*iniStaffNum);
+		    		
+		    	}
 		    	else {
 		    		GRBLinExpr iExpr = new GRBLinExpr();
 		    		iExpr.addTerm(1, y[t]);
@@ -188,7 +191,7 @@ public class MIPWorkforce {
 		    for (int t = 0; t < T; t++) {	
 		    	GRBLinExpr left1 = new GRBLinExpr();	
 		    	
-		    	// y_t <= x_{t-1}
+		    	// y_t >= x_{t-1}
 		    	// y_t - x_{t-1} <= z_t M
 		    	if (t == 0) 
 		    		left1.addConstant(-iniStaffNum);	

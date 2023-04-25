@@ -6,7 +6,7 @@ import ilog.cplex.IloCplex;
 
 /**
 * @author Zhen Chen
-* @date: 2018年11月16日 下午4:53:57  
+* @date: 2018-11-16, pm 4:53:57  
 * @email: 15011074486@163.com,
 * @licence: MIT licence. 
 *

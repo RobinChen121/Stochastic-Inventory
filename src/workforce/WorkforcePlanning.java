@@ -31,7 +31,7 @@ public class WorkforcePlanning {
 
 	public static void main(String[] args) {
 		double[] turnoverRate;
-		turnoverRate = new double[] {0.3, 0.2, 0.1};
+		turnoverRate = new double[] {0.5, 0.5, 0.5};
 		//Arrays.fill(turnoverRate, 0.5);
 		int T = turnoverRate.length;
 		
@@ -40,7 +40,7 @@ public class WorkforcePlanning {
 		double unitVariCost = 0;
 		double salary = 70;
 		double unitPenalty = 80;		
-		int[] minStaffNum = {20, 30, 50};	
+		int[] minStaffNum = {50, 50, 50};	
 		
 		int maxHireNum = 300;
 		int maxX = 300; // for drawing pictures
