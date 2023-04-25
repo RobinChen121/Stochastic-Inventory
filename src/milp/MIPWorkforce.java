@@ -191,7 +191,7 @@ public class MIPWorkforce {
 		    for (int t = 0; t < T; t++) {	
 		    	GRBLinExpr left1 = new GRBLinExpr();	
 		    	
-		    	// y_t >= x_{t-1}
+		    	// y_t - x_{t-1} >= 0
 		    	// y_t - x_{t-1} <= z_t M
 		    	if (t == 0) 
 		    		left1.addConstant(-iniStaffNum);	
@@ -211,23 +211,27 @@ public class MIPWorkforce {
 		    	
 //		    	model.addConstr(P[1][1], GRB.EQUAL, 1, null);
 //		    	model.addConstr(y[1], GRB.EQUAL, 66, null);
-//		    	model.addConstr(y[0], GRB.EQUAL, 66, null);
+//		    	model.addConstr(y[0], GRB.EQUAL, 36, null);
 		    	
-		    	// P_{jt} <= z_j - \sum_{k=j+1}^t z[k]
+		    	// P_{jt} >= z_j - \sum_{k=j+1}^t z[k]
 		    	for (int j = 0; j <= t; j++) {
 		    		GRBLinExpr right2 = new GRBLinExpr();
 		    		for (int k = j + 1; k <= t; k++) 
 		    			right2.addTerm(-1, z[k]);
 		    		right2.addTerm(1, z[j]);
-		    		model.addConstr(P[j][t], GRB.LESS_EQUAL, right2, null);
+		    		model.addConstr(P[j][t], GRB.GREATER_EQUAL, right2, null);
 		    	}
 		    		    	
 		    	// x_t >= y_j(1-p)^{t-j+1} - (1-P_{jt})M
 		    	// x_t <= y_j(1-p)^{t-j+1} + (1-P_{jt})M
+		    	// revise
+		    	if (t == 1)
+		    		System.out.println();
 		    	for (int j = 0; j <= t; j++) {
 		    		double p = 1;
 		    		for (int k = j; k <= t; k++)
 		    			p = p * (1 - turnoverRate[j]);
+		    		p = Math.pow(1 - turnoverRate[0], t - j + 1);
 		    		GRBLinExpr right3 = new GRBLinExpr();
 		    		right3.addTerm(p, y[j]);
 		    		right3.addTerm(M, P[j][t]);
@@ -256,7 +260,7 @@ public class MIPWorkforce {
 		    			right5.addTerm(slope[m], y[j]);
 		    			right5.addConstant(intercept[m]);
 		    			
-		    			// lower bound
+		    			// lower bound  only when (R, S) policy is optimal
 		    			right5.addTerm(M, P[j][t]);
 		    			right5.addConstant(-M);
 		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
@@ -265,7 +269,7 @@ public class MIPWorkforce {
 //		    			right5.addTerm(M, P[j][t]);
 //		    			right5.addConstant(-M);
 //		    			right5.addConstant(error);		
-//		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
+//		    			model.addConstr(u[t], GRB.LESS_EQUAL, right5, null);
 		    		}
 		    	}
 		    }
@@ -287,7 +291,9 @@ public class MIPWorkforce {
 				zV[t] = z[t].get(GRB.DoubleAttr.X);
 			}
 			PV = P[0][0].get(GRB.DoubleAttr.X);
-			System.out.println("P is " + PV);
+			System.out.println("P[0][0] is " + PV);
+			System.out.println("P[0][1] is " + P[0][1].get(GRB.DoubleAttr.X));
+			System.out.println("P[1][1] is " + P[1][1].get(GRB.DoubleAttr.X));
 			System.out.println("z is " + Arrays.toString(zV));
 			System.out.println("y is " + Arrays.toString(yV));
 			System.out.println("x is " + Arrays.toString(xV));
