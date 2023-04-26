@@ -187,7 +187,8 @@ public class MIPWorkforce {
 
 		    
 		    // constraints
-		    int M = Integer.MAX_VALUE;
+		    // M can not be too large, or a slight difference of P[j][t] affects results
+		    int M = iniStaffNum + 100*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
 		    for (int t = 0; t < T; t++) {	
 		    	GRBLinExpr left1 = new GRBLinExpr();	
 		    	
@@ -225,13 +226,10 @@ public class MIPWorkforce {
 		    	// x_t >= y_j(1-p)^{t-j+1} - (1-P_{jt})M
 		    	// x_t <= y_j(1-p)^{t-j+1} + (1-P_{jt})M
 		    	// revise
-		    	if (t == 1)
-		    		System.out.println();
 		    	for (int j = 0; j <= t; j++) {
 		    		double p = 1;
 		    		for (int k = j; k <= t; k++)
 		    			p = p * (1 - turnoverRate[j]);
-		    		p = Math.pow(1 - turnoverRate[0], t - j + 1);
 		    		GRBLinExpr right3 = new GRBLinExpr();
 		    		right3.addTerm(p, y[j]);
 		    		right3.addTerm(M, P[j][t]);
@@ -243,6 +241,7 @@ public class MIPWorkforce {
 		    		right4.addConstant(M);
 		    		model.addConstr(x[t], GRB.LESS_EQUAL, right4, null);
 		    	}
+		    	
 		    	
 		    	// piecewise constraints
 		    	// U_t >= \alpha y_j + \beta - (1 - P_{jt})M
