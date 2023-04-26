@@ -188,7 +188,7 @@ public class MIPWorkforce {
 		    
 		    // constraints
 		    // M can not be too large, or a slight difference of P[j][t] affects results
-		    int M = iniStaffNum + 100*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
+		    int M = iniStaffNum + 10*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
 		    for (int t = 0; t < T; t++) {	
 		    	GRBLinExpr left1 = new GRBLinExpr();	
 		    	
@@ -268,7 +268,7 @@ public class MIPWorkforce {
 //		    			right5.addTerm(M, P[j][t]);
 //		    			right5.addConstant(-M);
 //		    			right5.addConstant(error);		
-//		    			model.addConstr(u[t], GRB.LESS_EQUAL, right5, null);
+//		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
 		    		}
 		    	}
 		    }
