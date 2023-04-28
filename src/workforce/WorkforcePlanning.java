@@ -42,11 +42,11 @@ public class WorkforcePlanning {
 		double unitPenalty = 80;		
 		int[] minStaffNum = {30, 50, 40};	
 		
-		int maxHireNum = 300;
-		int maxX = 300; // for drawing pictures
+		int maxHireNum = 500;
+		int maxX = maxHireNum; // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
-		int segmentNum = 8;
+		int segmentNum = 10;
 		
 		int minX = 0;
 		int xLength = maxX - minX + 1;
@@ -139,7 +139,12 @@ public class WorkforcePlanning {
 		MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
 		
 		double mipObj = mip.pieceApprox(segmentNum);
-		mip.getsS(segmentNum);
+		double[][] sS = mip.getsS(segmentNum);
+		System.out.println("s, S by mip are: " + Arrays.deepToString(sS));
+		double sim2 = simulate.simulatesS(initialState, sS);
+
+		System.out.printf("simulated value is %.2f\n", sim2);
+		System.out.printf("simulated gap is %.2f%%\n", (sim2 - opt)*100/opt);
 		
 		
 		/*******************************************************************

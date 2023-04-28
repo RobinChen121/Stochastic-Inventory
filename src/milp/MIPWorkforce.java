@@ -307,160 +307,315 @@ public class MIPWorkforce {
 	public double[][] getsS(int segmentNum) {
 		double[][] sS = new double[T][2];
 		for (int tt = 0; tt < T; tt++) {
-		try {
-			// use Gurobi to solve the mip model
-			// Create empty environment, set options, and start
-			GRBEnv env = new GRBEnv(true);		
-			//env.set("logFile", "mip-chance.log");
-			env.start();
-			
-			// Create empty model
-			GRBModel model = new GRBModel(env);			
-			model.set(GRB.IntParam.LogToConsole, 0); // disable console logging
-			
-			// Create variables
-		    GRBVar[] y = new GRBVar[T-tt];
-		    GRBVar[] u = new GRBVar[T-tt];
-		    GRBVar[] x = new GRBVar[T-tt];
-		    GRBVar[] z = new GRBVar[T-tt];
-		    GRBVar[][] P = new GRBVar[T-tt][T-tt];
-		    for (int t = 0; t < T-tt; t++) {
-		    	y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "y");
-		    	u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "u");
-		    	x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "x");
-		    	z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "z");
-		    	for (int j = 0; j <= t; j++) {
-		    		P[j][t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "P");
-		    	}
-		    } 
-		    GRBVar S = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "S");
-		    
-		   // objective function, set objective
-		    GRBLinExpr obj = new GRBLinExpr();
-		    for (int t = 0; t < T-tt; t++) {
-		    	obj.addTerm(fixCost, z[t]);
-		    	if (t == 0) {
-		    		obj.addTerm(unitVariCost, y[t]);
-		    		obj.addTerm(-unitVariCost, S);
-		    		
-		    	}
-		    	else {
-		    		GRBLinExpr iExpr = new GRBLinExpr();
-		    		iExpr.addTerm(1, y[t]);
-		    		iExpr.addTerm(-1, x[t-1]);
-		    		obj.multAdd(unitVariCost, iExpr);
-				}
-		    	obj.addTerm(unitPenalty, u[t]);
-		    	obj.addTerm(salary, x[t]);
-		    }
-		    model.setObjective(obj, GRB.MINIMIZE);
-
-		    
-		    // constraints
-		    //z[0] == 0
-		    model.addConstr(z[0], GRB.EQUAL, 0, null);
-		    
-		    
-		    // M can not be too large, or a slight difference of P[j][t] affects results
-		    int M = 10*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
-		    for (int t = 0; t < T-tt; t++) {	
-		    	GRBLinExpr left1 = new GRBLinExpr();	
-		    	
-		    	// y_t - x_{t-1} >= 0
-		    	// y_t - x_{t-1} <= z_t*M
-		    	if (t == 0) 
-		    		left1.addTerm(-1, S);	
-		    	else 
-		    		left1.addTerm(-1, x[t-1]);	
-		    	left1.addTerm(1, y[t]);
-		    	model.addConstr(left1, GRB.GREATER_EQUAL, 0, null); 
-		    	GRBLinExpr right1 = new GRBLinExpr();
-		    	right1.addTerm(M, z[t]);
-		    	model.addConstr(left1, GRB.LESS_EQUAL, right1, null);
-		    	
-		    	// sum_{j=1}^t P_{jt} == 1
-		    	GRBLinExpr left2 = new GRBLinExpr();
-		    	for (int j = 0; j <= t; j++)
-		    		left2.addTerm(1, P[j][t]);
-		    	model.addConstr(left2, GRB.EQUAL, 1, null);
-		    	
-		    	// P_{jt} >= z_j - \sum_{k=j+1}^t z[k]
-		    	for (int j = 0; j <= t; j++) {
-		    		GRBLinExpr right2 = new GRBLinExpr();
-		    		for (int k = j + 1; k <= t; k++) 
-		    			right2.addTerm(-1, z[k]);
-		    		right2.addTerm(1, z[j]);
-		    		model.addConstr(P[j][t], GRB.GREATER_EQUAL, right2, null);
-		    	}
-		    		    	
-		    	// x_t >= y_j(1-p)^{t-j+1} - (1-P_{jt})M
-		    	// x_t <= y_j(1-p)^{t-j+1} + (1-P_{jt})M
-		    	// revise
-		    	for (int j = 0; j <= t; j++) {
-		    		double p = 1;
-		    		for (int k = j; k <= t; k++) {
-		    			p = p * (1 - turnoverRate[k+tt]);
-		    		}
-		    		GRBLinExpr right3 = new GRBLinExpr();
-		    		right3.addTerm(p, y[j]);
-		    		right3.addTerm(M, P[j][t]);
-		    		right3.addConstant(-M);
-		    		model.addConstr(x[t], GRB.GREATER_EQUAL, right3, null);
-		    		GRBLinExpr right4 = new GRBLinExpr();
-		    		right4.addTerm(p, y[j]);
-		    		right4.addTerm(-M, P[j][t]);
-		    		right4.addConstant(M);
-		    		model.addConstr(x[t], GRB.LESS_EQUAL, right4, null);
-		    	}
-		    	
-		    	
-		    	// piecewise constraints
-		    	// U_t >= \alpha y_j + \beta - (1 - P_{jt})M
-		    	for (int j = 0; j <= t; j++) {
-		    		double p = 1;
-		    		for (int k = j; k <= t; k++)
-		    			p = p * (1 - turnoverRate[k+tt]);
-		    		double[][] result = piecewise(segmentNum, minStaffNum[t+tt], 1 - p);
-		    		double[] slope = result[0];
-		    		double[] intercept = result[1];
-		    		double[] gap = result[6];
-		    		double error = Arrays.stream(gap).max().getAsDouble();
-		    		for (int m = 0; m < segmentNum; m++) {
-		    			GRBLinExpr right5 = new GRBLinExpr();
-		    			right5.addTerm(slope[m], y[j]);
-		    			right5.addConstant(intercept[m]);
-		    			
-		    			// lower bound  only when (R, S) policy is optimal
-		    			right5.addTerm(M, P[j][t]);
-		    			right5.addConstant(-M);
-		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
-		    		}
-		    	}
-		    }
-		    
-		    // Optimize model
-			model.optimize();
+			try {
+				// use Gurobi to solve the mip model
+				// Create empty environment, set options, and start
+				GRBEnv env = new GRBEnv(true);		
+				//env.set("logFile", "mip-chance.log");
+				env.start();
+				
+				// Create empty model
+				GRBModel model = new GRBModel(env);			
+				model.set(GRB.IntParam.LogToConsole, 0); // disable console logging
+				
+				// Create variables
+			    GRBVar[] y = new GRBVar[T-tt];
+			    GRBVar[] u = new GRBVar[T-tt];
+			    GRBVar[] x = new GRBVar[T-tt];
+			    GRBVar[] z = new GRBVar[T-tt];
+			    GRBVar[][] P = new GRBVar[T-tt][T-tt];
+			    for (int t = 0; t < T-tt; t++) {
+			    	y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "y");
+			    	u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "u");
+			    	x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "x");
+			    	z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "z");
+			    	for (int j = 0; j <= t; j++) {
+			    		P[j][t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "P");
+			    	}
+			    } 
+			    GRBVar S = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "S");
 			    
-			// output results
-			double Sv = Math.round(S.get(GRB.DoubleAttr.X));
-			double GS = model.get(GRB.DoubleAttr.ObjVal) + unitVariCost*S.get(GRB.DoubleAttr.X);
-			System.out.println("GS = " + GS);
-			System.out.println("S " + Sv);
-			sS[tt][1] = Sv;
-			
-			// find s
-			
-			
-		} catch (GRBException e) {
-			System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
-		}
+			   // objective function, set objective
+			    GRBLinExpr obj = new GRBLinExpr();
+			    for (int t = 0; t < T-tt; t++) {
+			    	obj.addTerm(fixCost, z[t]);
+			    	if (t == 0) {
+			    		obj.addTerm(unitVariCost, y[t]);
+			    		obj.addTerm(-unitVariCost, S);
+			    		
+			    	}
+			    	else {
+			    		GRBLinExpr iExpr = new GRBLinExpr();
+			    		iExpr.addTerm(1, y[t]);
+			    		iExpr.addTerm(-1, x[t-1]);
+			    		obj.multAdd(unitVariCost, iExpr);
+					}
+			    	obj.addTerm(unitPenalty, u[t]);
+			    	obj.addTerm(salary, x[t]);
+			    }
+			    model.setObjective(obj, GRB.MINIMIZE);
+	
+			    
+			    // constraints
+			    //z[0] == 0
+			    model.addConstr(z[0], GRB.EQUAL, 0, null);
+			    
+			    
+			    // M can not be too large, or a slight difference of P[j][t] affects results
+			    int M = 10*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
+			    for (int t = 0; t < T-tt; t++) {	
+			    	GRBLinExpr left1 = new GRBLinExpr();	
+			    	
+			    	// y_t - x_{t-1} >= 0
+			    	// y_t - x_{t-1} <= z_t*M
+			    	if (t == 0) 
+			    		left1.addTerm(-1, S);	
+			    	else 
+			    		left1.addTerm(-1, x[t-1]);	
+			    	left1.addTerm(1, y[t]);
+			    	model.addConstr(left1, GRB.GREATER_EQUAL, 0, null); 
+			    	GRBLinExpr right1 = new GRBLinExpr();
+			    	right1.addTerm(M, z[t]);
+			    	model.addConstr(left1, GRB.LESS_EQUAL, right1, null);
+			    	
+			    	// sum_{j=1}^t P_{jt} == 1
+			    	GRBLinExpr left2 = new GRBLinExpr();
+			    	for (int j = 0; j <= t; j++)
+			    		left2.addTerm(1, P[j][t]);
+			    	model.addConstr(left2, GRB.EQUAL, 1, null);
+			    	
+			    	// P_{jt} >= z_j - \sum_{k=j+1}^t z[k]
+			    	for (int j = 0; j <= t; j++) {
+			    		GRBLinExpr right2 = new GRBLinExpr();
+			    		for (int k = j + 1; k <= t; k++) 
+			    			right2.addTerm(-1, z[k]);
+			    		right2.addTerm(1, z[j]);
+			    		model.addConstr(P[j][t], GRB.GREATER_EQUAL, right2, null);
+			    	}
+			    		    	
+			    	// x_t >= y_j(1-p)^{t-j+1} - (1-P_{jt})M
+			    	// x_t <= y_j(1-p)^{t-j+1} + (1-P_{jt})M
+			    	// revise
+			    	for (int j = 0; j <= t; j++) {
+			    		double p = 1;
+			    		for (int k = j; k <= t; k++) {
+			    			p = p * (1 - turnoverRate[k+tt]);
+			    		}
+			    		GRBLinExpr right3 = new GRBLinExpr();
+			    		right3.addTerm(p, y[j]);
+			    		right3.addTerm(M, P[j][t]);
+			    		right3.addConstant(-M);
+			    		model.addConstr(x[t], GRB.GREATER_EQUAL, right3, null);
+			    		GRBLinExpr right4 = new GRBLinExpr();
+			    		right4.addTerm(p, y[j]);
+			    		right4.addTerm(-M, P[j][t]);
+			    		right4.addConstant(M);
+			    		model.addConstr(x[t], GRB.LESS_EQUAL, right4, null);
+			    	}
+			    	
+			    	
+			    	// piecewise constraints
+			    	// U_t >= \alpha y_j + \beta - (1 - P_{jt})M
+			    	for (int j = 0; j <= t; j++) {
+			    		double p = 1;
+			    		for (int k = j; k <= t; k++)
+			    			p = p * (1 - turnoverRate[k+tt]);
+			    		double[][] result = piecewise(segmentNum, minStaffNum[t+tt], 1 - p);
+			    		double[] slope = result[0];
+			    		double[] intercept = result[1];
+			    		double[] gap = result[6];
+			    		double error = Arrays.stream(gap).max().getAsDouble();
+			    		for (int m = 0; m < segmentNum; m++) {
+			    			GRBLinExpr right5 = new GRBLinExpr();
+			    			right5.addTerm(slope[m], y[j]);
+			    			right5.addConstant(intercept[m]);
+			    			
+			    			// lower bound  only when (R, S) policy is optimal
+			    			right5.addTerm(M, P[j][t]);
+			    			right5.addConstant(-M);
+			    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
+			    		}
+			    	}
+			    }
+			    
+			    // Optimize model
+				model.optimize();
+				    
+				// output results
+				double Sv = Math.round(S.get(GRB.DoubleAttr.X));
+				double GS = model.get(GRB.DoubleAttr.ObjVal) + unitVariCost*S.get(GRB.DoubleAttr.X);
+//				System.out.println("GS = " + GS);
+//				System.out.println("S= " + Sv);
+				sS[tt][1] = Sv;
+				
+				// find s
+				double s = finds(segmentNum, Sv, GS, tt);
+				sS[tt][0] = s;
+//				System.out.println("s= " + s);
+							
+			} catch (GRBException e) {
+				System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
+			}
 		}
 		
 		return sS;
 	}
 	
-	public double finds() {
-		return 0;
+	public double finds(int segmentNum, double Sv, double GS, int tt) {
+		double low = 0; 
+		double high = Sv;
+		double stepSize = 1;
+		double mid = high/2;
+		while (low < high) {
+			mid = Math.round((high+low)/2);
+			// use Gurobi to solve the mip model
+			// Create empty environment, set options, and start
+			try {
+				GRBEnv env = new GRBEnv(true);		
+				//env.set("logFile", "mip-chance.log");
+				env.start();
+				
+				// Create empty model
+				GRBModel model = new GRBModel(env);			
+				model.set(GRB.IntParam.LogToConsole, 0); // disable console logging
+				
+				// Create variables
+			    GRBVar[] y = new GRBVar[T-tt];
+			    GRBVar[] u = new GRBVar[T-tt];
+			    GRBVar[] x = new GRBVar[T-tt];
+			    GRBVar[] z = new GRBVar[T-tt];
+			    GRBVar[][] P = new GRBVar[T-tt][T-tt];
+			    for (int t = 0; t < T-tt; t++) {
+			    	y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "y");
+			    	u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "u");
+			    	x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "x");
+			    	z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "z");
+			    	for (int j = 0; j <= t; j++) {
+			    		P[j][t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "P");
+			    	}
+			    } 
+			    GRBVar S = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "S");
+						    
+			   // objective function, set objective
+			    GRBLinExpr obj = new GRBLinExpr();
+			    for (int t = 0; t < T-tt; t++) {
+			    	obj.addTerm(fixCost, z[t]);
+			    	if (t == 0) {
+			    		obj.addTerm(unitVariCost, y[t]);
+			    		obj.addTerm(-unitVariCost, S);
+			    		
+			    	}
+			    	else {
+			    		GRBLinExpr iExpr = new GRBLinExpr();
+			    		iExpr.addTerm(1, y[t]);
+			    		iExpr.addTerm(-1, x[t-1]);
+			    		obj.multAdd(unitVariCost, iExpr);
+					}
+			    	obj.addTerm(unitPenalty, u[t]);
+			    	obj.addTerm(salary, x[t]);
+			    }
+			    model.setObjective(obj, GRB.MINIMIZE);
+	
+			    
+			    // constraints
+			    //z[0] == 0
+			    model.addConstr(z[0], GRB.EQUAL, 0, null);
+			    // S == mid
+			    model.addConstr(S, GRB.EQUAL, mid, null);
+			    
+			    // M can not be too large, or a slight difference of P[j][t] affects results
+			    int M = 10*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
+			    for (int t = 0; t < T-tt; t++) {	
+			    	GRBLinExpr left1 = new GRBLinExpr();	
+			    	
+			    	// y_t - x_{t-1} >= 0
+			    	// y_t - x_{t-1} <= z_t*M
+			    	if (t == 0) 
+			    		left1.addTerm(-1, S);	
+			    	else 
+			    		left1.addTerm(-1, x[t-1]);	
+			    	left1.addTerm(1, y[t]);
+			    	model.addConstr(left1, GRB.GREATER_EQUAL, 0, null); 
+			    	GRBLinExpr right1 = new GRBLinExpr();
+			    	right1.addTerm(M, z[t]);
+			    	model.addConstr(left1, GRB.LESS_EQUAL, right1, null);
+			    	
+			    	// sum_{j=1}^t P_{jt} == 1
+			    	GRBLinExpr left2 = new GRBLinExpr();
+			    	for (int j = 0; j <= t; j++)
+			    		left2.addTerm(1, P[j][t]);
+			    	model.addConstr(left2, GRB.EQUAL, 1, null);
+			    	
+			    	// P_{jt} >= z_j - \sum_{k=j+1}^t z[k]
+			    	for (int j = 0; j <= t; j++) {
+			    		GRBLinExpr right2 = new GRBLinExpr();
+			    		for (int k = j + 1; k <= t; k++) 
+			    			right2.addTerm(-1, z[k]);
+			    		right2.addTerm(1, z[j]);
+			    		model.addConstr(P[j][t], GRB.GREATER_EQUAL, right2, null);
+			    	}
+			    		    	
+			    	// x_t >= y_j(1-p)^{t-j+1} - (1-P_{jt})M
+			    	// x_t <= y_j(1-p)^{t-j+1} + (1-P_{jt})M
+			    	// revise
+			    	for (int j = 0; j <= t; j++) {
+			    		double p = 1;
+			    		for (int k = j; k <= t; k++) {
+			    			p = p * (1 - turnoverRate[k+tt]);
+			    		}
+			    		GRBLinExpr right3 = new GRBLinExpr();
+			    		right3.addTerm(p, y[j]);
+			    		right3.addTerm(M, P[j][t]);
+			    		right3.addConstant(-M);
+			    		model.addConstr(x[t], GRB.GREATER_EQUAL, right3, null);
+			    		GRBLinExpr right4 = new GRBLinExpr();
+			    		right4.addTerm(p, y[j]);
+			    		right4.addTerm(-M, P[j][t]);
+			    		right4.addConstant(M);
+			    		model.addConstr(x[t], GRB.LESS_EQUAL, right4, null);
+			    	}
+			    	
+			    	
+			    	// piecewise constraints
+			    	// U_t >= \alpha y_j + \beta - (1 - P_{jt})M
+			    	for (int j = 0; j <= t; j++) {
+			    		double p = 1;
+			    		for (int k = j; k <= t; k++)
+			    			p = p * (1 - turnoverRate[k+tt]);
+			    		double[][] result = piecewise(segmentNum, minStaffNum[t+tt], 1 - p);
+			    		double[] slope = result[0];
+			    		double[] intercept = result[1];
+			    		double[] gap = result[6];
+			    		double error = Arrays.stream(gap).max().getAsDouble();
+			    		for (int m = 0; m < segmentNum; m++) {
+			    			GRBLinExpr right5 = new GRBLinExpr();
+			    			right5.addTerm(slope[m], y[j]);
+			    			right5.addConstant(intercept[m]);
+			    			
+			    			// lower bound  only when (R, S) policy is optimal
+			    			right5.addTerm(M, P[j][t]);
+			    			right5.addConstant(-M);
+			    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
+			    		}
+			    	}
+			    }
+			    
+			    // Optimize model
+				model.optimize();
+				double Gmid = model.get(GRB.DoubleAttr.ObjVal) + unitVariCost*S.get(GRB.DoubleAttr.X);
+				if (Gmid < GS + fixCost)
+					high = mid - stepSize;
+				else if (Gmid > GS + fixCost)
+					low = mid + stepSize;
+				else
+					low = high;
+				
+			} catch (GRBException e) {
+				System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
+			}
+		}
+		double s = mid;
+		return s;
 	}
 	
 	public int[] getZ() {
