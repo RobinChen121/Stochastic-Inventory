@@ -229,7 +229,7 @@ public class MIPWorkforce {
 		    	for (int j = 0; j <= t; j++) {
 		    		double p = 1;
 		    		for (int k = j; k <= t; k++)
-		    			p = p * (1 - turnoverRate[j]);
+		    			p = p * (1 - turnoverRate[k]);
 		    		GRBLinExpr right3 = new GRBLinExpr();
 		    		right3.addTerm(p, y[j]);
 		    		right3.addTerm(M, P[j][t]);
@@ -248,7 +248,7 @@ public class MIPWorkforce {
 		    	for (int j = 0; j <= t; j++) {
 		    		double p = 1;
 		    		for (int k = j; k <= t; k++)
-		    			p = p * (1 - turnoverRate[j]);
+		    			p = p * (1 - turnoverRate[k]);
 		    		double[][] result = piecewise(segmentNum, minStaffNum[t], 1 - p);
 		    		double[] slope = result[0];
 		    		double[] intercept = result[1];
@@ -290,13 +290,13 @@ public class MIPWorkforce {
 				zV[t] = z[t].get(GRB.DoubleAttr.X);
 			}
 			PV = P[0][0].get(GRB.DoubleAttr.X);
-			System.out.println("P[0][0] is " + PV);
-			System.out.println("P[0][1] is " + P[0][1].get(GRB.DoubleAttr.X));
-			System.out.println("P[1][1] is " + P[1][1].get(GRB.DoubleAttr.X));
-			System.out.println("z is " + Arrays.toString(zV));
-			System.out.println("y is " + Arrays.toString(yV));
-			System.out.println("x is " + Arrays.toString(xV));
-			System.out.println("u is " + Arrays.toString(uV));
+//			System.out.println("P[0][0] is " + PV);
+//			System.out.println("P[0][1] is " + P[0][1].get(GRB.DoubleAttr.X));
+//			System.out.println("P[1][1] is " + P[1][1].get(GRB.DoubleAttr.X));
+//			System.out.println("z is " + Arrays.toString(zV));
+//			System.out.println("y is " + Arrays.toString(yV));
+//			System.out.println("x is " + Arrays.toString(xV));
+//			System.out.println("u is " + Arrays.toString(uV));
 			
 		} catch (GRBException e) {
 			System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
@@ -304,7 +304,9 @@ public class MIPWorkforce {
 		return 0;
 	}
 	
-	public double[] getsS(int segmentNum) {
+	public double[][] getsS(int segmentNum) {
+		double[][] sS = new double[T][2];
+		for (int tt = 0; tt < T; tt++) {
 		try {
 			// use Gurobi to solve the mip model
 			// Create empty environment, set options, and start
@@ -317,12 +319,12 @@ public class MIPWorkforce {
 			model.set(GRB.IntParam.LogToConsole, 0); // disable console logging
 			
 			// Create variables
-		    GRBVar[] y = new GRBVar[T];
-		    GRBVar[] u = new GRBVar[T];
-		    GRBVar[] x = new GRBVar[T];
-		    GRBVar[] z = new GRBVar[T];
-		    GRBVar[][] P = new GRBVar[T][T];
-		    for (int t = 0; t < T; t++) {
+		    GRBVar[] y = new GRBVar[T-tt];
+		    GRBVar[] u = new GRBVar[T-tt];
+		    GRBVar[] x = new GRBVar[T-tt];
+		    GRBVar[] z = new GRBVar[T-tt];
+		    GRBVar[][] P = new GRBVar[T-tt][T-tt];
+		    for (int t = 0; t < T-tt; t++) {
 		    	y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "y");
 		    	u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "u");
 		    	x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "x");
@@ -335,7 +337,7 @@ public class MIPWorkforce {
 		    
 		   // objective function, set objective
 		    GRBLinExpr obj = new GRBLinExpr();
-		    for (int t = 0; t < T; t++) {
+		    for (int t = 0; t < T-tt; t++) {
 		    	obj.addTerm(fixCost, z[t]);
 		    	if (t == 0) {
 		    		obj.addTerm(unitVariCost, y[t]);
@@ -361,11 +363,11 @@ public class MIPWorkforce {
 		    
 		    // M can not be too large, or a slight difference of P[j][t] affects results
 		    int M = 10*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
-		    for (int t = 0; t < T; t++) {	
+		    for (int t = 0; t < T-tt; t++) {	
 		    	GRBLinExpr left1 = new GRBLinExpr();	
 		    	
 		    	// y_t - x_{t-1} >= 0
-		    	// y_t - x_{t-1} <= z_t M
+		    	// y_t - x_{t-1} <= z_t*M
 		    	if (t == 0) 
 		    		left1.addTerm(-1, S);	
 		    	else 
@@ -396,8 +398,9 @@ public class MIPWorkforce {
 		    	// revise
 		    	for (int j = 0; j <= t; j++) {
 		    		double p = 1;
-		    		for (int k = j; k <= t; k++)
-		    			p = p * (1 - turnoverRate[j]);
+		    		for (int k = j; k <= t; k++) {
+		    			p = p * (1 - turnoverRate[k+tt]);
+		    		}
 		    		GRBLinExpr right3 = new GRBLinExpr();
 		    		right3.addTerm(p, y[j]);
 		    		right3.addTerm(M, P[j][t]);
@@ -416,8 +419,8 @@ public class MIPWorkforce {
 		    	for (int j = 0; j <= t; j++) {
 		    		double p = 1;
 		    		for (int k = j; k <= t; k++)
-		    			p = p * (1 - turnoverRate[j]);
-		    		double[][] result = piecewise(segmentNum, minStaffNum[t], 1 - p);
+		    			p = p * (1 - turnoverRate[k+tt]);
+		    		double[][] result = piecewise(segmentNum, minStaffNum[t+tt], 1 - p);
 		    		double[] slope = result[0];
 		    		double[] intercept = result[1];
 		    		double[] gap = result[6];
@@ -431,7 +434,7 @@ public class MIPWorkforce {
 		    			right5.addTerm(M, P[j][t]);
 		    			right5.addConstant(-M);
 		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
-		    					    		}
+		    		}
 		    	}
 		    }
 		    
@@ -439,31 +442,26 @@ public class MIPWorkforce {
 			model.optimize();
 			    
 			// output results
-			System.out.println(model.get(GRB.DoubleAttr.ObjVal));
-			double[] yV = new double[T];
-			double[] xV = new double[T];
-			double[] uV = new double[T];
-			double[] zV = new double[T];
-			double PV;
-			for (int t = 0; t < T; t++) {
-				yV[t] = y[t].get(GRB.DoubleAttr.X);
-				xV[t] = x[t].get(GRB.DoubleAttr.X);
-				uV[t] = u[t].get(GRB.DoubleAttr.X);
-				zV[t] = z[t].get(GRB.DoubleAttr.X);
-			}
-			PV = P[0][0].get(GRB.DoubleAttr.X);
-			System.out.println("S " + S.get(GRB.DoubleAttr.X));
-			System.out.println("y is " + Arrays.toString(yV));
-			System.out.println("x is " + Arrays.toString(xV));
-			System.out.println("u is " + Arrays.toString(uV));
+			double Sv = Math.round(S.get(GRB.DoubleAttr.X));
+			double GS = model.get(GRB.DoubleAttr.ObjVal) + unitVariCost*S.get(GRB.DoubleAttr.X);
+			System.out.println("GS = " + GS);
+			System.out.println("S " + Sv);
+			sS[tt][1] = Sv;
+			
+			// find s
+			
 			
 		} catch (GRBException e) {
 			System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
 		}
+		}
 		
-		return null;
+		return sS;
 	}
 	
+	public double finds() {
+		return 0;
+	}
 	
 	public int[] getZ() {
 		int[] Z = new int[T];
