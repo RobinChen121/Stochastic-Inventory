@@ -139,6 +139,7 @@ public class WorkforceTesting {
 			 * when >= s, not order.
 			 */
 			
+			
 			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, iMinStaff, optQ, opt, time, sim, gapPercent};
 			wr.writeToExcelAppend(out, fileName);
 			

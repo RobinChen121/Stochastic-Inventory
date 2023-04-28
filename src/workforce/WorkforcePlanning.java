@@ -139,6 +139,7 @@ public class WorkforcePlanning {
 		MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
 		
 		double mipObj = mip.pieceApprox(segmentNum);
+		mip.getsS(segmentNum);
 		
 		
 		/*******************************************************************
