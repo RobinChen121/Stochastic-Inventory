@@ -3,6 +3,7 @@ package workforce;
 import java.util.Arrays;
 import java.util.function.Function;
 
+import milp.MIPWorkforce;
 import sdp.inventory.CheckKConvexity;
 import sdp.inventory.Drawing;
 import sdp.inventory.FitsS;
@@ -21,12 +22,14 @@ public class WorkforceTesting {
 				{10, 20, 30, 40, 50, 60, 70, 80},
 				{80, 70, 60, 50, 40, 30, 20, 10},
 		};
+		int segmentNum = 14;
 		
 		WriteToExcelTxt wr = new WriteToExcelTxt();
 		String fileName = "results.xls";
 		String headString =  
 				"turnoverRate" + "\t" + "fixCost" + "\t"  + "salary" + "\t" + "unitPenalty" + "\t" + "iMinStaff" + "\t" +
-		         "Q*" + "\t" + "ExpectedCosts"  + "\t" + "time"+ "\t" + "simCosts"+ "\t" + "gapPercent";
+		         "Q*" + "\t" + "ExpectedCosts"  + "\t" + "time"+ "\t" + "simCosts"+ "\t" + "gapPercent" +"\t" +
+						    "MIPcost" + "\t" + "gapMIP" + "\t" + "MIPcost" + "\t" + "gapMIPsS";
 		wr.writeToFile(fileName, headString);
 		
 		int m = turnoverRates.length;
@@ -138,9 +141,21 @@ public class WorkforceTesting {
 			 * find s and S from MIP and simulate.
 			 * when >= s, not order.
 			 */
+			System.out.println("**********************************************");
+			MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
 			
+			double mipObj = mip.pieceApprox(segmentNum);
+			double gapMip = (mipObj - opt)*100/opt;
+			double[][] sS = mip.getsS(segmentNum);
+			System.out.println("s, S by mip are: " + Arrays.deepToString(sS));
+			double sim2 = simulate.simulatesS(initialState, sS);
+
+			System.out.printf("simulated value is %.2f\n", sim2);
+			double gapsS = (sim2 - opt)*100/opt;
+			System.out.printf("simulated gap is %.2f%%\n", gapsS);
 			
-			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, iMinStaff, optQ, opt, time, sim, gapPercent};
+			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, iMinStaff, optQ, opt, time, sim, gapPercent,
+					mipObj, gapMip, sim2, gapsS};
 			wr.writeToExcelAppend(out, fileName);
 			
 

@@ -46,7 +46,7 @@ public class WorkforcePlanning {
 		int maxX = maxHireNum; // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
-		int segmentNum = 10;
+		int segmentNum = 10; // n segment result in n+1 lines
 		
 		int minX = 0;
 		int xLength = maxX - minX + 1;
