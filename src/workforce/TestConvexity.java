@@ -302,6 +302,8 @@ public class TestConvexity {
 		TestConvexity test = new TestConvexity(w, p, ymax, ymin, segNum);
 		boolean result = test.test();
 		
+		System.out.println(test.lossFunction(w-1));
+		
 		double[][] result2 = test.piecewise();
 		test.drawPicL();
 		System.out.println(result);

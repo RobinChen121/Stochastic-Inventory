@@ -21,6 +21,7 @@ public class WorkforceTesting {
 		int[][] minStaffs = {{40, 40, 40, 40, 40, 40, 40, 40},
 				{10, 20, 30, 40, 50, 60, 70, 80},
 				{80, 70, 60, 50, 40, 30, 20, 10},
+				{40, 50, 80, 60, 40, 50, 80, 60},
 		};
 		int segmentNum = 14;
 		
@@ -29,14 +30,14 @@ public class WorkforceTesting {
 		String headString =  
 				"turnoverRate" + "\t" + "fixCost" + "\t"  + "salary" + "\t" + "unitPenalty" + "\t" + "iMinStaff" + "\t" +
 		         "Q*" + "\t" + "ExpectedCosts"  + "\t" + "time"+ "\t" + "simCosts"+ "\t" + "gapPercent" +"\t" +
-						    "MIPcost" + "\t" + "gapMIP" + "\t" + "MIPcost" + "\t" + "gapMIPsS";
+						    "MIPcost" + "\t" + "timeMip" + "\t" + "gapMIP" + "\t" + "MIPsScost" + "\t" + "timesS" + "\t" + "gapMIPsS";
 		wr.writeToFile(fileName, headString);
 		
 		int m = turnoverRates.length;
-		for (int iRate = 0; iRate < m; iRate++)
+		for (int iRate = 1; iRate < 2; iRate++)
 			for (int iFix = 0; iFix < m; iFix++)
 				for (int iSalary = 0; iSalary < m; iSalary ++)
-					for (int iPenalty = 0; iPenalty < m; iPenalty ++) 
+					for (int iPenalty = 2; iPenalty < 3; iPenalty ++) 
 						for (int iMinStaff = 0; iMinStaff < m + 1; iMinStaff ++) {
 			
 			int T = 8;
@@ -49,12 +50,12 @@ public class WorkforceTesting {
 			double unitPenalty = unitPenaltys[iPenalty];		
 			int[] minStaffNum = minStaffs[iMinStaff];	
 			
-			int maxHireNum = 300;
+			int maxHireNum = 800;
 			int stepSize = 1;
 			boolean isForDrawGy = true;
 			
 			int minX = iniStaffNum;
-			int maxX = 300; // for drawing pictures
+			int maxX = maxHireNum; // for drawing pictures
 			
 			// get pmf for every possible x
 			int xLength = maxX - minX + 1;
@@ -133,9 +134,7 @@ public class WorkforceTesting {
 			
 			System.out.printf("simulated value is %.2f\n", sim);
 			double gapPercent = (sim - opt)*100/opt;
-			System.out.printf("simulated gap is %.2f%%\n", gapPercent);
-			System.out.println("****************************************************");
-			System.out.println();		
+			System.out.printf("simulated gap is %.2f%%\n", gapPercent);	
 			
 			/*******************************************************************
 			 * find s and S from MIP and simulate.
@@ -144,21 +143,32 @@ public class WorkforceTesting {
 			System.out.println("**********************************************");
 			MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
 			
+			currTime = System.currentTimeMillis();
 			double mipObj = mip.pieceApprox(segmentNum);
+			double timeMip = (System.currentTimeMillis() - currTime) / 1000;
+			System.out.println("running time for mip is " + timeMip + "s");
+			System.out.printf("mip value for expected cost is %.2f\n", mipObj);
 			double gapMip = (mipObj - opt)*100/opt;
+			System.out.printf("gap for mip  is %.2f%%\n", gapMip);
+			
+			currTime = System.currentTimeMillis();
 			double[][] sS = mip.getsS(segmentNum);
+			double timeMipsS = (System.currentTimeMillis() - currTime) / 1000;
+			System.out.println("running time for mip is " + timeMipsS + "s");
+			
 			System.out.println("s, S by mip are: " + Arrays.deepToString(sS));
 			double sim2 = simulate.simulatesS(initialState, sS);
 
-			System.out.printf("simulated value is %.2f\n", sim2);
+			System.out.printf("simulated value for mip sS is %.2f\n", sim2);
 			double gapsS = (sim2 - opt)*100/opt;
-			System.out.printf("simulated gap is %.2f%%\n", gapsS);
+			System.out.printf("simulated gap for mip sS is %.2f%%\n", gapsS);
+			System.out.println("**********************************************");
+			System.out.println("**********************************************");
+			System.out.println("**********************************************");
 			
 			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, iMinStaff, optQ, opt, time, sim, gapPercent,
-					mipObj, gapMip, sim2, gapsS};
-			wr.writeToExcelAppend(out, fileName);
-			
-
+					mipObj, timeMip, gapMip, sim2, timeMipsS, gapsS};
+			wr.writeToExcelAppend(out, fileName);		
 		}
 	}
 

@@ -84,7 +84,7 @@ public class MIPWorkforce {
 			if (i == 0) {
 				slope[i] = p - 1;
 				tanPointXcoe[0] = w - 1;
-				tanPointYcoe[0] = (w - 1) * p + 1;
+				tanPointYcoe[0] = (w - 1) * p + 1; // right
 				intercept[0] = w;
 			}
 			else {
@@ -277,7 +277,8 @@ public class MIPWorkforce {
 			model.optimize();
 			    
 			// output results
-			System.out.println(model.get(GRB.DoubleAttr.ObjVal));
+			double thisObj = model.get(GRB.DoubleAttr.ObjVal);
+			System.out.println(thisObj);
 			double[] yV = new double[T];
 			double[] xV = new double[T];
 			double[] uV = new double[T];
@@ -297,6 +298,7 @@ public class MIPWorkforce {
 //			System.out.println("y is " + Arrays.toString(yV));
 //			System.out.println("x is " + Arrays.toString(xV));
 //			System.out.println("u is " + Arrays.toString(uV));
+			return thisObj;
 			
 		} catch (GRBException e) {
 			System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());

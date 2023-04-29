@@ -31,22 +31,22 @@ public class WorkforcePlanning {
 
 	public static void main(String[] args) {
 		double[] turnoverRate;
-		turnoverRate = new double[] {0.3, 0.9, 0.3};
+		turnoverRate = new double[] {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 		//Arrays.fill(turnoverRate, 0.5);
 		int T = turnoverRate.length;
 		
 		int iniStaffNum = 0;
-		double fixCost = 100;
+		double fixCost = 2000;
 		double unitVariCost = 0;
-		double salary = 70;
-		double unitPenalty = 80;		
-		int[] minStaffNum = {30, 50, 40};	
+		double salary = 30;
+		double unitPenalty = 50;		
+		int[] minStaffNum = {10, 20, 30, 40, 50, 60, 70, 80};	
 		
 		int maxHireNum = 500;
 		int maxX = maxHireNum; // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
-		int segmentNum = 10; // n segment result in n+1 lines
+		int segmentNum = 30; // n segment result in n+1 lines
 		
 		int minX = 0;
 		int xLength = maxX - minX + 1;
