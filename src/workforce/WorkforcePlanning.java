@@ -39,14 +39,14 @@ public class WorkforcePlanning {
 		double fixCost = 2000;
 		double unitVariCost = 0;
 		double salary = 30;
-		double unitPenalty = 50;		
-		int[] minStaffNum = {10, 20, 30, 40, 50, 60, 70, 80};	
+		double unitPenalty = 2200;		
+		int[] minStaffNum = {80, 70, 60, 50, 40, 30, 20, 10};	
 		
 		int maxHireNum = 500;
 		int maxX = maxHireNum; // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
-		int segmentNum = 30; // n segment result in n+1 lines
+		int segmentNum = 34; // n segment result in n+1 lines
 		
 		int minX = 0;
 		int xLength = maxX - minX + 1;

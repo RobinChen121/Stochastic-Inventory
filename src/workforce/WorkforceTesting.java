@@ -34,7 +34,7 @@ public class WorkforceTesting {
 		wr.writeToFile(fileName, headString);
 		
 		int m = turnoverRates.length;
-		for (int iRate = 1; iRate < 2; iRate++)
+		for (int iRate = 2; iRate < 3; iRate++)
 			for (int iFix = 0; iFix < m; iFix++)
 				for (int iSalary = 0; iSalary < m; iSalary ++)
 					for (int iPenalty = 2; iPenalty < 3; iPenalty ++) 
@@ -50,7 +50,7 @@ public class WorkforceTesting {
 			double unitPenalty = unitPenaltys[iPenalty];		
 			int[] minStaffNum = minStaffs[iMinStaff];	
 			
-			int maxHireNum = 800;
+			int maxHireNum = 1000;
 			int stepSize = 1;
 			boolean isForDrawGy = true;
 			

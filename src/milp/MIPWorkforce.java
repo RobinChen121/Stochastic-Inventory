@@ -616,7 +616,7 @@ public class MIPWorkforce {
 				System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
 			}
 		}
-		double s = mid;
+		double s = mid - 1;
 		return s;
 	}
 	

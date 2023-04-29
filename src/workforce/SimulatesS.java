@@ -55,7 +55,8 @@ public class SimulatesS {
 			for (int i = 0; i < lastStatesLength; i++) {
 				StaffState thisIniState = t == 0 ? iniState : new StaffState(t + 1, nextInventory[t-1][i]);
 				int optQ = thisIniState.iniStaffNum < (int)optimalsS[t][0] ? (int)optimalsS[t][1] - thisIniState.iniStaffNum : 0;
-//				int optQ =  Math.max((int)optimalsS[t][1] - thisIniState.iniStaffNum, 0);
+				
+				//				int optQ =  Math.max((int)optimalsS[t][1] - thisIniState.iniStaffNum, 0);
 				int hireTo = thisIniState.iniStaffNum + optQ;
 				int[] randomDemands;
 				if (hireTo > 0) {
