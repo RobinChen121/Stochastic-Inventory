@@ -55,7 +55,7 @@ public class TestConvexity {
 		double[] intsPointYcoe = new double[segmentNum];
 		double[][] result = new double[6][];
 		
-		int endX = 0;
+		int endX = ymax;
 		for (int k = w; k < w*10; k ++) {
 			if (Fy(k) > 0.9999) {
 				endX = k;
@@ -75,7 +75,7 @@ public class TestConvexity {
 				intercept[0] = w;
 			}
 			else {
-				int a = (int)tanPointXcoe[i-1];
+				int a = (int)tanPointXcoe[i-1];				
 				for (int j = a; j <= endX; j++) {
 					if (Fy(j) - Fy(a) > 1 /(double)segmentNum) {
 						tanPointXcoe[i] = j;
@@ -84,13 +84,25 @@ public class TestConvexity {
 						slope[i] = -(1 - p)*(1 - Fy(b));
 						intercept[i] = -slope[i] * tanPointXcoe[i] + tanPointYcoe[i];
 						break;
-					}
-				}			
+					}	
+				}
+				if (Fy(endX) - Fy(a) <= 1 /(double)segmentNum) {
+					slope[i] = slope[i-1];
+					tanPointXcoe[i] = endX; // tangent point
+					int b = (int)tanPointXcoe[i];
+					tanPointYcoe[i] = lossFunction(b);
+					intercept[i] = -slope[i] * tanPointXcoe[i] + tanPointYcoe[i];
+				}
 			}
 		}
 		for (int i = 0; i < segmentNum; i++) {
 			intsPointXcoe[i] = tanPointYcoe[i+1] - tanPointYcoe[i] + slope[i]*tanPointXcoe[i] - slope[i+1]*tanPointXcoe[i+1];
-			intsPointXcoe[i] = intsPointXcoe[i] / (slope[i] -  slope[i+1]);
+			if (slope[i+1] > slope[i]) {
+				intsPointXcoe[i] = intsPointXcoe[i] / (slope[i] -  slope[i+1]);
+			}
+			else {
+				intsPointXcoe[i] = (tanPointYcoe[i] + tanPointYcoe[i+1]) / 2;	
+			}	
 			intsPointYcoe[i] = slope[i]*(intsPointXcoe[i] - tanPointXcoe[i]) + tanPointYcoe[i];
 		}
 		result[0] = slope;
@@ -293,11 +305,11 @@ public class TestConvexity {
 	}
 	
 	public static void main(String[] args) {
-		int w = 50;
-		double p = 0.3;
+		int w = 40;
+		double p = 0.9;
 		int ymin = w-10;
-		int ymax = w+50;
-		int segNum = 2;
+		int ymax = w*10;
+		int segNum = 5;
 		
 		TestConvexity test = new TestConvexity(w, p, ymax, ymin, segNum);
 		boolean result = test.test();

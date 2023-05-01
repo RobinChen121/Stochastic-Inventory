@@ -67,7 +67,7 @@ public class MIPWorkforce {
 		double[] intsPointGap = new double[segmentNum + 2];
 		double[][] result = new double[7][];
 		
-		int endX = w;
+		int endX = w*10;
 		for (int k = w + 1; k < w*10; k ++) {
 			endX = k;
 			if (Fy(k, w, p) > 0.9999) {
@@ -212,7 +212,7 @@ public class MIPWorkforce {
 		    	
 //		    	model.addConstr(P[1][1], GRB.EQUAL, 1, null);
 //		    	model.addConstr(y[1], GRB.EQUAL, 66, null);
-//		    	model.addConstr(y[0], GRB.EQUAL, 36, null);
+		    	model.addConstr(y[0], GRB.EQUAL, 600, null);
 		    	
 		    	// P_{jt} >= z_j - \sum_{k=j+1}^t z[k]
 		    	for (int j = 0; j <= t; j++) {
@@ -260,15 +260,15 @@ public class MIPWorkforce {
 		    			right5.addConstant(intercept[m]);
 		    			
 		    			// lower bound  only when (R, S) policy is optimal
-		    			right5.addTerm(M, P[j][t]);
-		    			right5.addConstant(-M);
-		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
-		    			
-		    			// upper bound
 //		    			right5.addTerm(M, P[j][t]);
 //		    			right5.addConstant(-M);
-//		    			right5.addConstant(error);		
 //		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
+		    			
+		    			// upper bound
+		    			right5.addTerm(M, P[j][t]);
+		    			right5.addConstant(-M);
+		    			right5.addConstant(error);		
+		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
 		    		}
 		    	}
 		    }
@@ -291,13 +291,13 @@ public class MIPWorkforce {
 				zV[t] = z[t].get(GRB.DoubleAttr.X);
 			}
 			PV = P[0][0].get(GRB.DoubleAttr.X);
-//			System.out.println("P[0][0] is " + PV);
+			System.out.println("P[0][0] is " + PV);
 //			System.out.println("P[0][1] is " + P[0][1].get(GRB.DoubleAttr.X));
 //			System.out.println("P[1][1] is " + P[1][1].get(GRB.DoubleAttr.X));
-//			System.out.println("z is " + Arrays.toString(zV));
-//			System.out.println("y is " + Arrays.toString(yV));
-//			System.out.println("x is " + Arrays.toString(xV));
-//			System.out.println("u is " + Arrays.toString(uV));
+			System.out.println("z is " + Arrays.toString(zV));
+			System.out.println("y is " + Arrays.toString(yV));
+			System.out.println("x is " + Arrays.toString(xV));
+			System.out.println("u is " + Arrays.toString(uV));
 			return thisObj;
 			
 		} catch (GRBException e) {

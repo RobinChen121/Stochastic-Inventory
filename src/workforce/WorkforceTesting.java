@@ -50,7 +50,7 @@ public class WorkforceTesting {
 			double unitPenalty = unitPenaltys[iPenalty];		
 			int[] minStaffNum = minStaffs[iMinStaff];	
 			
-			int maxHireNum = 1000;
+			int maxHireNum = 1500;
 			int stepSize = 1;
 			boolean isForDrawGy = true;
 			
