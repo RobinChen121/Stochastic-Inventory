@@ -67,9 +67,8 @@ public class MIPWorkforce {
 		double[] intsPointGap = new double[segmentNum + 2];
 		double[][] result = new double[7][];
 		
-		int endX = w*10;
-		for (int k = w + 1; k < w*10; k ++) {
-			endX = k;
+		int endX = w*50; // can affect results
+		for (int k = w + 1; k < endX; k ++) {
 			if (Fy(k, w, p) > 0.9999) {
 				endX = k;
 				break;
@@ -100,7 +99,14 @@ public class MIPWorkforce {
 						intercept[i] = -slope[i] * tanPointXcoe[i] + tanPointYcoe[i];
 						break;
 					}
-				}				
+				}
+				if (Fy(endX, w, p) - Fy(a, w, p) <= 1 /(double)segmentNum) {
+					slope[i] = slope[i-1];
+					tanPointXcoe[i] = endX; // tangent point
+					int b = (int)tanPointXcoe[i];
+					tanPointYcoe[i] = lossFunction(b, w, p);
+					intercept[i] = -slope[i] * tanPointXcoe[i] + tanPointYcoe[i];
+				}
 			}
 		}
 		intsPointXcoe[0] = 0;
@@ -116,6 +122,7 @@ public class MIPWorkforce {
 			double y =lossFunction((int)intsPointXcoe[i+1], w, p);
 			intsPointGap[i+1] = y - intsPointYcoe[i+1];
 		}
+		
 		result[0] = slope;
 		result[1] = intercept;
 		result[2] = tanPointXcoe;
@@ -188,7 +195,7 @@ public class MIPWorkforce {
 		    
 		    // constraints
 		    // M can not be too large, or a slight difference of P[j][t] affects results
-		    int M = iniStaffNum + 10*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
+		    int M = iniStaffNum + 50*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
 		    for (int t = 0; t < T; t++) {	
 		    	GRBLinExpr left1 = new GRBLinExpr();	
 		    	
@@ -212,7 +219,7 @@ public class MIPWorkforce {
 		    	
 //		    	model.addConstr(P[1][1], GRB.EQUAL, 1, null);
 //		    	model.addConstr(y[1], GRB.EQUAL, 66, null);
-		    	model.addConstr(y[0], GRB.EQUAL, 600, null);
+		    	model.addConstr(y[0], GRB.EQUAL, 544, null);
 		    	
 		    	// P_{jt} >= z_j - \sum_{k=j+1}^t z[k]
 		    	for (int j = 0; j <= t; j++) {
@@ -260,15 +267,15 @@ public class MIPWorkforce {
 		    			right5.addConstant(intercept[m]);
 		    			
 		    			// lower bound  only when (R, S) policy is optimal
-//		    			right5.addTerm(M, P[j][t]);
-//		    			right5.addConstant(-M);
-//		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
-		    			
-		    			// upper bound
 		    			right5.addTerm(M, P[j][t]);
 		    			right5.addConstant(-M);
-		    			right5.addConstant(error);		
 		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
+		    			
+		    			// upper bound
+//		    			right5.addTerm(M, P[j][t]);
+//		    			right5.addConstant(-M);
+//		    			right5.addConstant(error);		
+//		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
 		    		}
 		    	}
 		    }

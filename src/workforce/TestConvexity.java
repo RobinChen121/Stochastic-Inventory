@@ -56,7 +56,7 @@ public class TestConvexity {
 		double[][] result = new double[6][];
 		
 		int endX = ymax;
-		for (int k = w; k < w*10; k ++) {
+		for (int k = w; k < w*20; k ++) {
 			if (Fy(k) > 0.9999) {
 				endX = k;
 				break;
@@ -70,9 +70,9 @@ public class TestConvexity {
 		for (int i = 0; i < segmentNum; i++) {
 			if (i == 0) {
 				slope[i] = p - 1;
-				tanPointXcoe[0] = w - 1;
-				tanPointYcoe[0] = (w - 1) * p + 1;
-				intercept[0] = w;
+				tanPointXcoe[0] = w - 1; // 切点横坐标
+				tanPointYcoe[0] = (w - 1) * p + 1; // is right
+				intercept[0] = w; // is right, is the y-intercept
 			}
 			else {
 				int a = (int)tanPointXcoe[i-1];				
@@ -95,13 +95,13 @@ public class TestConvexity {
 				}
 			}
 		}
-		for (int i = 0; i < segmentNum; i++) {
+		for (int i = 0; i < segmentNum; i++) { // right
 			intsPointXcoe[i] = tanPointYcoe[i+1] - tanPointYcoe[i] + slope[i]*tanPointXcoe[i] - slope[i+1]*tanPointXcoe[i+1];
 			if (slope[i+1] > slope[i]) {
 				intsPointXcoe[i] = intsPointXcoe[i] / (slope[i] -  slope[i+1]);
 			}
 			else {
-				intsPointXcoe[i] = (tanPointYcoe[i] + tanPointYcoe[i+1]) / 2;	
+				intsPointXcoe[i] = endX;	
 			}	
 			intsPointYcoe[i] = slope[i]*(intsPointXcoe[i] - tanPointXcoe[i]) + tanPointYcoe[i];
 		}
@@ -115,6 +115,7 @@ public class TestConvexity {
 	}
 	
 	/**
+	 * cdf of binomial distribution
 	 * @param y
 	 * @return F_y(y-W)
 	 */
@@ -216,8 +217,8 @@ public class TestConvexity {
 			index++;
 		}
 		
-		WriteToExcelTxt write = new WriteToExcelTxt();
-		write.writeArrayToTxt(gy, "gy.txt");
+//		WriteToExcelTxt write = new WriteToExcelTxt();
+//		write.writeArrayToTxt(gy, "gy.txt");
 		
 		double[][] result = piecewise();
 		double[] slope = result[0];
@@ -230,11 +231,14 @@ public class TestConvexity {
 		}
 		
 		XYSeriesCollection dataset = new XYSeriesCollection();
-		dataset.addSeries(series);
 		
-		XYSeries seriesLine1 = new XYSeries("line1");
-		for (double i = ymin; i <= intsPointX[0]; i = i + 0.1)
-			seriesLine1.add(i, i * slope[0] + intercept[0]);
+//		dataset.addSeries(series);
+		
+//		XYSeries seriesLine1 = new XYSeries("line1");
+//		for (double i = ymin; i <= intsPointX[0]; i = i + 0.1)
+//			seriesLine1.add(i, i * slope[0] + intercept[0]);
+		
+		// without the below codes, it will only draw loss function
 		XYSeries[] seriesLines = new XYSeries[segmentNum + 1];
 		for (int k = 0; k < segmentNum + 1; k++) {
 			int m = k + 1;
@@ -308,8 +312,8 @@ public class TestConvexity {
 		int w = 40;
 		double p = 0.9;
 		int ymin = w-10;
-		int ymax = w*10;
-		int segNum = 5;
+		int ymax = w*20;
+		int segNum = 10;
 		
 		TestConvexity test = new TestConvexity(w, p, ymax, ymin, segNum);
 		boolean result = test.test();
