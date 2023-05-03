@@ -235,7 +235,7 @@ public class TestConvexity {
 //		dataset.addSeries(series);
 		
 //		XYSeries seriesLine1 = new XYSeries("line1");
-//		for (double i = ymin; i <= intsPointX[0]; i = i + 0.1)
+//		for (double i = ymin; i <= intsPointX[0]; i = i + 1)
 //			seriesLine1.add(i, i * slope[0] + intercept[0]);
 		
 		// without the below codes, it will only draw loss function
@@ -245,7 +245,7 @@ public class TestConvexity {
 			seriesLines[k] = new XYSeries("line" + m);
 			double b = k < segmentNum ? intsPointX[k] : ymax;
 			double a = k == 0 ? ymin : intsPointX[k-1];
-			for (double i = a; i <= b; i = i + 0.1)
+			for (double i = a; i <= b; i = i + 1)
 				seriesLines[k].add(i, i * slope[k] + intercept[k]);
 			dataset.addSeries(seriesLines[k]);
 		}
@@ -265,8 +265,8 @@ public class TestConvexity {
 				);
 		XYPlot plot = (XYPlot)chart.getPlot();
 		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-		renderer.setSeriesLinesVisible(0, false); // 0 is the series number
-		//renderer.setSeriesPaint(1, Color.black);
+		renderer.setSeriesLinesVisible(0, false); // 0 is the series number, 散点图，设置连线不可见
+//		renderer.setSeriesPaint(0, Color.white);
 		renderer.setSeriesStroke(0, new BasicStroke(50));
 		renderer.setSeriesStroke(1, new BasicStroke(1));
 		
@@ -313,7 +313,7 @@ public class TestConvexity {
 		double p = 0.9;
 		int ymin = w-10;
 		int ymax = w*20;
-		int segNum = 10;
+		int segNum = 15;
 		
 		TestConvexity test = new TestConvexity(w, p, ymax, ymin, segNum);
 		boolean result = test.test();
@@ -324,6 +324,10 @@ public class TestConvexity {
 		test.drawPicL();
 		System.out.println(result);
 		System.out.println(Arrays.deepToString(result2));
+		
+		double result3 = test.lossFunction(518) - test.lossFunction(517);
+		double y = test.lossFunction(518);
+		System.out.println(result3);
 	}
 
 }

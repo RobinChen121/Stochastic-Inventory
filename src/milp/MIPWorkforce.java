@@ -78,7 +78,7 @@ public class MIPWorkforce {
 		slope[segmentNum] = 0;
 		tanPointXcoe[segmentNum] = endX;
 		tanPointYcoe[segmentNum] = 0;
-		intercept[segmentNum] = 0;
+		intercept[segmentNum] = 0; // intercept is actually the y-intercept
 		for (int i = 0; i < segmentNum; i++) {
 			if (i == 0) {
 				slope[i] = p - 1;
@@ -90,6 +90,7 @@ public class MIPWorkforce {
 				int a = (int)tanPointXcoe[i-1];
 				tanPointXcoe[i] = a;
 				slope[i] = slope[i-1];
+				
 				for (int j = a + 1; j <= endX; j++) {
 					if (Fy(j, w, p) - Fy(a, w, p) > 1 /(double)segmentNum) {
 						tanPointXcoe[i] = j;
@@ -100,13 +101,13 @@ public class MIPWorkforce {
 						break;
 					}
 				}
-				if (Fy(endX, w, p) - Fy(a, w, p) <= 1 /(double)segmentNum) {
-					slope[i] = slope[i-1];
-					tanPointXcoe[i] = endX; // tangent point
-					int b = (int)tanPointXcoe[i];
-					tanPointYcoe[i] = lossFunction(b, w, p);
-					intercept[i] = -slope[i] * tanPointXcoe[i] + tanPointYcoe[i];
-				}
+//				if (Fy(endX, w, p) - Fy(a, w, p) <= 1 /(double)segmentNum) {
+//					slope[i] = slope[i-1];
+//					tanPointXcoe[i] = endX; // tangent point
+//					int b = (int)tanPointXcoe[i];
+//					tanPointYcoe[i] = lossFunction(b, w, p);
+//					intercept[i] = -slope[i] * tanPointXcoe[i] + tanPointYcoe[i];
+//				}
 			}
 		}
 		intsPointXcoe[0] = 0;
@@ -164,7 +165,6 @@ public class MIPWorkforce {
 		    for (int t = 0; t < T; t++) {
 		    	y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "y");
 		    	u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "u");
-		    	//delta[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "delta");
 		    	x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "x");
 		    	z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "z");
 		    	for (int j = 0; j <= t; j++) {
@@ -219,7 +219,8 @@ public class MIPWorkforce {
 		    	
 //		    	model.addConstr(P[1][1], GRB.EQUAL, 1, null);
 //		    	model.addConstr(y[1], GRB.EQUAL, 66, null);
-		    	model.addConstr(y[0], GRB.EQUAL, 544, null);
+//		    	model.addConstr(y[0], GRB.EQUAL, 544, null);
+//		    	model.addConstr(u[0], GRB.EQUAL, 0.037, null);
 		    	
 		    	// P_{jt} >= z_j - \sum_{k=j+1}^t z[k]
 		    	for (int j = 0; j <= t; j++) {
@@ -252,6 +253,7 @@ public class MIPWorkforce {
 		    	
 		    	// piecewise constraints
 		    	// U_t >= \alpha y_j + \beta - (1 - P_{jt})M
+		    	// something wrong in the piecewise for u[t]
 		    	for (int j = 0; j <= t; j++) {
 		    		double p = 1;
 		    		for (int k = j; k <= t; k++)
@@ -260,7 +262,9 @@ public class MIPWorkforce {
 		    		double[] slope = result[0];
 		    		double[] intercept = result[1];
 		    		double[] gap = result[6];
-		    		double error = Arrays.stream(gap).max().getAsDouble();
+		    		double error;
+		    		error = Arrays.stream(gap).max().getAsDouble();
+//		    		error = gap[segmentNum];
 		    		for (int m = 0; m < segmentNum; m++) {
 		    			GRBLinExpr right5 = new GRBLinExpr();
 		    			right5.addTerm(slope[m], y[j]);
@@ -271,17 +275,26 @@ public class MIPWorkforce {
 		    			right5.addConstant(-M);
 		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
 		    			
-		    			// upper bound
-//		    			right5.addTerm(M, P[j][t]);
-//		    			right5.addConstant(-M);
-//		    			right5.addConstant(error);		
+//		    			GRBLinExpr right6 = new GRBLinExpr();
+//		    			right6.addTerm(M, P[j][t]);
+//		    			right6.addConstant(-M);
+//		    			right6.addConstant(error);
 //		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
+//		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right6, null);
+		    			
+		    			// upper bound
+		    			// better for large penalty cost
+		    			right5.addTerm(M, P[j][t]);
+		    			right5.addConstant(-M);
+		    			right5.addConstant(error);		
+		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
 		    		}
 		    	}
 		    }
 		    
 		    // Optimize model
 			model.optimize();
+//			model.write("test.lp");
 			    
 			// output results
 			double thisObj = model.get(GRB.DoubleAttr.ObjVal);
@@ -298,7 +311,7 @@ public class MIPWorkforce {
 				zV[t] = z[t].get(GRB.DoubleAttr.X);
 			}
 			PV = P[0][0].get(GRB.DoubleAttr.X);
-			System.out.println("P[0][0] is " + PV);
+//			System.out.println("P[0][0] is " + PV);
 //			System.out.println("P[0][1] is " + P[0][1].get(GRB.DoubleAttr.X));
 //			System.out.println("P[1][1] is " + P[1][1].get(GRB.DoubleAttr.X));
 			System.out.println("z is " + Arrays.toString(zV));

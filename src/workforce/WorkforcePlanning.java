@@ -31,7 +31,7 @@ public class WorkforcePlanning {
 
 	public static void main(String[] args) {
 		double[] turnoverRate;
-		turnoverRate = new double[] {0.9};
+		turnoverRate = new double[] {0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9};
 		//Arrays.fill(turnoverRate, 0.5);
 		int T = turnoverRate.length;
 		
@@ -42,11 +42,11 @@ public class WorkforcePlanning {
 		double unitPenalty = 2200;		
 		int[] minStaffNum = {40, 40, 40, 40, 40, 40, 40, 40};	
 		
-		int maxHireNum = 1000;
+		int maxHireNum = 800;
 		int maxX = maxHireNum; // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
-		int segmentNum = 10; // n segment result in n+1 lines
+		int segmentNum = 14; // n segment result in n+1 lines
 		
 		int minX = 0;
 		int xLength = maxX - minX + 1;
@@ -139,12 +139,13 @@ public class WorkforcePlanning {
 		MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
 		
 		double mipObj = mip.pieceApprox(segmentNum);
+		System.out.printf("mip gap is %.2f%%\n", (mipObj - opt)*100/opt);
 		double[][] sS = mip.getsS(segmentNum);
 		System.out.println("s, S by mip are: " + Arrays.deepToString(sS));
 		double sim2 = simulate.simulatesS(initialState, sS);
 
 		System.out.printf("simulated value is %.2f\n", sim2);
-		System.out.printf("simulated gap is %.2f%%\n", (sim2 - opt)*100/opt);
+		System.out.printf("simulated gap for mipSS is %.2f%%\n", (sim2 - opt)*100/opt);
 		
 		
 		/*******************************************************************
