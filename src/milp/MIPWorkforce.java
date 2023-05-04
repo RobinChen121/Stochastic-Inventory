@@ -284,10 +284,10 @@ public class MIPWorkforce {
 		    			
 		    			// upper bound
 		    			// better for large penalty cost
-		    			right5.addTerm(M, P[j][t]);
-		    			right5.addConstant(-M);
-		    			right5.addConstant(error);		
-		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
+//		    			right5.addTerm(M, P[j][t]);
+//		    			right5.addConstant(-M);
+//		    			right5.addConstant(error);		
+//		    			model.addConstr(u[t], GRB.GREATER_EQUAL, right5, null);
 		    		}
 		    	}
 		    }

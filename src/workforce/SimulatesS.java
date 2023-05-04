@@ -35,7 +35,7 @@ public class SimulatesS {
 		int[] sampleNums = new int[T];
 		for (int t = 0; t < T; t++) {
 			if (t == 0 || t == 1 )
-				sampleNums[t] = 100;
+				sampleNums[t] = 10;
 			else if (t > 3)
 				sampleNums[t] = 1;
 			else
