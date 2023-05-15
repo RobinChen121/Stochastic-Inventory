@@ -36,12 +36,12 @@ public class TestPaper {
 		int iniCash = 0;
 		
 		// parameters
-		double price = 2000; // selling price 
-		double orderCost = 1000; // ordering cost
-		double holdCost = 500; // holding cost
+		double price = 10; // selling price 
+		double orderCost = 2; // ordering cost
+		double holdCost = 1; // holding cost
 		double depositeRate = 0.01; // deposite interest rate
 		double loanRate = 0.15; // loan interest rate
-		double salvageValue = 400; // salvage value
+		double salvageValue = 5; // salvage value
 		
 		// demand possible values setting
 		double truncationQuantile = 1; 
@@ -52,9 +52,9 @@ public class TestPaper {
 		double maxOrderQuantity = 100; // maximum ordering quantity in stochastic dynamic programming
 		double minInventoryState = 0;
 		double maxInventoryState = 300;
-		double minCashState = -1000000; 
-		double maxCashState = 1000000;
-		double minCashRequired = -1000000;
+		double minCashState = -1000; 
+		double maxCashState = 1000;
+		double minCashRequired = -100;
 		
 		double discountFactor = 1;
 		

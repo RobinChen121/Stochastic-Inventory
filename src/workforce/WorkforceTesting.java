@@ -28,16 +28,16 @@ public class WorkforceTesting {
 		WriteToExcelTxt wr = new WriteToExcelTxt();
 		String fileName = "results.xls";
 		String headString =  
-				"turnoverRate" + "\t" + "fixCost" + "\t"  + "salary" + "\t" + "unitPenalty" + "\t" + "iMinStaff" + "\t" +
+				"turnoverRate" + "\t" + "fixCost" + "\t" + "variCost" + "\t"  + "salary" + "\t" + "unitPenalty" + "\t" + "iMinStaff" + "\t" +
 		         "Q*" + "\t" + "ExpectedCosts"  + "\t" + "time"+ "\t" + "simCosts"+ "\t" + "gapPercent" +"\t" +
 						    "MIPcost" + "\t" + "timeMip" + "\t" + "gapMIP" + "\t" + "MIPsScost" + "\t" + "timesS" + "\t" + "gapMIPsS";
 		wr.writeToFile(fileName, headString);
 		
 		int m = turnoverRates.length;
-		for (int iRate = 2; iRate < 3; iRate++)
+		for (int iRate = 0; iRate < 2; iRate++)
 			for (int iFix = 0; iFix < m; iFix++)
 				for (int iSalary = 0; iSalary < m; iSalary ++)
-					for (int iPenalty = 2; iPenalty < 3; iPenalty ++) 
+					for (int iPenalty = 0; iPenalty < 3; iPenalty ++) 
 						for (int iMinStaff = 0; iMinStaff < m + 1; iMinStaff ++) {
 			
 			int T = 8;
@@ -45,12 +45,12 @@ public class WorkforceTesting {
 			Arrays.fill(turnoverRate, turnoverRates[iRate]);
 			int iniStaffNum = 0;
 			double fixCost = fixCosts[iFix];
-			double unitVariCost = 0;
+			double unitVariCost = 20;
 			double salary = salarys[iSalary];
 			double unitPenalty = unitPenaltys[iPenalty];		
 			int[] minStaffNum = minStaffs[iMinStaff];	
 			
-			int maxHireNum = 1500;
+			int maxHireNum = 1000;
 			int stepSize = 1;
 			boolean isForDrawGy = true;
 			
@@ -115,27 +115,27 @@ public class WorkforceTesting {
 			long currTime = System.currentTimeMillis();
 			SimulatesS simulate = new SimulatesS(recursion, T, turnoverRate);			
 			
-//			double opt = recursion.getExpectedValue(initialState);
-//			System.out.println("final optimal expected cost is: " + opt);
-//			double optQ = recursion.getAction(initialState);
-//			System.out.println("optimal hiring number in the first priod is : " + optQ);
-//			double time = (System.currentTimeMillis() - currTime) / 1000;
-//			System.out.println("running time is " + time + "s");
-//			double[][] optTable = recursion.getOptTable();
-//			
-//			/*******************************************************************
-//			 * find s and S from SDP and simulate.
-//			 * when >= s, not order.
-//			 */
-//			FitsS findsS = new FitsS(Integer.MAX_VALUE, T);
-//			double[][] optsS = findsS.getSinglesS(optTable);
-//			System.out.println("single s, S level: " + Arrays.deepToString(optsS));
-//			
-//			double sim  = simulate.simulatesS(initialState, optsS);
-//			
-//			System.out.printf("simulated value is %.2f\n", sim);
-//			double gapPercent = (sim - opt)*100/opt;
-//			System.out.printf("simulated gap is %.2f%%\n", gapPercent);	
+			double opt = recursion.getExpectedValue(initialState);
+			System.out.println("final optimal expected cost is: " + opt);
+			double optQ = recursion.getAction(initialState);
+			System.out.println("optimal hiring number in the first priod is : " + optQ);
+			double time = (System.currentTimeMillis() - currTime) / 1000;
+			System.out.println("running time is " + time + "s");
+			double[][] optTable = recursion.getOptTable();
+			
+			/*******************************************************************
+			 * find s and S from SDP and simulate.
+			 * when >= s, not order.
+			 */
+			FitsS findsS = new FitsS(Integer.MAX_VALUE, T);
+			double[][] optsS = findsS.getSinglesS(optTable);
+			System.out.println("single s, S level: " + Arrays.deepToString(optsS));
+			
+			double sim  = simulate.simulatesS(initialState, optsS);
+			
+			System.out.printf("simulated value is %.2f\n", sim);
+			double gapPercent = (sim - opt)*100/opt;
+			System.out.printf("simulated gap is %.2f%%\n", gapPercent);	
 			
 			/*******************************************************************
 			 * find s and S from MIP and simulate.
@@ -149,8 +149,8 @@ public class WorkforceTesting {
 			double timeMip = (System.currentTimeMillis() - currTime) / 1000;
 			System.out.println("running time for mip is " + timeMip + "s");
 			System.out.printf("mip value for expected cost is %.2f\n", mipObj);
-//			double gapMip = (mipObj - opt)*100/opt;
-//			System.out.printf("gap for mip  is %.2f%%\n", gapMip);
+			double gapMip = (mipObj - opt)*100/opt;
+			System.out.printf("gap for mip  is %.2f%%\n", gapMip);
 			
 			currTime = System.currentTimeMillis();
 			double[][] sS = mip.getsS(segmentNum);
@@ -160,18 +160,19 @@ public class WorkforceTesting {
 			System.out.println("s, S by mip are: " + Arrays.deepToString(sS));
 			double sim2 = simulate.simulatesS(initialState, sS);
 
-//			System.out.printf("simulated value for mip sS is %.2f\n", sim2);
-//			double gapsS = (sim2 - opt)*100/opt;
-//			System.out.printf("simulated gap for mip sS is %.2f%%\n", gapsS);
+			System.out.printf("simulated value for mip sS is %.2f\n", sim2);
+			double gapsS = (sim2 - opt)*100/opt;
+			System.out.printf("simulated gap for mip sS is %.2f%%\n", gapsS);
 			System.out.println("**********************************************");
 			System.out.println("**********************************************");
 			System.out.println("**********************************************");
 			
-//			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, iMinStaff, optQ, opt, time, sim, gapPercent,
-//					mipObj, timeMip, gapMip, sim2, timeMipsS, gapsS};
+			double[] out = new double[]{turnoverRate[0], fixCost, unitVariCost, salary, unitPenalty, iMinStaff, optQ, opt, time, sim, gapPercent,
+					mipObj, timeMip, gapMip, sim2, timeMipsS, gapsS};
 			
-			double[] out = new double[]{turnoverRate[0], fixCost, salary, unitPenalty, iMinStaff, 0, 0, 0, 0, 0,
-					mipObj, timeMip, 0, sim2, timeMipsS, 0};
+//			double[] out = new double[]{turnoverRate[0], fixCost, unitVariCost, salary, unitPenalty, iMinStaff, 0, 0, 0, 0, 0,
+//					mipObj, timeMip, 0, sim2, timeMipsS, 0};
+			
 			wr.writeToExcelAppend(out, fileName);		
 		}
 	}

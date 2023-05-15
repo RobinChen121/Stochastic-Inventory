@@ -53,10 +53,10 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 20};
+		double[] meanDemand = {10, 20, 10};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 5;
+		double iniCash = 10;
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double price = 10;

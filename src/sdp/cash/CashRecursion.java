@@ -112,11 +112,7 @@ public class CashRecursion {
 				double thisQValue = 0;								
 				for (int j = 0; j < dAndP.length; j++) {
 					double randomDemand = dAndP[j][0];
-					double thisDValue = immediateValue.apply(s, orderQty, randomDemand);
-					
-//					if (thisDValue < -10000 && dAndP[j][1] > 0.001)
-//						System.out.println(thisDValue);
-					
+					double thisDValue = immediateValue.apply(s, orderQty, randomDemand);	
 					double dProb = dAndP[j][1];
 					thisQValue += dProb * thisDValue;
 					if (s.getPeriod() < pmf.length) {
@@ -138,12 +134,7 @@ public class CashRecursion {
 					}
 				}
 			}
-			try {
 			this.cacheActions.putIfAbsent(s, bestOrderQty);
-			}
-			catch (Exception e) {
-				System.out.println("error");
-			}
 			return val;
 		});
 	}

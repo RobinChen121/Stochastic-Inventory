@@ -27,26 +27,28 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashOverdraftLimit {
 
 	public static void main(String[] args) {
-		double[] meanDemand = { 7, 7, 7, 7, 7, 7 };
+		double[] meanDemand = {5, 5, 15, 8};
+		double[] overheadCost = {25, 25, 25, 25};
 
-		double fixOrderCost = 15;
-		double variCost = 2;
+		double fixOrderCost = 0;
+		double variCost = 1;
 		double holdingCost = 0;
 		double price = 5;
 		double salvageValue = 0.5;
 
 		double iniCash = 0;
-		double interestRate = 0.2;
+		double interestRate = 0.03; // about 10 times higher than the deposite rate
+		double depositeRate = 0.003;
 		double minCashRequired = -100; // minimum cash balance the retailer can withstand
-		double maxOrderQuantity = 60; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
 
-		double truncationQuantile = 0.999;
+		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 100;
-		double minCashState = -200; // 资金不可能减少
+		double minCashState = -200; // 
 		double maxCashState = 800;
-		double discountFactor = 0.95;
+		double discountFactor = 1;
 
 		// get demand possibilities for each period
 		int T = meanDemand.length;
@@ -58,7 +60,7 @@ public class CashOverdraftLimit {
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
 			double maxQ = (int) Math.min(maxOrderQuantity,
-					Math.max(0, (s.getIniCash() - minCashRequired - fixOrderCost) / variCost));
+					Math.max(0, (s.getIniCash() -overheadCost[s.getPeriod()-1] - minCashRequired - fixOrderCost) / variCost));
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -69,10 +71,11 @@ public class CashOverdraftLimit {
 			double variableCost = variCost * action;
 			double inventoryLevel = state.getIniInventory() + action - randomDemand;
 			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
-			double cashBalanceBefore = state.getIniCash() + revenue - fixedCost - variableCost - holdCosts;
+			double cashBalanceBeforeRevenue = state.getIniCash() - fixedCost - variableCost - holdCosts - overheadCost[state.getPeriod()-1];
 			// related with when to pay interest
-			double interest = interestRate * Math.max(-cashBalanceBefore + revenue, 0); 
-			double cashBalanceAfter = cashBalanceBefore - interest;
+			double interest = interestRate * Math.max(-cashBalanceBeforeRevenue, 0); 
+			double deposite = depositeRate * Math.max(cashBalanceBeforeRevenue, 0);
+			double cashBalanceAfter = cashBalanceBeforeRevenue - interest + deposite + revenue;
 			double cashIncrement = cashBalanceAfter - state.getIniCash();
 			return cashIncrement;
 		};
@@ -81,18 +84,13 @@ public class CashOverdraftLimit {
 		StateTransitionFunction<CashState, Double, Double, CashState> stateTransition = (state, action,
 				randomDemand) -> {
 			double nextInventory = Math.max(0, state.getIniInventory() + action - randomDemand);
-			double revenue = price * Math.min(state.getIniInventory() + action, randomDemand);
-			double fixedCost = action > 0 ? fixOrderCost : 0;
-			double variableCost = variCost * action;
-			double holdCosts = holdingCost * Math.max(nextInventory, 0);
-			double nextCash = state.getIniCash() + revenue - fixedCost - variableCost - holdCosts;
-			nextCash = nextCash - Math.max(-nextCash, 0) * interestRate;
+			double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
 			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			//cash is integer or not
-			nextCash = Math.round(nextCash * 1) / 1;
+			nextCash = Math.round(nextCash * 10) / 10;
 			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 		};
 
@@ -128,8 +126,8 @@ public class CashOverdraftLimit {
 		System.out.println("");
 		double[][] optTable = recursion.getOptTable();
 		FindsSOverDraft findsCS = new FindsSOverDraft(T, iniCash);
-		double[][] optsCS = findsCS.getsCS(optTable);		
-		double simsCSFinalValue = simuation.simulatesCSDraft(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
-		System.out.printf("Optimality gap is: %.2f%%\n", (finalCash -simsCSFinalValue)/finalCash*100);
+//		double[][] optsCS = findsCS.getsCS(optTable);		
+//		double simsCSFinalValue = simuation.simulatesCSDraft(initialState, optsCS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
+//		System.out.printf("Optimality gap is: %.2f%%\n", (finalCash -simsCSFinalValue)/finalCash*100);
 	}
 }
