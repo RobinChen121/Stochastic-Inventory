@@ -160,7 +160,7 @@ public class CLSP {
 		
 		  
 	      double initialInventory = 0; 
-	      double[] meanDemand = {10, 10, 10};
+	      double[] meanDemand = {10, 10};
 	      
 	      double truncationQuantile = 0.9999;  
 	      double stepSize = 1; 
@@ -173,7 +173,7 @@ public class CLSP {
 	      double holdingCost = 2;
 	      double penaltyCost = 10;
 	      
-	      int maxOrderQuantity = 100;
+	      int maxOrderQuantity = 30;
 	      
 	      Distribution[] distributions = IntStream.iterate(0, i -> i + 1)
 	                                              .limit(T)

@@ -139,7 +139,7 @@ public class LostSaleChance {
 					M1 = thissSumD;
 			}
 			M2 = iniCash + price[0] * M1; // prices are same
-			M3 = iniI * holdCostUnit * T + variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash; // variCostUnit[0] * M1
+			M3 = iniI * holdCostUnit * T + variCostUnit[0] * (M1 - iniI) + Arrays.stream(overheadCost).sum() - iniCash; // variCostUnit[0] * M1
 		    for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++) {
 		    		revenue[t][s] = new GRBLinExpr();
@@ -201,10 +201,8 @@ public class LostSaleChance {
 		    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr2);
 		    			model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr, "IConstraint1");
 		    			
-		    			GRBLinExpr rightExpr3 = new GRBLinExpr();
-		    			rightExpr3.multAdd(-1, rightExpr2);
 		    			rightExpr.clear();
-		    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr3);
+		    			rightExpr.add(rightExpr1); 
 		    			model.addConstr(I[t][s], GRB.GREATER_EQUAL, rightExpr, "IConstraint2");
 		    			
 		    			GRBLinExpr rightExpr4 = new GRBLinExpr();
@@ -221,10 +219,8 @@ public class LostSaleChance {
 		    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr2);
 		    			model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr, "IConstraint1");
 		    			
-		    			GRBLinExpr rightExpr3 = new GRBLinExpr();
-		    			rightExpr3.multAdd(-1, rightExpr2);
 		    			rightExpr.clear();
-		    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr3);
+		    			rightExpr.add(rightExpr1); 
 		    			model.addConstr(I[t][s], GRB.GREATER_EQUAL, rightExpr, "IConstraint2");
 		    			
 		    			GRBLinExpr rightExpr4 = new GRBLinExpr();
@@ -255,7 +251,7 @@ public class LostSaleChance {
 			for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++){
 		    		GRBLinExpr rightExpr = new GRBLinExpr();
-		    		rightExpr.addTerm(M2, alpha[t][s]); rightExpr.addConstant(-2); // add a constant to avoid survival probs too big
+		    		rightExpr.addTerm(M2, alpha[t][s]); //rightExpr.addConstant(-2); // add a constant to avoid survival probs too big
 		    		model.addConstr(cash[t][s], GRB.LESS_EQUAL, rightExpr, "CashConstraint1");
 		    		rightExpr.clear();
 		    		rightExpr.addConstant(-M3); rightExpr.addTerm(M3, alpha[t][s]);
@@ -273,6 +269,29 @@ public class LostSaleChance {
 		    	}
 		    	//model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "CashConstraint2");
 			}
+			
+			// strict cash constraints
+			for (int t = 0; t < T; t++) 
+		    	for (int s = 0; s < sampleNumTotal; s++){
+		    		GRBLinExpr leftExpr = new GRBLinExpr();
+		    		leftExpr.addTerm(variCostUnit[t], Q[t][s]);
+		    		if (t == 0)
+		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, iniCash, "strictCashConstraint");
+		    		else
+		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, cash[t-1][s], "strictCashConstraint");
+		    	}
+			
+			for (int t = 0; t < T; t++) 
+		    	for (int s = 0; s < sampleNumTotal; s++){
+		    		GRBLinExpr leftExpr = new GRBLinExpr();
+		    		for (int k = t + 1; k < T; k++)
+		    			leftExpr.addTerm(1, Q[k][s]);
+		    		GRBLinExpr rightExpr = new GRBLinExpr();
+		    		rightExpr.addTerm(M1, alpha[t][s]);
+		    		if (t < T - 1)
+		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "orderQZeroConstraint");
+		    	}
+			
 			
 			// first-stage decision, here and now decision
 			for (int s = 0; s < sampleNumTotal - 1; s++) {

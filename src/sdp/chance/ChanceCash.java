@@ -94,13 +94,13 @@ public class ChanceCash {
 //		         + "simRollingObj" + "\t" + "simRollingService";
 //		wr.writeToFile(fileName, headString);
 		
-		double[] meanDemand = {11, 14, 18, 23, 28};
+		double[] meanDemand = {10, 20, 10};
 		double iniCash = 100;
 		int T = meanDemand.length;
 		
 		double minInventoryState = 0;
 		double maxInventoryState = 300;
-		double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
+		double minCashState = -10; // can affect results, should be smaller than minus fixedOrderCost
 		double maxCashState = 200;
 		double discountFactor = 1;		
 		
@@ -124,7 +124,7 @@ public class ChanceCash {
 		double rollingServiceRate = Math.pow(serviceRateSAA, portion);		
 		int sampleNumSim = 100;  // simulating sample number in testing SAA and extended SAA
 		
-		double holdCostUnit = 0.5;
+		double holdCostUnit = 0;
 		double salvageValueUnit = 0.5;	
 		
 		double[] prices = new double[T];
@@ -197,34 +197,34 @@ public class ChanceCash {
 		double[][][] pmf = new GetPmf(distributions, trunQuantile, stepSize).getpmf();	
 		
 		// immediate value
-			ImmediateValueFunction<CashState, Double, Double, Double> immediateValue = (state, action, randomDemand) -> {
-				int t = state.getPeriod() - 1;
-				double revenue = prices[t] * Math.min(state.getIniInventory() + action, randomDemand);
-				double fixedCost = action > 0 ? fixOrderCost : 0;
-				double variableCost = variCostUnits[t] * action;
-				double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
-				double inventoryLevel = state.getIniInventory() + action - randomDemand;
-				double holdCosts = holdCostUnit * Math.max(inventoryLevel, 0);
-				double cashIncrement = revenue + deposite - holdCosts - overheadCosts[t]
-						- state.getIniCash();
-				double salValue = state.getPeriod() == T ? salvageValueUnit * Math.max(inventoryLevel, 0) : 0;
-				cashIncrement += salValue;
-				return cashIncrement;
-			};
+		ImmediateValueFunction<CashState, Double, Double, Double> immediateValue = (state, action, randomDemand) -> {
+			int t = state.getPeriod() - 1;
+			double revenue = prices[t] * Math.min(state.getIniInventory() + action, randomDemand);
+			double fixedCost = action > 0 ? fixOrderCost : 0;
+			double variableCost = variCostUnits[t] * action;
+			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
+			double inventoryLevel = state.getIniInventory() + action - randomDemand;
+			double holdCosts = holdCostUnit * Math.max(inventoryLevel, 0);
+			double cashIncrement = revenue + deposite - holdCosts - overheadCosts[t]
+					- state.getIniCash();
+			double salValue = state.getPeriod() == T ? salvageValueUnit * Math.max(inventoryLevel, 0) : 0;
+			cashIncrement += salValue;
+			return cashIncrement;
+		};
 		
 			// state transition function
-			StateTransitionFunction<CashState, Double, Double, CashState> stateTransition = (state, action,
-					randomDemand) -> {
-				double nextInventory = Math.max(0, state.getIniInventory() + action - randomDemand);
-				double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
-				nextCash = nextCash > maxCashState ? maxCashState : nextCash;
-				nextCash = nextCash < minCashState ? minCashState : nextCash;
-				nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
-				nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
-				// cash is integer or not
-				nextCash = Math.round(nextCash * 1) / 1; // the right should be a decimal
-				return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
-			};
+		StateTransitionFunction<CashState, Double, Double, CashState> stateTransition = (state, action,
+				randomDemand) -> {
+			double nextInventory = Math.max(0, state.getIniInventory() + action - randomDemand);
+			double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
+			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
+			nextCash = nextCash < minCashState ? minCashState : nextCash;
+			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
+			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
+			// cash is integer or not
+			nextCash = Math.round(nextCash * 1) / 1; // the right should be a decimal
+			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
+		};
 		
 	    
 		int period = 1;		
@@ -233,16 +233,16 @@ public class ChanceCash {
 	    CashSimulation simulation1 = new CashSimulation(distributions, sampleNumSim, immediateValue, stateTransition); // no need to add overheadCost in this class
 	    double error;
 	    
-//	    double SAAServiceSim;	    
-//	    currTime = System.currentTimeMillis();
-//	    resultSim = simulation1.simulateSAA(initialState, result[0], serviceRateSAA, sampleNumSims, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
-//	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;  
-//	    System.out.println("running time is " + time1 + "s");
-//	    double objSAASim = resultSim[0];
-//	    System.out.println("final simulated survival probability of SAA in " + df.format(sampleNumSim) + " samples is: " + nf.format(objSAASim));
-//		error  = 1.96 * Math.sqrt(resultSim[1]*(1 - resultSim[1]) / sampleNumSim);
-//		SAAServiceSim = 1-resultSim[1];
-//		System.out.println("final simulated service sale rate of SAA " + " is: " + nf.format(SAAServiceSim) + " with error " + nf.format(error)); 
+	    double SAAServiceSim;	    
+	    currTime = System.currentTimeMillis();
+	    resultSim = simulation1.simulateSAA(initialState, result[0], serviceRateSAA, sampleNumSims, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
+	    time1 = (System.currentTimeMillis() - currTime) / 1000.00;  
+	    System.out.println("running time is " + time1 + "s");
+	    double objSAASim = resultSim[0];
+	    System.out.println("final simulated survival probability of SAA in " + df.format(sampleNumSim) + " samples is: " + nf.format(objSAASim));
+		error  = 1.96 * Math.sqrt(resultSim[1]*(1 - resultSim[1]) / sampleNumSim);
+		SAAServiceSim = 1-resultSim[1];
+		System.out.println("final simulated service sale rate of SAA " + " is: " + nf.format(SAAServiceSim) + " with error " + nf.format(error)); 
 	    
 		/**
 		 * solve the problem by scenario tree
@@ -351,7 +351,7 @@ public class ChanceCash {
 		 */	
 		sampleNumSim = 1000;
 		CashSimulation simulation = new CashSimulation(distributions, sampleNumSim, recursion, discountFactor); // no need to add overheadCost in this class
-		double[] result2 = simulation.simulateSDPGivenSamplNum(initialState, immediateValue);
+		double[] result2 = simulation.simulateLostSale(initialState, immediateValue);
 		System.out.println("final simulated survival probability in " + df.format(sampleNumSim) + " samples is: " + nf.format(result2[0]));
 		System.out.println("final simulated lost sale rate " + " is: " + nf.format(result2[1])); 
 		
@@ -390,7 +390,7 @@ public class ChanceCash {
 		 */		
 		sampleNumSim = 10000;
 		simulation = new CashSimulation(distributions, sampleNumSim, recursion, discountFactor); // no need to add overheadCost in this class
-		result2 = simulation.simulateSDPGivenSamplNum(initialState, immediateValue);
+		result2 = simulation.simulateLostSale(initialState, immediateValue);
 		System.out.println("final simulated survival probability in " + df.format(sampleNumSim) + " samples is: " + nf.format(result2[0]));
 		System.out.println("final simulated lost sale rate " + " is: " + nf.format(result2[1]));	
 		

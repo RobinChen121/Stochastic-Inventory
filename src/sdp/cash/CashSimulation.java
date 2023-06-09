@@ -865,7 +865,7 @@ public class CashSimulation {
 	 * @param iniState
 	 * @return simulate sdp in a given number of samples with lost sale rate simulation
 	 */
-	public double[] simulateSDPGivenSamplNum(CashState iniState, ImmediateValueFunction<CashState, Double, Double, Double> immediateValue2) {
+	public double[] simulateLostSale(CashState iniState, ImmediateValueFunction<CashState, Double, Double, Double> immediateValue2) {
 		Sampling.resetStartStream();
 		Sampling sampling = new Sampling();
 		double[][] samples = sampling.generateLHSamples(distributions, sampleNum);
@@ -889,14 +889,21 @@ public class CashSimulation {
 			{
 				recursion.getExpectedValue(state);
 				double optQ = recursion.getAction(state);
+				if (state.iniCash < 0)
+					optQ = 0;
 				double randomDemand = Math.round(samples[i][t]); // integer samples to test sdp
-				if (state.getIniInventory() + optQ < randomDemand - 0.1 && countBefore == false) {
+				if (state.getIniInventory() + optQ < randomDemand && countBefore == false) {
 					lostSaleCount ++;
 					countBefore = true;
 				}
 				double thisValue = state.iniCash + immediateValue2.apply(state, optQ, randomDemand);
 				state = stateTransition.apply(state, optQ, randomDemand);
-				if (thisValue < - 0.1 && countBeforeBankrupt == false) {
+				if (thisValue < 0 && countBeforeBankrupt == false) {
+//					if (countBefore == false) {
+//						lostSaleCount ++;
+//						countBefore = true;
+//					}
+					
 					simuValues[i] = 1;
 					countBeforeBankrupt = true;
 				}

@@ -106,7 +106,7 @@ public class CashRecursion {
 				double orderQty = feasibleActions[i];
 				
 //				if (s.getPeriod() == 1) { // only for debugging
-//					System.out.println(orderQty);
+//					orderQty = 12;
 //				}
 				
 				double thisQValue = 0;								
@@ -151,6 +151,8 @@ public class CashRecursion {
 			double bestOrderQty = 0;
 			for (int i = 0; i < feasibleActions.length; i++) {
 				double orderQty = feasibleActions[i];
+//				if (s.getPeriod() == 1)
+//					orderQty = 16;
 				
 				double thisQProb = 0;								
 				for (int j = 0; j < dAndP.length; j++) {

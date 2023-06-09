@@ -240,7 +240,7 @@ public class ChanceTestingLostsaleRate {
 				 */		
 				sampleNumSim = 1000;
 				simulation = new CashSimulation(distributions, sampleNumSim, recursion, discountFactor); // no need to add overheadCost in this class
-				result2 = simulation.simulateSDPGivenSamplNum(initialState, immediateValue);
+				result2 = simulation.simulateLostSale(initialState, immediateValue);
 				System.out.println("final simulated survival probability in " + df.format(sampleNumSim) + " samples is: " + nf.format(result2[0]));
 				System.out.println("final simulated service rate " + " is: " + nf.format(1-result2[1]));
 				}

@@ -8,7 +8,6 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
-import cash.strongconstraint.FindsCS.FindCCrieria;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
@@ -16,6 +15,7 @@ import sdp.cash.CashRecursion.OptDirection;
 import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
+import sdp.write.WriteToExcelTxt;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
@@ -36,15 +36,20 @@ public class cashSurvival {
 	 * @date: Nov 21, 2020, 6:01:10 PM 
 	 */
 	public static void main(String[] args) {
+		
+		WriteToExcelTxt wr = new WriteToExcelTxt();
+		String fileName = "SurvivalDiffCash.xls";
+		String headString =  "iniCash" + "\t" + "optQ" + "\t" + "survivalProb" + "\t" + "serviceLeval";		
+						
 		double[] meanDemand = {10, 20, 10};
 		double iniInventory = 0;
-		double iniCash = 120;
+		double iniCash = 130;
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double[] price = {5, 5, 5, 5};
 		double depositeRate = 0;
 		double salvageValue = 0.5;
-		double holdingCost = 0.5;	
+		double holdingCost = 0;	
 		
 		double overheadCost = 80; // costs like wages or rents which is required to pay in each period
 		double overheadRate = 0; // rate from revenue to pay overhead wages
@@ -68,11 +73,15 @@ public class cashSurvival {
 		
 		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 		
+//		for (int k = 0; k < 40; k++) {
+//			iniCash = k * 10;
 
 		// feasible actions
 		// in fact, no cash constraint in this paper
 		Function<CashState, double[]> getFeasibleAction = s -> {
-			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxOrderQuantity + 1).toArray();
+			double maxQ = Math.min(s.iniCash/variCost, maxOrderQuantity);
+			maxQ = Math.max(maxQ, 0);
+			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 		
 		// immediate value
@@ -117,7 +126,8 @@ public class cashSurvival {
 		recursion.setTreeMapCacheAction();
 		double finalValue = recursion.getSurvProb(initialState);
 		System.out.println("survival probability for this initial state is: " + finalValue);
-		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
+		double optQ = recursion.getAction(initialState);
+		System.out.println("optimal order quantity in the first priod is : " + optQ);
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");
 		
@@ -128,31 +138,19 @@ public class cashSurvival {
 		 * Simulate the result
 		 */
 		
-		// immediate value
-		ImmediateValueFunction<CashState, Double, Double, Double> immediateValue2 = (state, action, randomDemand) -> {
-			int t = state.getPeriod() - 1;
-			double revenue = price[t] * Math.min(state.getIniInventory() + action, randomDemand);
-			double fixedCost = action > 0 ? fixOrderCost : 0;
-			double variableCost = variCost * action;
-			double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
-			double inventoryLevel = state.getIniInventory() + action - randomDemand;
-			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
-			double cashIncrement = (1 - overheadRate) * revenue + deposite - holdCosts - overheadCost
-					- state.getIniCash();
-			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
-			cashIncrement += salValue;
-			double endCash = state.getIniCash() + cashIncrement;
-			return cashIncrement;
-		};
-		
-		int sampleNum = 100000;
+		int sampleNum = 10000;
 		CashSimulation simulation = new CashSimulation(distributions, sampleNum, recursion, discountFactor); // no need to add overheadCost in this class
-		double[] result = simulation.simulateSDPGivenSamplNum(initialState, immediateValue2);
+		double[] result = simulation.simulateLostSale(initialState, immediateValue);
 		DecimalFormat df2 = new DecimalFormat("###, ###");
 		System.out.println("\nfinal simulated survival probability in " + df2.format(sampleNum) + " samples is: " + result[0]);
+		double serviceRate = 1 - result[1];
 		System.out.println("\nfinal simulated lost sale rate " + " is: " + result[1]);
-		 
+		System.out.println("************************************************************");
 		
+//		double[] out = new double[]{iniCash, optQ, finalValue, serviceRate};
+//		wr.writeToExcelAppend(out, fileName);
+//		 
+//		}
 	}
 
 }
