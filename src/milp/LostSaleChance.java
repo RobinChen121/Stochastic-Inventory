@@ -390,7 +390,7 @@ public class LostSaleChance {
 					M1 = thissSumD;
 			}
 			M2 = iniCash + price[0] * M1; // prices are same
-			M3 = iniI * holdCostUnit * T + variCostUnit[0] * M1 + Arrays.stream(overheadCost).sum() - iniCash; // variCostUnit[0] * M1
+			M3 = iniI * holdCostUnit * T + variCostUnit[0] * (M1 - iniI) + Arrays.stream(overheadCost).sum() - iniCash; // variCostUnit[0] * M1
 		    for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++) {
 		    		revenue[t][s] = new GRBLinExpr();
@@ -452,10 +452,8 @@ public class LostSaleChance {
 		    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr2);
 		    			model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr, "IConstraint1");
 		    			
-		    			GRBLinExpr rightExpr3 = new GRBLinExpr();
-		    			rightExpr3.multAdd(-1, rightExpr2);
 		    			rightExpr.clear();
-		    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr3);
+		    			rightExpr.add(rightExpr1); 
 		    			model.addConstr(I[t][s], GRB.GREATER_EQUAL, rightExpr, "IConstraint2");
 		    			
 		    			GRBLinExpr rightExpr4 = new GRBLinExpr();
@@ -472,10 +470,8 @@ public class LostSaleChance {
 		    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr2);
 		    			model.addConstr(I[t][s], GRB.LESS_EQUAL, rightExpr, "IConstraint1");
 		    			
-		    			GRBLinExpr rightExpr3 = new GRBLinExpr();
-		    			rightExpr3.multAdd(-1, rightExpr2);
 		    			rightExpr.clear();
-		    			rightExpr.add(rightExpr1); rightExpr.add(rightExpr3);
+		    			rightExpr.add(rightExpr1); 
 		    			model.addConstr(I[t][s], GRB.GREATER_EQUAL, rightExpr, "IConstraint2");
 		    			
 		    			GRBLinExpr rightExpr4 = new GRBLinExpr();
@@ -524,6 +520,28 @@ public class LostSaleChance {
 		    	}
 		    	//model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "CashConstraint2");
 			}
+			
+			// strict cash constraints
+			for (int t = 0; t < T; t++) 
+		    	for (int s = 0; s < sampleNumTotal; s++){
+		    		GRBLinExpr leftExpr = new GRBLinExpr();
+		    		leftExpr.addTerm(variCostUnit[t], Q[t][s]);
+		    		if (t == 0)
+		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, iniCash, "strictCashConstraint");
+		    		else
+		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, cash[t-1][s], "strictCashConstraint");
+		    	}
+			
+			for (int t = 0; t < T; t++) 
+		    	for (int s = 0; s < sampleNumTotal; s++){
+		    		GRBLinExpr leftExpr = new GRBLinExpr();
+		    		for (int k = t + 1; k < T; k++)
+		    			leftExpr.addTerm(1, Q[k][s]);
+		    		GRBLinExpr rightExpr = new GRBLinExpr();
+		    		rightExpr.addTerm(M1, alpha[t][s]);
+		    		if (t < T - 1)
+		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "orderQZeroConstraint");
+		    	}
 			
 			// first-stage decision, here and now decision
 			for (int s = 0; s < sampleNumTotal - 1; s++) {
@@ -581,66 +599,68 @@ public class LostSaleChance {
 		    int negScenarioNum = 0;
 		    double[] zValue = new double[sampleNumTotal];
 		    double[] betaValue = new double[sampleNumTotal];
-			try {
-				BufferedWriter out = new BufferedWriter(new FileWriter("detail-results.txt"));
-				out.write("ordering quantity and each scenario: \n");
-				for (int s = 0; s < sampleNumTotal; s++) {
-					out.write("scenario " + s + ": \n");
-					for (int t = 0; t < T; t++) 
-						out.write(String.format("%.1f  ", Q[t][s].get(GRB.DoubleAttr.X)));
-					out.newLine();
-				}
-				out.newLine();
-				out.newLine();
-				out.newLine();
-				out.write("***************************************************\n");
-				out.write("cash balance in each period and each scenario: \n");
-				for (int s = 0; s < sampleNumTotal; s++) {
-					out.write("scenario " + s + ": \n");
-					int thissNegative = 0; 
-					for (int t = 0; t < T; t++) {
-						out.write(String.format("%.1f  ", cash[t][s].getValue()));
-						if (cash[t][s].getValue() < -1)
-							thissNegative = 1;
-					}
-					negScenarioNum += thissNegative;
-					zValue[s] = z[s].get(GRB.DoubleAttr.X);
-					out.newLine();
-				}
-				out.newLine();
-				out.newLine();
-				out.newLine();
-				out.write("***************************************************\n");
-				out.write("alpha in each period and each scenario: \n");
-				for (int s = 0; s < sampleNumTotal; s++) {
-					out.write("scenario " + s + ": \n");
-					for (int t = 0; t < T; t++) 
-						out.write(String.format("%.1f  ", alpha[t][s].get(GRB.DoubleAttr.X)));
-					out.newLine();
-				}
-				out.newLine();
-				out.newLine();
-				out.newLine();
-				out.write("***************************************************\n");
-				out.write("z in each scenario: \n");
-				for (int s = 0; s < sampleNumTotal; s++) {
-					out.write(String.format("%.1f  ", z[s].get(GRB.DoubleAttr.X)));	
-				}
-				out.newLine();
-				out.newLine();
-				out.newLine();
-				out.write("***************************************************\n");
-				out.write("Inventory balance in each period and each scenario: \n");
-			    for (int s = 0; s < sampleNumTotal; s++) {
-			    	out.write("scenario " + s + ": \n");
-			    	for (int t = 0; t < T; t++)
-			    		out.write(String.format("%.1f  ", I[t][s].get(GRB.DoubleAttr.X)));
-			    	out.newLine();
-			    	betaValue[s] = beta[s].get(GRB.DoubleAttr.X);
-			    }
-				out.close();
-			} catch (IOException e) {				
-			}	    
+//			try {
+//				BufferedWriter out = new BufferedWriter(new FileWriter("detail-results.txt"));
+//				out.write("ordering quantity and each scenario: \n");
+//				for (int s = 0; s < sampleNumTotal; s++) {
+//					out.write("scenario " + s + ": \n");
+//					for (int t = 0; t < T; t++) {
+//						out.write(String.format("%.1f  ", Q[t][s].get(GRB.DoubleAttr.X)));
+//						System.out.printf("%.1f  ", Q[t][s].get(GRB.DoubleAttr.X));
+//					}
+//					out.newLine();
+//				}
+//				out.newLine();
+//				out.newLine();
+//				out.newLine();
+//				out.write("***************************************************\n");
+//				out.write("cash balance in each period and each scenario: \n");
+//				for (int s = 0; s < sampleNumTotal; s++) {
+//					out.write("scenario " + s + ": \n");
+//					int thissNegative = 0; 
+//					for (int t = 0; t < T; t++) {
+//						out.write(String.format("%.1f  ", cash[t][s].getValue()));
+//						if (cash[t][s].getValue() < -1)
+//							thissNegative = 1;
+//					}
+//					negScenarioNum += thissNegative;
+//					zValue[s] = z[s].get(GRB.DoubleAttr.X);
+//					out.newLine();
+//				}
+//				out.newLine();
+//				out.newLine();
+//				out.newLine();
+//				out.write("***************************************************\n");
+//				out.write("alpha in each period and each scenario: \n");
+//				for (int s = 0; s < sampleNumTotal; s++) {
+//					out.write("scenario " + s + ": \n");
+//					for (int t = 0; t < T; t++) 
+//						out.write(String.format("%.1f  ", alpha[t][s].get(GRB.DoubleAttr.X)));
+//					out.newLine();
+//				}
+//				out.newLine();
+//				out.newLine();
+//				out.newLine();
+//				out.write("***************************************************\n");
+//				out.write("z in each scenario: \n");
+//				for (int s = 0; s < sampleNumTotal; s++) {
+//					out.write(String.format("%.1f  ", z[s].get(GRB.DoubleAttr.X)));	
+//				}
+//				out.newLine();
+//				out.newLine();
+//				out.newLine();
+//				out.write("***************************************************\n");
+//				out.write("Inventory balance in each period and each scenario: \n");
+//			    for (int s = 0; s < sampleNumTotal; s++) {
+//			    	out.write("scenario " + s + ": \n");
+//			    	for (int t = 0; t < T; t++)
+//			    		out.write(String.format("%.1f  ", I[t][s].get(GRB.DoubleAttr.X)));
+//			    	out.newLine();
+//			    	betaValue[s] = beta[s].get(GRB.DoubleAttr.X);
+//			    }
+//				out.close();
+//			} catch (IOException e) {				
+//			}	    
 			
 			result[0] = Q[0][0].get(GRB.DoubleAttr.X);
 			result[1] = model.get(GRB.DoubleAttr.ObjVal);

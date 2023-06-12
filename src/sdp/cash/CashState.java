@@ -17,11 +17,7 @@ public class CashState extends State{
 		this.iniCash = iniCash;
 	}
 	
-	public CashState(int period, double initialInventory, int iniCash) {
-		super(period, initialInventory);
-		this.iniCash = iniCash;
-	}
-	
+
 	public double getIniCash() {
 		return this.iniCash;
 	}

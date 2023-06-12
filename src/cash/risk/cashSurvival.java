@@ -42,8 +42,8 @@ public class cashSurvival {
 		String headString =  "iniCash" + "\t" + "optQ" + "\t" + "survivalProb" + "\t" + "serviceLeval";		
 						
 		double[] meanDemand = {10, 20, 10};
-		double iniInventory = 0;
-		double iniCash = 130;
+		double iniInventory = 50;
+		double iniCash = 0;
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double[] price = {5, 5, 5, 5};
@@ -77,7 +77,7 @@ public class cashSurvival {
 //			iniCash = k * 10;
 
 		// feasible actions
-		// in fact, no cash constraint in this paper
+		// in fact, no cash constraint in the paper of Archibald & Betts (2002).
 		Function<CashState, double[]> getFeasibleAction = s -> {
 			double maxQ = Math.min(s.iniCash/variCost, maxOrderQuantity);
 			maxQ = Math.max(maxQ, 0);

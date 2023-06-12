@@ -71,16 +71,6 @@ public class CashSimulation {
 		this.stateTransition = stateTransition;
 	}
 	
-	
-	public CashSimulation(Distribution[] distributions, int sampleNum, ImmediateValueFunction<CashState, Double, Double, Double> immediateValue,
-			StateTransitionFunction<CashState, Double, Double, CashState> stateTransition,
-			double discountFactor) {
-		this.distributions = distributions;
-		this.sampleNum = sampleNum;	
-		this.discountFactor = discountFactor;
-		this.immediateValue = immediateValue;
-		this.stateTransition = stateTransition;
-	}
 
 	public void setSampleNum(int n) {
 		this.sampleNum = n;
@@ -887,7 +877,7 @@ public class CashSimulation {
 			boolean countBeforeBankrupt = false;
 			for (int t = 0; t < samples[0].length; t++)
 			{
-				recursion.getExpectedValue(state);
+				recursion.getSurvProb(state);
 				double optQ = recursion.getAction(state);
 				if (state.iniCash < 0)
 					optQ = 0;
