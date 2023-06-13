@@ -16,7 +16,7 @@ import umontreal.ssj.probdist.PoissonDist;
 
 /**
 * @author Zhen Chen
-* @date: 2018Äê10ÔÂ29ÈÕ ÏÂÎç4:54:48  
+* @date: 2018ï¿½ï¿½10ï¿½ï¿½29ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½4:54:48  
 * @email: 15011074486@163.com,
 * @licence: MIT licence. 
 *
@@ -130,8 +130,7 @@ public class MIPTesting {
 						 		double[][] sCS = mipHeuristic.findsCS(); 					 		
 						 		double time = (System.currentTimeMillis() - currTime) / 1000;
 								System.out.println("running time is " + time + "s");
-								CashSimulation simuation = new CashSimulation(distributions, sampleNum, immediateValue, stateTransition,
-										discountFactor);
+								CashSimulation simuation = new CashSimulation(distributions, sampleNum, immediateValue, stateTransition);
 						 		cacheC1Values = mipHeuristic.cacheC1Values;
 						 		double simsCSMIPValue = simuation.simulatesCS(initialState, sCS, cacheC1Values, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
 						 		

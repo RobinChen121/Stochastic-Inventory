@@ -76,8 +76,13 @@ public class RiskSimulation {
 				if (t < T - 1) {										
 					double nextServiceRate = 0;
 					
-					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
-					nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;				
+//					double thisPeriodServRate = distributions[t].cdf(optQ + state.getIniInventory());
+//					nextServiceRate = thisPeriodServRate < thisServiceRate ? thisServiceRate : thisServiceRate / thisPeriodServRate;				
+					
+					double meanDemandSum = IntStream.range(0, T).mapToDouble(j -> distributions[j].getMean()).sum();
+					double rollingDemandSum = IntStream.range(t, T).mapToDouble(j -> distributions[j].getMean()).sum();
+					double portion = rollingDemandSum / meanDemandSum;
+					nextServiceRate = Math.pow(serviceRate, portion);
 					
 					state = stateTransition.apply(state, optQ, randomDemand);
 					double iniCash = state.iniCash;
@@ -151,8 +156,8 @@ public class RiskSimulation {
 					double rollingDemandSum = IntStream.range(t, T).mapToDouble(j -> distributions[j].getMean()).sum();
 					double portion = rollingDemandSum / meanDemandSum;
 					nextServiceRate = Math.pow(serviceRate, portion);
-					double nextServiceRate2 = Math.pow(serviceRate, portion);
-					nextServiceRate = Math.max(nextServiceRate, nextServiceRate2);
+//					double nextServiceRate2 = Math.pow(serviceRate, portion);
+//					nextServiceRate = Math.max(nextServiceRate, nextServiceRate2);
 					
 //					if (countLostBefore == true)
 //						nextServiceRate = 0;
