@@ -55,18 +55,7 @@ import umontreal.ssj.probdist.PoissonDist;
  * 
  * 
  * objective is to maximize the survival probability.
- * 
- * big scenario number will increase the performance of extended SAA.
- * 
- * further extended SAA reduces a binary variable great equal constraints
- * 
- * double[] meanDemand = {10, 5, 10, 5, 10}, service rate is 60%, 
- * sample numbers [5, 5, 3, 3, 3, 3] are 2025s for saa, extended saa 3747s, 
- * service rate 80%: 5 periods, sample numbers [5, 5, 5, 5, 5] are 268.75s for SAA, extended SAA 10.35s, further SAA is 4.83s
- * 80%: 6 periods, sampleNumSims = {5, 5, 5, 5, 5, 5}, meanDemand = {10, 5, 10, 5, 10, 5}, extended SAA 59.18s.
- * 
- * rolling horizon 4, int[] sampleNumSimsRolling = {5, 5, 5, 5, 3, 3}; final simulated lost sale rate of rolling further SAA  is: 35.98222%.
- * 
+ * large scenario number will improve the performance of extended SAA.
  * when there is inventory holding cost, sometimes the results are strange: lost sale rate in the simulation too large.
  *
  */
@@ -91,7 +80,7 @@ public class ChanceCash {
 				"sampleNumSim" + "\t" +  "etaFrac" + "\t" + "eta" + "\t" + "SAAObj" + "\t" + "simSAAObj" + "\t" +
 		         "simSAAService" + "\t" + "scenarioObj" + "\t" + "simScenarioObj" + "\t" + "simScenarioService"
 		         + "\t" + "SDPObj" + "\t" + "simSDPService" + "\t" + "SDPLbObj" + "\t" + "simSDPLbService" + "\t"
-		         + "rollingObj" + "\t" + "rollingService";
+		         + "rollingObj" + "\t" + "rollingService" + "\t" + "rollingLength";
 		wr.writeToFile(fileName, headString);
 		
 		
@@ -111,10 +100,8 @@ public class ChanceCash {
 		double serviceRate = 0.9; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
 		int etaFrac = 1;
 		double serviceRateSAA = 1 - (1- serviceRate)/etaFrac;
-		
-		for (int kk = 0; kk < 5; kk++) {
 			
-		int sampleNumPeriod = 3 + kk*2;
+		int sampleNumPeriod = 15;
 		int[] sampleNumSims = new int[T]; // sample number in each period, the number of samples in the first period can have big influence		
 		int[] sampleNumSimsRolling = new int[T];
 		Arrays.fill(sampleNumSimsRolling, sampleNumPeriod);
@@ -191,7 +178,7 @@ public class ChanceCash {
 	    System.out.println("lost sale rate of SAA is: " + nf.format(lostRate));
 	    System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
 	    System.out.println();
-//	    
+	    
 	    /**
 		 * Simulate the restult of SAA
 		 */
@@ -380,7 +367,7 @@ public class ChanceCash {
 		System.out.println("final simulated service rate " + " is: " + nf.format(serviceSDPLB));
 		
 		/**
-		 * solve the problem by rolling horizon of further SAA
+		 * solve the problem by rolling horizon of SAA
 		 * 
 		 */
 		sampleNumSim = 100; // number of scenarios for rolling SAA
@@ -392,7 +379,7 @@ public class ChanceCash {
 	    System.out.println("after rolling horizon for length " + rollingLength +", " + "total horizon length is " + T + ", result is: ");
 	    System.out.println("running time is " + time1 + "s");
 	    double rollingObj = resultSim[0];
-	    System.out.println("final simulated survival probability of rolling SAA in " + nf.format(sampleNumSim) + " samples is: " + nf.format(rollingObj));
+	    System.out.println("final simulated survival probability of rolling SAA in " + sampleNumSim + " samples is: " + nf.format(rollingObj));
 	    double sigma2 = Math.sqrt(resultSim[1]*(1 - resultSim[1])/sampleNumSim);
 		double error2  = 1.96*sigma2;
 		double serviceRateRolling = 1 - resultSim[1];
@@ -402,13 +389,16 @@ public class ChanceCash {
 		 * output to excel
 		 * 
 		 */
-		double[] out = new double[]{sampleNumSimTotal, etaFrac, 1-serviceRateSAA, ObjSAA/100.0, objSAASim, SAAServiceSim, ObjScenario/100.0, ObjScenarioSim, 
-				ScenarioServiceSim, SDPSurvival, serviceSDP, SDPLbSurvival, serviceSDPLB, rollingObj, serviceRateRolling};
+		double[] out = new double[]{sampleNumSimTotal, etaFrac, 1-serviceRateSAA, ObjSAA/100.0, objSAASim, SAAServiceSim, ObjScenario, ObjScenarioSim, 
+				ScenarioServiceSim, SDPSurvival, serviceSDP, SDPLbSurvival, serviceSDPLB, rollingObj, serviceRateRolling, rollingLength};
+		
+//		double[] out = new double[]{sampleNumSimTotal, etaFrac, 1-serviceRateSAA, 0, 0, 0, 0, 0, 
+//				0, 0, 0, 0, 0, rollingObj, serviceRateRolling, rollingLength};
+		
 		wr.writeToExcelAppend(out, fileName);	
 		System.out.println("");
+		
 		}
-		}
-
 	}
 }
 

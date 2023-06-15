@@ -15,6 +15,8 @@ import java.util.stream.IntStream;
 import milp.LostSaleChanceTesting;
 import sdp.cash.CashSimulation;
 import sdp.cash.CashState;
+import sdp.cash.RiskSimulation;
+import sdp.cash.RiskState;
 import sdp.inventory.GetPmf;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
@@ -43,10 +45,10 @@ public class ChanceCashTestingRollingHorizon {
 	
 	public static void main(String[] args) {
 		WriteToExcelTxt wr = new WriteToExcelTxt();
-		String fileName = "RollingHorizonPerformance.xls";
+		String fileName = "RollingHorizonTest.xls";
 		String headString =  
-				"demand mode" + "\t" + "rolling length" + "\t"  + "serviceRate" + "\t" + "sample one period" +  "\t"+ "scenario number" + "\t" + "iniCash" + "\t" + "price" + "\t" + "variCost" + "\t" + "rolling time" + "\t" + "rolling obj" + "\t" +
-		         "rolling service rate" + "\t" + "sigmasCoe" + "\t" +"holdingCost";
+				"demand mode" + "\t" + "rolling length" + "\t"  + "serviceRate" + "\t" + "sample one period" +  "\t"+ "scenarioNumRolling" + "\t" + "iniCash" + "\t" + "price" + "\t" + "variCost" + "\t" + "rolling time" + "\t" + "rolling obj" + "\t" +
+		         "rolling service rate" + "\t" + "sigmasCoe";
 		wr.writeToFile(fileName, headString);
 		
 		double[][] meanDemands = {{30,30,30,30,30,30,30, 30, 30, 30, 30, 30},
@@ -80,11 +82,11 @@ public class ChanceCashTestingRollingHorizon {
 //			prices[t] = seasonalPrice[m];
 //			variCostUnits[t] = seasonalVariCost[m];
 //		}
-		Arrays.fill(prices, 5);	//
-		Arrays.fill(variCostUnits, 1); //
+		Arrays.fill(prices, 5);	
+		Arrays.fill(variCostUnits, 1); 
 		Arrays.fill(overheadCosts, 80); // overhead costs
 		
-		double holdCostUnit = 0.5;
+		double holdCostUnit = 0;
 		double salvageValueUnit = 0.5;
 		double maxOrderQuantity = 300; // maximum ordering quantity when having enough cash
 		
@@ -92,10 +94,10 @@ public class ChanceCashTestingRollingHorizon {
 		int sampleOnePeriod = 13; 
 		Arrays.fill(sampleNumsRolling,sampleOnePeriod);
 		
-		int rollingLength = 3; // rolling horizon length		
+		int rollingLength = 2; // rolling horizon length		
 		int instanceNum = meanDemands.length;
 		double iniCash = 100;
-		for (int m = 2; m < 3; m++) {
+		for (int m = 0; m < 10; m++) {
 			for(int kk = 0; kk < 10; kk++) {	
 			/**
 			 * solve the problem by rolling horizon of SAA
@@ -115,13 +117,13 @@ public class ChanceCashTestingRollingHorizon {
 		    double depositeRate = 0;
 		    double minInventoryState = 0;
 			double maxInventoryState = 500;
-			double minCashState = -1000; // can affect results, should be smaller than minus fixedOrderCost
-			double maxCashState = 2000;
+			double minCashState = -100; // can affect results, should be smaller than minus fixedOrderCost
+			double maxCashState = 3000;
 			double discountFactor = 1;
 			double[][][] pmf = new GetPmf(distributions, trunQuantile, stepSize).getpmf();	
 			
 			// immediate value
-			ImmediateValueFunction<CashState, Double, Double, Double> immediateValue = (state, action, randomDemand) -> {
+			ImmediateValueFunction<RiskState, Double, Double, Double> immediateValue = (state, action, randomDemand) -> {
 				int t = state.getPeriod() - 1;
 				double revenue = prices[t] * Math.min(state.getIniInventory() + action, randomDemand);
 				double fixedCost = action > 0 ? fixOrderCost : 0;
@@ -129,14 +131,15 @@ public class ChanceCashTestingRollingHorizon {
 				double deposite = (state.getIniCash() - fixedCost - variableCost) * (1 + depositeRate);
 				double inventoryLevel = state.getIniInventory() + action - randomDemand;
 				double holdCosts = holdCostUnit * Math.max(inventoryLevel, 0);
-				double cashIncrement = revenue + deposite - holdCosts - overheadCosts[t] - state.getIniCash();
+				double cashIncrement = revenue + deposite - holdCosts - overheadCosts[t]
+						- state.getIniCash();
 				double salValue = state.getPeriod() == T ? salvageValueUnit * Math.max(inventoryLevel, 0) : 0;
 				cashIncrement += salValue;
 				return cashIncrement;
 			};
 			
 			// state transition function
-			StateTransitionFunction<CashState, Double, Double, CashState> stateTransition = (state, action,
+			StateTransitionFunction<RiskState, Double, Double, RiskState> stateTransition = (state, action,
 					randomDemand) -> {
 				double nextInventory = Math.max(0, state.getIniInventory() + action - randomDemand);
 				double nextCash = state.getIniCash() + immediateValue.apply(state, action, randomDemand);
@@ -146,14 +149,17 @@ public class ChanceCashTestingRollingHorizon {
 				nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 				// cash is integer or not
 				nextCash = Math.round(nextCash * 1) / 1; // the right should be a decimal
-				return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
+				boolean bankruptBefore = false;
+				if (nextCash < 0)
+					bankruptBefore = true;
+				return new RiskState(state.getPeriod() + 1, nextInventory, nextCash, bankruptBefore);
 			};
 					
-			int sampleNum = 10; // number of scenarios for rolling SAA
+			int sampleNumRolling = 100; // number of scenarios for rolling SAA
 			int period = 1;		
-		    CashState initialState = new CashState(period, iniI, iniCash);			    			    			    	    
-		    CashSimulation simulation1 = new CashSimulation(distributions, sampleNum, immediateValue, stateTransition); // no need to add overheadCost in this class
-		    		
+			RiskState initialState = new RiskState(period, iniI, iniCash, false);			    			    			    	    
+			 RiskSimulation simulation1 = new RiskSimulation(distributions, sampleNumRolling, immediateValue, stateTransition); // no need to add overheadCost in this class
+			    		
 		    long currTime = System.currentTimeMillis();
 		    System.out.println("**********************************************");
 		    System.out.println("after rolling horizon for length " + rollingLength +", result of SAA-scenario tree: ");
@@ -169,11 +175,11 @@ public class ChanceCashTestingRollingHorizon {
 			nf.setMinimumFractionDigits(5);	
 			
 		    double[][] scenariosRolling = sampling.generateLHSamples(distributions, sampleNumsRolling); //include scenarios in the whole planning horizon
-		    resultRolling = simulation1.rollingHoirzonFurtherExtendSAA(rollingLength, initialState, rollingServiceRate, sampleNumsRolling, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenariosRolling, sampleNum);
+		    resultRolling = simulation1.rollingHoirzon(rollingLength, initialState, rollingServiceRate, sampleNumsRolling, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenariosRolling, sampleNumRolling);
 		    double time1 = (System.currentTimeMillis() - currTime) / 1000.00;	     
 		    System.out.println("running time is " + time1 + "s");
-		    System.out.println("final simulated survival probability of rolling further SAA in " + df.format(sampleNum) + "samples is: " + nf.format(resultRolling[0]));
-		    double sigma2 = Math.sqrt(resultRolling[1]*(1 - resultRolling[1])/sampleNum);
+		    System.out.println("final simulated survival probability of rolling further SAA in " + df.format(sampleNumRolling) + "samples is: " + nf.format(resultRolling[0]));
+		    double sigma2 = Math.sqrt(resultRolling[1]*(1 - resultRolling[1])/sampleNumRolling);
 			double error2  = 1.96*sigma2;
 			double serviceRate2 = 1 - resultRolling[1];
 			System.out.printf("the service rate for simulated extended SAA rolling horizon is %.4f, with error %.4f\n", serviceRate2, error2);
@@ -183,7 +189,7 @@ public class ChanceCashTestingRollingHorizon {
 			 * output results to excel
 			 */
 			System.out.println("");
-			double[] out = new double[]{m, rollingLength, serviceRate, sampleOnePeriod, sampleNum, iniCash, prices[0], variCostUnits[0], time1, resultRolling[0], serviceRate2, sigmasCoe, holdCostUnit};
+			double[] out = new double[]{m, rollingLength, serviceRate, sampleOnePeriod, sampleNumRolling, iniCash, prices[0], variCostUnits[0], time1, resultRolling[0], serviceRate2, sigmasCoe};
 			wr.writeToExcelAppend(out, fileName);
 			
 		}			
