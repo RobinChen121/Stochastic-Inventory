@@ -104,7 +104,7 @@ public class ChanceCashTesting5Period {
 		Arrays.fill(overheadCosts, 100); // overhead costs
 		
 		double salvageValueUnit = 0.5;
-		double maxOrderQuantity = 300; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 				
 		
 		int instanceNum = meanDemands.length;
@@ -285,7 +285,7 @@ public class ChanceCashTesting5Period {
 			simulation = new RiskSimulation(distributions, sampleNum, recursion); // no need to add overheadCost in this class
 			result = simulation.simulateLostSale(initialState, immediateValue);
 			System.out.println("final simulated survival probability in " + df.format(sampleNum) + " samples is: " + nf.format(result[0]));
-			System.out.println("final simulated lost sale rate " + " is: " + nf.format(result[1]));
+//			System.out.println("final simulated lost sale rate " + " is: " + nf.format(result[1]));
 			double serviceSDPLB = 1 - result[1];
 			System.out.println("final simulated service rate " + " is: " + nf.format(serviceSDPLB));
 			
