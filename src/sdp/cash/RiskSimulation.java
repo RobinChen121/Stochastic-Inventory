@@ -341,7 +341,7 @@ public class RiskSimulation {
 		double error  = 1.96*sigma;
 		System.out.printf("the confidence interval for simulated rolling horizon is [%.4f, %.4f], with error %.4f\n", lowCI, upCI, error);
 		double lostSaleRate = (double) lostSaleCount / (double) sampleNum;	
-		double[] results =  {simFinalValue, lostSaleRate};
+		double[] results =  {simFinalValue, lostSaleRate, iniQ};
 		return results;
 	}
 		

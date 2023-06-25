@@ -48,22 +48,22 @@ public class cashSurvival {
 		String fileName = "SurvivalDiffCash.xls";
 		String headString =  "iniCash" + "\t" + "optQ" + "\t" + "survivalProb" + "\t" + "serviceLeval";		
 						
-		double[] meanDemand = {30,30,30,30,30};
+		double[] meanDemand = {47,30,6,30,54};
 		int T = meanDemand.length;
 		
 		double iniI = 0;
-		double iniCash = 80;
+		double iniCash = 200;
 		double fixOrderCost = 0;
 		double[] price = new double[T];
 		double[] variCost = new double[T];
-		Arrays.fill(price, 4);	
+		Arrays.fill(price, 5);	
 		Arrays.fill(variCost, 1);	
 		double depositeRate = 0;
 		double salvageValue = 0.5;
 		double holdingCost = 0;	
 		
 		double[] overheadCosts = new double[T];	
-		Arrays.fill(overheadCosts, 60); // overhead costs
+		Arrays.fill(overheadCosts, 100); // overhead costs
 		double overheadRate = 0; // rate from revenue to pay overhead wages
 		double maxOrderQuantity = 1000; // maximum ordering quantity
 		
@@ -252,7 +252,9 @@ public class cashSurvival {
 	    double sigma2 = Math.sqrt(resultSim[1]*(1 - resultSim[1])/sampleNumSim);
 		double error2  = 1.96*sigma2;
 		double serviceRateRolling = 1 - resultSim[1];
+		double optQ1Rolling = resultSim[2];
 		System.out.println("the service rate for simulated SAA rolling horizon is " + nf.format(serviceRateRolling) + ", with error " + nf.format(error2));
+		System.out.println("the optimal ordering Q in the 1st period of the SAA rolling horizon is " + optQ1Rolling);
 		
 		
 //		double[] out = new double[]{iniCash, optQ, finalValue, serviceRate};

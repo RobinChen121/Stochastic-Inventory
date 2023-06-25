@@ -59,7 +59,7 @@ public class ChanceCashTesting5Period {
 				"demand mode" + "\t" + "serviceRate" + "\t" + "sample number" + "\t" + "iniCash" + "\t" + "price" + "\t" +  
 		         "overheadCost" + "\t" + "SDPObj" + "\t" + "SDPService" + "\t" + "timeSDP" + "\t" + "SDPLbObj" + "\t" 
 					 + "SDPLbServie" + "\t" + "timeSDPLb" + "\t" + "RollingObj" + "\t" + "RollingService" +  "\t" + "RollingTime"
-					 + "\t" + "rollingLength";
+					 + "\t" + "rollingLength" + "\t" + "Q1SDP" + "\t" + "Q1SDPLb" + "\t" + "Q1Rolling" + "\t";
 		wr.writeToFile(fileName, headString);
 		
 		
@@ -222,8 +222,8 @@ public class ChanceCashTesting5Period {
 			recursion.setTreeMapCacheAction();
 			double SDPObj = recursion.getSurvProb(initialState);
 			System.out.println("survival probability for this initial state is: " + SDPObj);
-			double optQ = recursion.getAction(initialState);
-			System.out.println("optimal order quantity in the first priod is : " + optQ);
+			double optQSDP = recursion.getAction(initialState);
+			System.out.println("optimal order quantity in the first priod is : " + optQSDP);
 			double timeSDP = (System.currentTimeMillis() - currTime) / 1000;
 			System.out.println("running time is " + timeSDP + "s");
 			
@@ -273,7 +273,8 @@ public class ChanceCashTesting5Period {
 			SDPLbObj = recursion.getSurvProb(initialState);
 			System.out.println("result of SDP with service rate constraint is: ");
 			System.out.println("survival probability for this initial state is: " + nf.format(SDPLbObj));
-			System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
+			double optQSDPLb = recursion.getAction(initialState);
+			System.out.println("optimal order quantity in the first priod is : " + optQSDPLb);
 			double timeSDPLb = (System.currentTimeMillis() - currTime) / 1000;
 			System.out.println("running time is " + timeSDPLb + "s");
 			
@@ -317,8 +318,9 @@ public class ChanceCashTesting5Period {
 		    double sigma2 = Math.sqrt(resultSim[1]*(1 - resultSim[1])/sampleNum);
 			double error2  = 1.96*sigma2;
 			double serviceRateRolling = 1 - resultSim[1];
+			double optQ1Rolling = resultSim[2];
 			System.out.println("the service rate for simulated SAA rolling horizon is " + nf.format(serviceRateRolling) + ", with error " + nf.format(error2));
-			System.out.println();
+			System.out.println("the optimal ordering Q in the 1st period of the SAA rolling horizon is " + optQ1Rolling);
 			System.out.println("**********************************************");
 			System.out.println("**********************************************");
 			
@@ -327,7 +329,7 @@ public class ChanceCashTesting5Period {
 			 * output results to excel
 			 */
 			double[] out = new double[]{m, serviceRate, sampleNumPeriod, iniCash, prices[0], overheadCosts[0], SDPObj, SDPService, timeSDP, SDPLbObj, serviceSDPLB, timeSDPLb,
-					rollingObj, serviceRateRolling, timeRolling, rollingLength};
+					rollingObj, serviceRateRolling, timeRolling, rollingLength, optQSDP, optQSDPLb, optQ1Rolling};
 			
 			wr.writeToExcelAppend(out, fileName);
 			}
