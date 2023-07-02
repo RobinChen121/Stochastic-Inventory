@@ -277,8 +277,13 @@ public class LostSaleChance {
 		    		leftExpr.addTerm(variCostUnit[t], Q[t][s]);
 		    		if (t == 0)
 		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, iniCash, "strictCashConstraint");
-		    		else
-		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, cash[t-1][s], "strictCashConstraint");
+		    		else {
+		    			GRBLinExpr rightExpr = new GRBLinExpr();
+		    			rightExpr.add(cash[t-1][s]);
+		    			rightExpr.addTerm(-1, alpha[t-1][s]);
+		    			rightExpr.addConstant(M2);
+		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "strictCashConstraint");
+		    		}
 		    	}
 			
 			for (int t = 0; t < T; t++) 
@@ -528,8 +533,13 @@ public class LostSaleChance {
 		    		leftExpr.addTerm(variCostUnit[t], Q[t][s]);
 		    		if (t == 0)
 		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, iniCash, "strictCashConstraint");
-		    		else
-		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, cash[t-1][s], "strictCashConstraint");
+		    		else {
+		    			GRBLinExpr rightExpr = new GRBLinExpr();
+		    			rightExpr.add(cash[t-1][s]);
+		    			rightExpr.addTerm(-1, alpha[t-1][s]);
+		    			rightExpr.addConstant(M2);
+		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "strictCashConstraint");
+		    		}
 		    	}
 			
 			for (int t = 0; t < T; t++) 
