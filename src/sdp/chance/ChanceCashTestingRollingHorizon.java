@@ -50,7 +50,7 @@ public class ChanceCashTestingRollingHorizon {
 	
 	public static void main(String[] args) {
 		WriteToExcelTxt wr = new WriteToExcelTxt();
-		String fileName = "RollingHorizonTest6Periods-3.xls";
+		String fileName = "RollingHorizonTest.xls";
 		String headString =  
 				"demand mode" +
 //						+ "\t" + "SDP survival" + "\t" + "SDP service" + "\t" + "SDP time" + 
@@ -115,7 +115,7 @@ public class ChanceCashTestingRollingHorizon {
 		int[] sampleNumsRolling = new int[T];
 		int sampleOnePeriod; 
 		
-		int rollingLength = 3; // rolling horizon length		
+		int rollingLength = 1; // rolling horizon length		
 		int instanceNum = meanDemands.length;
 		double iniCash = 130;
 		int sampleNumRolling = 100; // number of scenarios for rolling SAA
@@ -124,16 +124,16 @@ public class ChanceCashTestingRollingHorizon {
 		NumberFormat nf = NumberFormat.getPercentInstance();
 		nf.setMinimumFractionDigits(5);
 		
-		for (int kSampleNum = 0; kSampleNum < 3; kSampleNum ++)
+		for (int kSampleNum = 0; kSampleNum < 1; kSampleNum ++)
 			for (int kRollingLength = 1; kRollingLength < 2; kRollingLength++)
 				for (int kService = 1; kService < 2; kService ++) {
-					rollingLength = kRollingLength + 1;
-					sampleOnePeriod = 10 + kSampleNum * 20;
+					rollingLength = kRollingLength + 2;
+					sampleOnePeriod = 20;
 					serviceRate[0] = 0.9 + kService * 0.05;	
 					Arrays.fill(sampleNumsRolling,sampleOnePeriod);
 					
 					
-		for (int m = 7; m < 8; m++) {
+		for (int m = 2; m < 3; m++) {
 			for(int kk = 0; kk < 1; kk++) {	
 					
 			int instanceIndex = m;
@@ -252,8 +252,8 @@ public class ChanceCashTestingRollingHorizon {
 //				if (s.getBankruptBefore() == true)
 //					maxQ = 0;
 //				if (maxQ < minQ) {
-//					maxQ = 0;
-//					minQ = 0;
+//					maxQ = s.iniCash/variCostUnits[t];
+//					minQ = s.iniCash/variCostUnits[t];
 //				}
 //				maxQ = Math.max(maxQ, 0);
 //				return DoubleStream.iterate(minQ, i -> i + stepSize).limit((int) maxQ + 1).toArray();
@@ -272,7 +272,7 @@ public class ChanceCashTestingRollingHorizon {
 //			System.out.println("**********************************************");
 //			System.out.println("result of SDP with service rate constraint is: ");
 //			System.out.println("survival probability for this initial state is: " + nf.format(SDPLbSurvival));
-//			System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
+//			System.out.println("optimal order quantity in the first period is : " + recursion.getAction(initialState));
 //			timeSDPLb = (System.currentTimeMillis() - currTime) / 1000;
 //			System.out.println("running time is " + timeSDPLb + "s");
 //			

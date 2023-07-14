@@ -110,7 +110,7 @@ public class ChanceCashTesting5Period {
 		int instanceNum = meanDemands.length;
 		int runNum = 1; // run number is 10 for computing upper bounds
 		
-		for (int iCash = 0; iCash < 3; iCash++)
+		for (int iCash = 1; iCash < 3; iCash++)
 			for (int iPrice = 0; iPrice < 3; iPrice++)
 				for (int iOverh = 0; iOverh < 3; iOverh++) {
 					double iniCash = iniCashT[iCash];
@@ -220,75 +220,78 @@ public class ChanceCashTesting5Period {
 			 */
 			RiskRecursion recursion = new RiskRecursion(pmf, getFeasibleAction, stateTransition, immediateValue);
 			recursion.setTreeMapCacheAction();
-			double SDPObj = recursion.getSurvProb(initialState);
-			System.out.println("survival probability for this initial state is: " + SDPObj);
-			double optQSDP = recursion.getAction(initialState);
-			System.out.println("optimal order quantity in the first priod is : " + optQSDP);
-			double timeSDP = (System.currentTimeMillis() - currTime) / 1000;
-			System.out.println("running time is " + timeSDP + "s");
-			
-			System.out.println();
-			
-			/*******************************************************************
-			 * Simulate the result
-			 */
-			
+		    
+//			double SDPObj = recursion.getSurvProb(initialState);
+//			System.out.println("survival probability for this initial state is: " + SDPObj);
+//			double optQSDP = recursion.getAction(initialState);
+//			System.out.println("optimal order quantity in the first priod is : " + optQSDP);
+//			double timeSDP = (System.currentTimeMillis() - currTime) / 1000;
+//			System.out.println("running time is " + timeSDP + "s");
+//			
+//			System.out.println();
+//			
+//			/*******************************************************************
+//			 * Simulate the result
+//			 */
+//			
 			int sampleNumSim = 1000;
 			RiskSimulation simulation = new RiskSimulation(distributions, sampleNumSim, recursion); // no need to add overheadCost in this class
-			double[] result = simulation.simulateLostSale(initialState, immediateValue);
-			DecimalFormat df2 = new DecimalFormat("###, ###");
-			System.out.println("\nfinal simulated survival probability in " + df2.format(sampleNumSim) + " samples is: " + nf.format(result[0]));
-			double SDPService = 1 - result[1];
-			System.out.println("final simulated service rate " + " is: " + nf.format(SDPService));
-			System.out.println("************************************************************");
+			double[] result;
+			
+//			result = simulation.simulateLostSale(initialState, immediateValue);
+//			DecimalFormat df2 = new DecimalFormat("###, ###");
+//			System.out.println("\nfinal simulated survival probability in " + df2.format(sampleNumSim) + " samples is: " + nf.format(result[0]));
+//			double SDPService = 1 - result[1];
+//			System.out.println("final simulated service rate " + " is: " + nf.format(SDPService));
+//			System.out.println("************************************************************");
+			
 					
 			/*******************************************************************
 			 * solve the problem by SDP when there is individual chance constraint approximation,
 			 * to get a lower bound
 			 */			
-			Function<RiskState, double[]> getFeasibleAction2 = s -> {
-				int t = s.getPeriod() - 1;
-				double thisPeriodServRate = 1 - (1 - serviceRate) / T;
-				double minQ = Math.ceil(distributions[t].inverseF(thisPeriodServRate)); // minimum ordering quantity in each period 
-				double maxQ = Math.min(s.iniCash/variCostUnits[t], maxOrderQuantity);
-				if (s.getBankruptBefore() == true)
-					maxQ = 0;
-				if (maxQ < minQ) {
-					maxQ = 0;
-					minQ = 0;
-				}
-				maxQ = Math.max(maxQ, 0);
-				return DoubleStream.iterate(minQ, i -> i + stepSize).limit((int) maxQ + 1).toArray();
-			};
-			
-			/*******************************************************************
-			 * Solve
-			 */		
-			recursion = new RiskRecursion(pmf, getFeasibleAction2, stateTransition, immediateValue);
-			period = 1;		
-			initialState = new RiskState(period, iniI, iniCash, false);
-			currTime = System.currentTimeMillis();
-			recursion.setTreeMapCacheAction();
-			double SDPLbObj;
-			SDPLbObj = recursion.getSurvProb(initialState);
-			System.out.println("result of SDP with service rate constraint is: ");
-			System.out.println("survival probability for this initial state is: " + nf.format(SDPLbObj));
-			double optQSDPLb = recursion.getAction(initialState);
-			System.out.println("optimal order quantity in the first priod is : " + optQSDPLb);
-			double timeSDPLb = (System.currentTimeMillis() - currTime) / 1000;
-			System.out.println("running time is " + timeSDPLb + "s");
-			
-			/*******************************************************************
-			 * Simulating sdp results
-			 */		
-			
-			sampleNum = 1000;
-			simulation = new RiskSimulation(distributions, sampleNum, recursion); // no need to add overheadCost in this class
-			result = simulation.simulateLostSale(initialState, immediateValue);
-			System.out.println("final simulated survival probability in " + df.format(sampleNum) + " samples is: " + nf.format(result[0]));
-//			System.out.println("final simulated lost sale rate " + " is: " + nf.format(result[1]));
-			double serviceSDPLB = 1 - result[1];
-			System.out.println("final simulated service rate " + " is: " + nf.format(serviceSDPLB));
+//			Function<RiskState, double[]> getFeasibleAction2 = s -> {
+//				int t = s.getPeriod() - 1;
+//				double thisPeriodServRate = 1 - (1 - serviceRate) / T;
+//				double minQ = Math.ceil(distributions[t].inverseF(thisPeriodServRate)); // minimum ordering quantity in each period 
+//				double maxQ = Math.min(s.iniCash/variCostUnits[t], maxOrderQuantity);
+//				if (s.getBankruptBefore() == true)
+//					maxQ = 0;
+//				if (maxQ < minQ) {
+//					maxQ = s.iniCash/variCostUnits[t];
+//					minQ = s.iniCash/variCostUnits[t];
+//				}
+//				maxQ = Math.max(maxQ, 0);
+//				return DoubleStream.iterate(minQ, i -> i + stepSize).limit((int) maxQ + 1).toArray();
+//			};
+//			
+//			/*******************************************************************
+//			 * Solve
+//			 */		
+//			recursion = new RiskRecursion(pmf, getFeasibleAction2, stateTransition, immediateValue);
+//			period = 1;		
+//			initialState = new RiskState(period, iniI, iniCash, false);
+//			currTime = System.currentTimeMillis();
+//			recursion.setTreeMapCacheAction();
+//			double SDPLbObj;
+//			SDPLbObj = recursion.getSurvProb(initialState);
+//			System.out.println("result of SDP with service rate constraint is: ");
+//			System.out.println("survival probability for this initial state is: " + nf.format(SDPLbObj));
+//			double optQSDPLb = recursion.getAction(initialState);
+//			System.out.println("optimal order quantity in the first priod is : " + optQSDPLb);
+//			double timeSDPLb = (System.currentTimeMillis() - currTime) / 1000;
+//			System.out.println("running time is " + timeSDPLb + "s");
+//			
+//			/*******************************************************************
+//			 * Simulating sdp results
+//			 */					
+//			sampleNum = 1000;
+//			simulation = new RiskSimulation(distributions, sampleNum, recursion); // no need to add overheadCost in this class
+//			result = simulation.simulateLostSale(initialState, immediateValue);
+//			System.out.println("final simulated survival probability in " + df.format(sampleNum) + " samples is: " + nf.format(result[0]));
+////			System.out.println("final simulated lost sale rate " + " is: " + nf.format(result[1]));
+//			double serviceSDPLB = 1 - result[1];
+//			System.out.println("final simulated service rate " + " is: " + nf.format(serviceSDPLB));
 			
 			/*******************************************************************
 			 * rolling horizon approach
@@ -328,8 +331,11 @@ public class ChanceCashTesting5Period {
 			 * 
 			 * output results to excel
 			 */
-			double[] out = new double[]{m, serviceRate, sampleNumPeriod, iniCash, prices[0], overheadCosts[0], SDPObj, SDPService, timeSDP, SDPLbObj, serviceSDPLB, timeSDPLb,
-					rollingObj, serviceRateRolling, timeRolling, rollingLength, optQSDP, optQSDPLb, optQ1Rolling};
+//			double[] out = new double[]{m, serviceRate, sampleNumPeriod, iniCash, prices[0], overheadCosts[0], SDPObj, SDPService, timeSDP, SDPLbObj, serviceSDPLB, timeSDPLb,
+//					rollingObj, serviceRateRolling, timeRolling, rollingLength, optQSDP, optQSDPLb, optQ1Rolling};
+			
+			double[] out = new double[]{m, serviceRate, sampleNumPeriod, iniCash, prices[0], overheadCosts[0], 0, 0, 0, 0, 0, 0,
+					rollingObj, serviceRateRolling, timeRolling, 0, 0, 0, optQ1Rolling};
 			
 			wr.writeToExcelAppend(out, fileName);
 			}

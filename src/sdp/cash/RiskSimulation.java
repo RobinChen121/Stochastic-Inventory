@@ -97,6 +97,8 @@ public class RiskSimulation {
 							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
 					double[] result = model.solveMaxSurvival();	
 					optQ = result[0];
+					if (state.iniCash < 0)
+						optQ = 0;
 					thisServiceRate = nextServiceRate;
 				}			
 			}
@@ -177,6 +179,8 @@ public class RiskSimulation {
 							salvageValueUnit, holdCostUnit, nextOverheadCosts, nextServiceRate, nextScenarios);
 					double[] result = model.solveScenario();	
 					optQ = result[0];
+					if (state.iniCash < 0)
+						optQ = 0;
 					thisServiceRate = nextServiceRate;
 				}			
 			}
@@ -209,7 +213,7 @@ public class RiskSimulation {
 		for (int i = 0; i < samples.length; i++) {
 			RiskState state = iniState;
 			boolean countBefore = false;
-			boolean countBeforeBankrupt = false;
+			boolean countBeforeBankrupt = state.getBankruptBefore();
 			for (int t = 0; t < samples[0].length; t++)
 			{
 				recursion.getSurvProb(state);
@@ -328,6 +332,8 @@ public class RiskSimulation {
 					result = model.solveMaxSurvival();
 //					result = model.solveScenario();
 					optQ = result[0];
+					if (countBeforeBankrupt == true)
+						optQ = 0;
 					thisServiceRate = nextServiceRate;
 				}			
 			}

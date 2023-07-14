@@ -48,15 +48,15 @@ public class cashSurvival {
 		String fileName = "SurvivalDiffCash.xls";
 		String headString =  "iniCash" + "\t" + "optQ" + "\t" + "survivalProb" + "\t" + "serviceLeval";		
 						
-		double[] meanDemand = {47,30,6,30,54};
+		double[] meanDemand = {14,23,33,46,50};
 		int T = meanDemand.length;
 		
 		double iniI = 0;
-		double iniCash = 200;
+		double iniCash = 80;
 		double fixOrderCost = 0;
 		double[] price = new double[T];
 		double[] variCost = new double[T];
-		Arrays.fill(price, 5);	
+		Arrays.fill(price, 4);	
 		Arrays.fill(variCost, 1);	
 		double depositeRate = 0;
 		double salvageValue = 0.5;
@@ -76,8 +76,8 @@ public class cashSurvival {
 		double penaltyCost = 0; // can also be overdraft rate; large penalty cost cause big gaps for simulation results, since may generate zero demand;
 		double discountFactor = 1;		
 		
-		int sampleNumSim = 100; // number of scenarios for rolling SAA
-		int sampleNumPeriod = 300;
+		int sampleNumSim = 300; // number of scenarios for rolling SAA
+		int sampleNumPeriod = 15;
 		int rollingLength = 1;
 		double meanDemandSum = Arrays.stream(meanDemand).sum();
 		double rollingDemandSum = Arrays.stream(meanDemand).limit(rollingLength).sum();
@@ -138,7 +138,7 @@ public class cashSurvival {
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			// cash is integer or not
 			nextCash = Math.round(nextCash * 1) / 1; // the right should be a decimal
-			boolean bankruptBefore = false;
+			boolean bankruptBefore = state.getBankruptBefore();
 			if (nextCash < 0)
 				bankruptBefore = true;
 			return new RiskState(state.getPeriod() + 1, nextInventory, nextCash, bankruptBefore);
@@ -183,16 +183,24 @@ public class cashSurvival {
 		Function<RiskState, double[]> getFeasibleAction2 = s -> {
 			int t = s.getPeriod() - 1;
 			double thisPeriodServRate = 1- (1 - serviceRateRequired) / T;
-			double minQ = Math.ceil(distributions[t].inverseF(thisPeriodServRate)); // minimum ordering quantity in each period 
-			double maxQ = Math.min(s.iniCash/variCost[t], maxOrderQuantity);
-			if (s.getBankruptBefore() == true)
-				maxQ = 0;
-			if (maxQ < minQ) {
-				maxQ = 0;
-				minQ = 0;
+			double cashQ = Math.max(0, s.iniCash/variCost[t]);
+			double minQ = Math.ceil(distributions[t].inverseF(thisPeriodServRate)); 
+			minQ = minQ > cashQ ? cashQ : minQ;
+			double maxQ = Math.min(cashQ, maxOrderQuantity);
+//			if (s.getBankruptBefore() == true)
+//				maxQ = 0;
+			minQ = Math.ceil(distributions[t].inverseF(thisPeriodServRate));
+			maxQ = cashQ;
+			if (maxQ < minQ)
+				return new double[]{cashQ};
+			else {
+				int K = (int) maxQ - (int) minQ + 1;
+				double[] actions = new double[K];
+				for (int i = 0; i < K; i++)
+					actions[i] = (int) minQ + i;
+				return actions;
 			}
-			maxQ = Math.max(maxQ, 0);
-			return DoubleStream.iterate(minQ, i -> i + stepSize).limit((int) maxQ + 1).toArray();
+			
 		};
 		
 		/*******************************************************************
@@ -253,7 +261,7 @@ public class cashSurvival {
 		double error2  = 1.96*sigma2;
 		double serviceRateRolling = 1 - resultSim[1];
 		double optQ1Rolling = resultSim[2];
-		System.out.println("the service rate for simulated SAA rolling horizon is " + nf.format(serviceRateRolling) + ", with error " + nf.format(error2));
+		System.out.println("the service rate for simulated SAA rolling horizon is " + nf.format(serviceRateRolling));
 		System.out.println("the optimal ordering Q in the 1st period of the SAA rolling horizon is " + optQ1Rolling);
 		
 		

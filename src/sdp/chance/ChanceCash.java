@@ -75,16 +75,16 @@ public class ChanceCash {
 	public static void main(String[] args) {
 		
 		WriteToExcelTxt wr = new WriteToExcelTxt();
-		String fileName = "nita_N.xls";
+		String fileName = "nita_N_New.xls";
 		String headString =  
-				"sampleNumSim" + "\t" +  "etaFrac" + "\t" + "eta" + "\t" + "SAAObj" + "\t" + "simSAAObj" + "\t" +
+				"sampleNumSim" + "\t" +  "serviceRate" + "\t" + "eta" + "\t" + "SAAObj" + "\t" + "simSAAObj" + "\t" +
 		         "simSAAService" + "\t" + "scenarioObj" + "\t" + "simScenarioObj" + "\t" + "simScenarioService"
 		         + "\t" + "SDPObj" + "\t" + "simSDPService" + "\t" + "SDPLbObj" + "\t" + "simSDPLbService" + "\t"
-		         + "rollingObj" + "\t" + "rollingService" + "\t" + "rollingLength";
+		         + "rollingObj" + "\t" + "rollingService" + "\t" + "rollingLength" + "\t" + "sampleNumPeirodRolling";
 		wr.writeToFile(fileName, headString);
 		
 		
-		double[] meanDemand = {11, 14, 18, 23, 28, 33, 38, 42, 46, 49, 50, 49};
+		double[] meanDemand = {10, 20, 20, 10};
 		double iniCash = 130;
 		int T = meanDemand.length;
 		
@@ -97,17 +97,16 @@ public class ChanceCash {
 		double iniI = 0;
 		double trunQuantile = 0.9999;
 		
-		double serviceRate = 0.95; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
+		double serviceRate = 0.9; // the higher value results in slower running speed. maximum negative possibility rate is 1 - serviceRate. 
 		int etaFrac = 1;
 		double serviceRateSAA = 1 - (1- serviceRate)/etaFrac;
 			
-		int sampleNumPeriod = 10;
+		int sampleNumPeriod = 3; //
 		int[] sampleNumSims = new int[T]; // sample number in each period, the number of samples in the first period can have big influence		
 		int[] sampleNumSimsRolling = new int[T];
-		Arrays.fill(sampleNumSimsRolling, sampleNumPeriod);
-		Arrays.fill(sampleNumSims, sampleNumPeriod);
+		int sampleNumPeriodRolling = 11; //		
 		
-		int rollingLength = 2; // rolling horizon length
+		int rollingLength = 3; // rolling horizon length
 		double meanDemandSum = Arrays.stream(meanDemand).sum();
 		double rollingDemandSum = Arrays.stream(meanDemand).limit(rollingLength).sum();
 		double portion = rollingDemandSum / meanDemandSum;
@@ -134,6 +133,15 @@ public class ChanceCash {
 				//.mapToObj(i -> new NormalDist(meanDemand[i], sigmaCoe * meanDemand[i])).toArray(Distribution[]::new);// can be changed to other distributions
 				.mapToObj(i -> new PoissonDist(meanDemand[i])).toArray(Distribution[]::new);
 		
+		
+//		for (int sizeK = 4; sizeK < 5; sizeK ++) {
+//			sampleNumPeriod =  3 + sizeK * 2;
+		
+		Arrays.fill(sampleNumSimsRolling, sampleNumPeriodRolling);
+		Arrays.fill(sampleNumSims, sampleNumPeriod);
+			
+//		
+//		
 //		for (int runTime = 0; runTime < 10; runTime++) {
 		
 		
@@ -192,7 +200,7 @@ public class ChanceCash {
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			// cash is integer or not
 			nextCash = Math.round(nextCash * 1) / 1; // the right should be a decimal
-			boolean bankruptBefore = false;
+			boolean bankruptBefore = state.getBankruptBefore();
 			if (nextCash < 0)
 				bankruptBefore = true;
 			return new RiskState(state.getPeriod() + 1, nextInventory, nextCash, bankruptBefore);
@@ -221,10 +229,10 @@ public class ChanceCash {
 //	    System.out.println("lost sale rate of SAA is: " + nf.format(lostRate));
 //	    System.out.println("lost sale max required rate is: " + nf.format(1 - serviceRate));
 //	    System.out.println();
-	    
-	    /**
-		 * Simulate the restult of SAA
-		 */		    
+//	    
+//	    /**
+//		 * Simulate the restult of SAA
+//		 */		    
 //	    double SAAServiceSim;	    
 //	    currTime = System.currentTimeMillis();
 //	    resultSim = simulation1.simulateSAA(initialState, result[0], serviceRateSAA, sampleNumSims, prices, variCostUnits, overheadCosts, salvageValueUnit, holdCostUnit, scenarios, sampleNumSim);
@@ -245,7 +253,7 @@ public class ChanceCash {
 //		currTime = System.currentTimeMillis();
 //		result = model.solveScenario();	// same result with soveSort or solveSort2, but less computational time
 //		                                   // former name is solveSortFurther()
-		
+//		
 //		time1 = (System.currentTimeMillis() - currTime) / 1000.00;    
 //	    System.out.println("**************************************************************");
 //	    System.out.println("result of scenario tree: ");
@@ -282,8 +290,8 @@ public class ChanceCash {
 //		Function<RiskState, double[]> getFeasibleAction = s -> {
 //			int t = s.getPeriod() - 1;
 //			double maxQ = Math.min(s.iniCash/variCostUnits[t], maxOrderQuantity);
-//			if (s.getBankruptBefore() == true)
-//				maxQ = 0;
+////			if (s.getBankruptBefore() == true)
+////				maxQ = 0;
 //			maxQ = Math.max(maxQ, 0);
 //			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 //		};	
@@ -321,20 +329,27 @@ public class ChanceCash {
 //		 * solve the problem by SDP when there is individual chance constraint approximation
 //		 */			
 //		// feasible actions 2
-//		// in fact, no cash constraint in this paper
 //		Function<RiskState, double[]> getFeasibleAction2 = s -> {
 //			int t = s.getPeriod() - 1;
 //			double thisPeriodServRate = 1- (1 - serviceRate) / T;
-//			double minQ = Math.ceil(distributions[t].inverseF(thisPeriodServRate)); // minimum ordering quantity in each period 
-//			double maxQ = Math.min(s.iniCash/variCostUnits[t], maxOrderQuantity);
-//			if (s.getBankruptBefore() == true)
-//				maxQ = 0;
-//			if (maxQ < minQ) {
-//				maxQ = 0;
-//				minQ = 0;
+//			double cashQ = Math.max(0, s.iniCash/variCostUnits[t]);
+//			double minQ = Math.ceil(distributions[t].inverseF(thisPeriodServRate)); 
+//			minQ = minQ > cashQ ? cashQ : minQ;
+//			double maxQ = Math.min(cashQ, maxOrderQuantity);
+////			if (s.getBankruptBefore() == true)
+////				maxQ = 0;
+//			minQ = Math.ceil(distributions[t].inverseF(thisPeriodServRate));
+//			maxQ = cashQ;
+//			if (maxQ < minQ)
+//				return new double[]{cashQ};
+//			else {
+//				int K = (int) maxQ - (int) minQ + 1;
+//				double[] actions = new double[K];
+//				for (int i = 0; i < K; i++)
+//					actions[i] = (int) minQ + i;
+//				return actions;
 //			}
-//			maxQ = Math.max(maxQ, 0);
-//			return DoubleStream.iterate(minQ, i -> i + stepSize).limit((int) maxQ + 1).toArray();
+//			
 //		};
 //		
 //		/*******************************************************************
@@ -388,16 +403,15 @@ public class ChanceCash {
 		 * output to excel
 		 * 
 		 */
-//		double[] out = new double[]{sampleNumSimTotal, etaFrac, 1-serviceRateSAA, ObjSAA/100.0, objSAASim, SAAServiceSim, ObjScenario, ObjScenarioSim, 
-//				ScenarioServiceSim, SDPSurvival, serviceSDP, SDPLbSurvival, serviceSDPLB, rollingObj, serviceRateRolling, rollingLength};
+//		double[] out = new double[]{sampleNumSimTotal, serviceRate, 1-serviceRateSAA, ObjSAA/100.0, objSAASim, SAAServiceSim, ObjScenario/100, ObjScenarioSim, 
+//				ScenarioServiceSim, SDPSurvival, serviceSDP, SDPLbSurvival, serviceSDPLB, rollingObj, serviceRateRolling, rollingLength, sampleNumPeriodRolling};
 		
 //		double[] out = new double[]{sampleNumSimTotal, etaFrac, 1-serviceRateSAA, 0, 0, 0, 0, 0, 
 //				0, 0, 0, 0, 0, rollingObj, serviceRateRolling, rollingLength};
-		
-//		wr.writeToExcelAppend(out, fileName);	
-//		System.out.println("");
 //		
-//		}
+//		wr.writeToExcelAppend(out, fileName);	
+		System.out.println("");
+
 	}
 }
 
