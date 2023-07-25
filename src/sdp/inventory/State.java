@@ -74,12 +74,13 @@ public class State implements Comparable<State> {
 		return "period = " + period + ", " + "initialInventory = " + initialInventory;
 	}
 
-	@Override
-	public int compareTo(State o) {
-		return this.period > o.period ? 1
-				: this.period == o.period
-						? this.initialInventory > o.initialInventory ? 1
-								: (this.initialInventory == o.initialInventory ? 0 : -1)
-						: -1;
-	}
+	// not very necessary to define compareTo in the class definition
+//	@Override
+//	public int compareTo(State o) {
+//		return this.period > o.period ? 1
+//				: this.period == o.period
+//						? this.initialInventory > o.initialInventory ? 1
+//								: (this.initialInventory == o.initialInventory ? 0 : -1)
+//						: -1;
+//	}
 }

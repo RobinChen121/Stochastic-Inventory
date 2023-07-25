@@ -173,7 +173,7 @@ public class CLSP {
 	      double holdingCost = 2;
 	      double penaltyCost = 10;
 	      
-	      int maxOrderQuantity = 30;
+	      int maxOrderQuantity = 100;
 	      
 	      Distribution[] distributions = IntStream.iterate(0, i -> i + 1)
 	                                              .limit(T)

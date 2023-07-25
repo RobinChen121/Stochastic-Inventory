@@ -41,16 +41,16 @@ public class LeadtimeState extends State{
 		return "period = " + period + ", " + "initialInventory = " + initialInventory + ", " + "preQ = " + preQ;
 	}
 	
-	
-	public int compareTo(LeadtimeState o) {
-		return this.period > o.period ? 1
-				: this.period == o.period
-						? this.initialInventory > o.initialInventory ? 1
-								: this.initialInventory == o.initialInventory ? 
-										this.preQ > o.preQ ?  1:
-											(this.preQ == o.preQ ? 0 : -1):
-												-1:-1;
-	}
+	// not necessary to define compareTo
+//	public int compareTo(LeadtimeState o) {
+//		return this.period > o.period ? 1
+//				: this.period == o.period
+//						? this.initialInventory > o.initialInventory ? 1
+//								: this.initialInventory == o.initialInventory ? 
+//										this.preQ > o.preQ ?  1:
+//											this.preQ == o.preQ ? 0 : -1:
+//												-1:-1;
+//	}
 		
 
 }
