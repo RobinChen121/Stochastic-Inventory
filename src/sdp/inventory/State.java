@@ -8,7 +8,8 @@ package sdp.inventory;
  * @description: A State class with inventory as state for dynamic programming
  */
 
-public class State implements Comparable<State> {
+// public class State implements Comparable<State> {
+public class State{
 	protected int period;
 	protected double initialInventory;
 

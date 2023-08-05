@@ -289,12 +289,11 @@ public class LostSaleChance {
 			for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++){
 		    		GRBLinExpr leftExpr = new GRBLinExpr();
-		    		for (int k = t + 1; k < T; k++)
+		    		for (int k = t; k < T; k++)
 		    			leftExpr.addTerm(1, Q[k][s]);
 		    		GRBLinExpr rightExpr = new GRBLinExpr();
 		    		rightExpr.addTerm(M1, alpha[t][s]);
-		    		if (t < T - 1)
-		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "orderQZeroConstraint");
+		    		model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "orderQZeroConstraint");
 		    	}
 			
 			
@@ -545,12 +544,11 @@ public class LostSaleChance {
 			for (int t = 0; t < T; t++) 
 		    	for (int s = 0; s < sampleNumTotal; s++){
 		    		GRBLinExpr leftExpr = new GRBLinExpr();
-		    		for (int k = t + 1; k < T; k++)
+		    		for (int k = t; k < T; k++)
 		    			leftExpr.addTerm(1, Q[k][s]);
 		    		GRBLinExpr rightExpr = new GRBLinExpr();
 		    		rightExpr.addTerm(M1, alpha[t][s]);
-		    		if (t < T - 1)
-		    			model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "orderQZeroConstraint");
+		    		model.addConstr(leftExpr, GRB.LESS_EQUAL, rightExpr, "orderQZeroConstraint");
 		    	}
 			
 			// first-stage decision, here and now decision
@@ -586,7 +584,7 @@ public class LostSaleChance {
 					GRBLinExpr sumAlphaP = new GRBLinExpr();
 					sumIP.addTerm(sum2, I[t][s]); sumDeltaP.addTerm(sum2, delta[t][s]); 
 					sumAlphaP.addTerm(sum2, alpha[t][s]);
-					model.addConstr(sum1I, GRB.EQUAL, sumIP, null); 
+					//model.addConstr(sum1I, GRB.EQUAL, sumIP, null); 
 					//model.addConstr(sum1alpha, GRB.EQUAL, sumAlphaP, null);
 					//model.addConstr(sum1delta, GRB.EQUAL, sumDeltaP, null);
 					if (t > 0 && t < T - 1) {
