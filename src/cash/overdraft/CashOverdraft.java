@@ -32,7 +32,7 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashOverdraft {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {10};
+		double[] meanDemand = {10, 20, 10};
 		
 		double[] overheadCost = {50, 50, 50};
 		double fixOrderCost = 0;
@@ -48,7 +48,7 @@ public class CashOverdraft {
 		double r3 = 2; // penalty interest rate for overdraft exceeding the limit
 		double limit = 80; // overdraft limit
 		double interestFreeAmount = 25;
-		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 50; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -88,9 +88,9 @@ public class CashOverdraft {
 			else if(cashBalanceBefore >= -interestFreeAmount)
 				interest = 0;
 			else if (cashBalanceBefore >= -limit)
-				interest = -r2 * (-cashBalanceBefore - interestFreeAmount);
+				interest = r2 * (-cashBalanceBefore - interestFreeAmount);
 			else 
-				interest = -r3 * (-cashBalanceBefore - limit) - r2 * (limit - interestFreeAmount);
+				interest = r3 * (-cashBalanceBefore - limit) + r2 * (limit - interestFreeAmount);
 			double cashBalanceAfter = cashBalanceBefore - interest + revenue;
 			double cashIncrement = cashBalanceAfter - state.getIniCash();
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
