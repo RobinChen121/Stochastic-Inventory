@@ -32,13 +32,13 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashOverdraft {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 20, 10};
+		double[] meanDemand = {10};
 		
 		double[] overheadCost = {50, 50, 50};
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
-		double price = 5;
+		double price = 10;
 		double salvageValue = 0.5;
 
 		double iniCash = 0;
@@ -47,7 +47,7 @@ public class CashOverdraft {
 		double r2 = 0.1;
 		double r3 = 2; // penalty interest rate for overdraft exceeding the limit
 		double limit = 80; // overdraft limit
-		double interestFreeQuantity = 25;
+		double interestFreeAmount = 25;
 		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
@@ -68,8 +68,7 @@ public class CashOverdraft {
 
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
-			double maxQ = (int) Math.min(maxOrderQuantity,
-					Math.max(0, (s.getIniCash() -minCashRequired - fixOrderCost) / variCost));
+			double maxQ = maxOrderQuantity;
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -81,9 +80,17 @@ public class CashOverdraft {
 			double fixedCost = action > 0 ? fixOrderCost : 0;
 			double variableCost = variCost * action;
 			double inventoryLevel = state.getIniInventory() + action - randomDemand;
-			double holdCosts = holdingCost * Math.max(inventoryLevel, 0);
-			double cashBalanceBefore = state.getIniCash() - fixedCost - variableCost - holdCosts;// whether plus revenue in this time point
-			double interest = interestRate * Math.max(-cashBalanceBefore, 0);
+			int t = state.getPeriod() - 1;
+			double cashBalanceBefore = state.getIniCash() - fixedCost - variableCost - overheadCost[t];// whether plus revenue in this time point
+			double interest = 0;
+			if (cashBalanceBefore >= 0)
+				interest = -r0 * cashBalanceBefore;
+			else if(cashBalanceBefore >= -interestFreeAmount)
+				interest = 0;
+			else if (cashBalanceBefore >= -limit)
+				interest = -r2 * (-cashBalanceBefore - interestFreeAmount);
+			else 
+				interest = -r3 * (-cashBalanceBefore - limit) - r2 * (limit - interestFreeAmount);
 			double cashBalanceAfter = cashBalanceBefore - interest + revenue;
 			double cashIncrement = cashBalanceAfter - state.getIniCash();
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
@@ -133,23 +140,23 @@ public class CashOverdraft {
 		/*******************************************************************
 		 * Find (s, S) and simulate
 		 */
-		System.out.println("");
-		double[][] optTable = recursion.getOptTable();
-		FindsSOverDraft findsS = new FindsSOverDraft(T, iniCash);
-		double[][] optsS = findsS.getsS(optTable);
-//		System.out.println("(s, S) are: ");
-//		System.out.println(Arrays.deepToString(optsS));
-		double simsSFinalValue = simuation.simulatesSOD(initialState, optsS, minCashRequired, maxOrderQuantity, fixOrderCost, variCost);
-		System.out.printf("Optimality gap for policy (s, S) is: %.2f%%\n", (finalCash -simsSFinalValue)/finalCash*100);
-		
-		
-		/*******************************************************************
-		 * Find (s, C, S1, S2) and simulate
-		 * 
-		 */
-		double[][] optsCS1S2 = findsS.getsCS1S2(optTable);
-		double simsSFinalValue2 = simuation.simulatesSOD2(initialState, optsCS1S2);
-		System.out.printf("Optimality gap for policy (s, C, S1, S2) is: %.2f%%\n", (finalCash -simsSFinalValue2)/finalCash*100);
+//		System.out.println("");
+//		double[][] optTable = recursion.getOptTable();
+//		FindsSOverDraft findsS = new FindsSOverDraft(T, iniCash);
+//		double[][] optsS = findsS.getsS(optTable);
+////		System.out.println("(s, S) are: ");
+////		System.out.println(Arrays.deepToString(optsS));
+//		double simsSFinalValue = simuation.simulatesSOD(initialState, optsS, limit, maxOrderQuantity, fixOrderCost, variCost);
+//		System.out.printf("Optimality gap for policy (s, S) is: %.2f%%\n", (finalCash -simsSFinalValue)/finalCash*100);
+//		
+//		
+//		/*******************************************************************
+//		 * Find (s, C, S1, S2) and simulate
+//		 * 
+//		 */
+//		double[][] optsCS1S2 = findsS.getsCS1S2(optTable);
+//		double simsSFinalValue2 = simuation.simulatesSOD2(initialState, optsCS1S2);
+//		System.out.printf("Optimality gap for policy (s, C, S1, S2) is: %.2f%%\n", (finalCash -simsSFinalValue2)/finalCash*100);
 		
 		
 		
