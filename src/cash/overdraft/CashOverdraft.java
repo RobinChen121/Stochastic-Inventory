@@ -32,9 +32,9 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashOverdraft {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 10};
+		double[] meanDemand = {20, 15, 10};
 		
-		double[] overheadCost = {50, 50, 50};
+		double[] overheadCost = {0, 0, 0};
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
@@ -42,13 +42,13 @@ public class CashOverdraft {
 		double salvageValue = 0.5;
 
 		double iniCash = 0;
-		double r0 = 0.01;
+		double r0 = 0;
 		double r1 = 0;
-		double r2 = 0.1;
-		double r3 = 2; // penalty interest rate for overdraft exceeding the limit
+		double r2 = 0;
+		double r3 = 0; // penalty interest rate for overdraft exceeding the limit
 		double limit = 80; // overdraft limit
 		double interestFreeAmount = 25;
-		double maxOrderQuantity = 50; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -68,7 +68,7 @@ public class CashOverdraft {
 
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
-			double maxQ = maxOrderQuantity;
+			double maxQ = maxOrderQuantity; // Math.max(s.iniCash/variCost, 0);//
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
