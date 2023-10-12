@@ -32,9 +32,9 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashOverdraft {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 15, 10};
+		double[] meanDemand = {10, 15, 10};
 		
-		double[] overheadCost = {0, 0, 0};
+		double[] overheadCost = {50, 50, 50};
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
@@ -42,9 +42,9 @@ public class CashOverdraft {
 		double salvageValue = 0.5;
 
 		double iniCash = 0;
-		double r0 = 0;
+		double r0 = 0.01;
 		double r1 = 0;
-		double r2 = 0;
+		double r2 = 0.1;
 		double r3 = 0; // penalty interest rate for overdraft exceeding the limit
 		double limit = 80; // overdraft limit
 		double interestFreeAmount = 25;
@@ -54,8 +54,8 @@ public class CashOverdraft {
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 100;
-		double minCashState = -500;
-		double maxCashState = 1000;
+		double minCashState = -200;
+		double maxCashState = 800;
 		double discountFactor = 1;
 		
 
@@ -83,18 +83,20 @@ public class CashOverdraft {
 			int t = state.getPeriod() - 1;
 			double cashBalanceBefore = state.getIniCash() - fixedCost - variableCost - overheadCost[t];// whether plus revenue in this time point
 			double interest = 0;
-			if (cashBalanceBefore >= 0)
-				interest = -r0 * cashBalanceBefore;
-//			else if(cashBalanceBefore >= -interestFreeAmount)
-//				interest = 0;
-//			else if (cashBalanceBefore >= -limit)
-//				interest = r2 * (-cashBalanceBefore - interestFreeAmount);
-//			else 
-//				interest = r3 * (-cashBalanceBefore - limit) + r2 * (limit - interestFreeAmount);
-			else {
-				interest = -r2 * cashBalanceBefore;
-			}
-			double cashBalanceAfter = cashBalanceBefore - interest + revenue;
+//			if (cashBalanceBefore >= 0)
+//				interest = r0 * cashBalanceBefore;
+////			else if(cashBalanceBefore >= -interestFreeAmount)
+////				interest = 0;
+////			else if (cashBalanceBefore >= -limit)
+////				interest = r2 * (-cashBalanceBefore - interestFreeAmount);
+////			else 
+////				interest = r3 * (-cashBalanceBefore - limit) + r2 * (limit - interestFreeAmount);
+//			else {
+//				interest = r2 * cashBalanceBefore;
+//			}
+			interest = r2 * Math.max(-cashBalanceBefore, 0); 
+			double deposite = r0 * Math.max(cashBalanceBefore, 0);
+			double cashBalanceAfter = cashBalanceBefore + deposite - interest + revenue;
 			double cashIncrement = cashBalanceAfter - state.getIniCash();
 			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
 			cashIncrement += salValue;
@@ -111,7 +113,7 @@ public class CashOverdraft {
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			// cash is integer or not
-			// nextCash = Math.round(nextCash * 100) / 100.00;
+			nextCash = Math.round(nextCash * 10) / 10; // affect computation time much
 			return new CashState(state.getPeriod() + 1, nextInventory, nextCash);
 		};
 

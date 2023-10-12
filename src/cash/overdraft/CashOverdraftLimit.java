@@ -27,18 +27,19 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashOverdraftLimit {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {5, 5, 15, 8};
-		double[] overheadCost = {25, 25, 25, 25};
+		double[] meanDemand = {10, 15, 10};
+		
+		double[] overheadCost = {50, 50, 50};
 
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
-		double price = 5;
+		double price = 10;
 		double salvageValue = 0.5;
 
 		double iniCash = 0;
-		double interestRate = 0.03; // about 10 times higher than the deposite rate
-		double depositeRate = 0.003;
+		double interestRate = 0.1; // about 10 times higher than the deposite rate
+		double depositeRate = 0.01;
 		double minCashRequired = -100; // minimum cash balance the retailer can withstand
 		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
 
@@ -61,6 +62,7 @@ public class CashOverdraftLimit {
 		Function<CashState, double[]> getFeasibleAction = s -> {
 			double maxQ = (int) Math.min(maxOrderQuantity,
 					Math.max(0, (s.getIniCash() -overheadCost[s.getPeriod()-1] - minCashRequired - fixOrderCost) / variCost));
+			maxQ = maxOrderQuantity;
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -77,6 +79,8 @@ public class CashOverdraftLimit {
 			double deposite = depositeRate * Math.max(cashBalanceBeforeRevenue, 0);
 			double cashBalanceAfter = cashBalanceBeforeRevenue - interest + deposite + revenue;
 			double cashIncrement = cashBalanceAfter - state.getIniCash();
+			double salValue = state.getPeriod() == T ? salvageValue * Math.max(inventoryLevel, 0) : 0;
+			cashIncrement += salValue;
 			return cashIncrement;
 		};
 		
