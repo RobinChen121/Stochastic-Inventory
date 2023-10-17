@@ -77,26 +77,26 @@ public class MultiItemCash {
 		};
 		
 		// Immediate Value Function	      
-				ImmediateValueFunction<CashStateMulti, Actions, Demands, Double> immediateValue
-				= (IniState, Actions, RandomDemands) -> {
-					double action1 = Actions.getFirstAction();
-					double action2 = Actions.getSecondAction();
-					double demand1 = RandomDemands.getFirstDemand();
-					double demand2 = RandomDemands.getSecondDemand();
-					double endInventory1 = Math.max(0, IniState.getIniInventory1() + action1 - demand1);
-					double endInventory2 = Math.max(0, IniState.getIniInventory2() + action2 - demand2);
-					double revenue1 = price[0] * (IniState.getIniInventory1() + action1 - endInventory1);
-					double revenue2 = price[1] * (IniState.getIniInventory2() + action2 - endInventory2);
-					double revenue = revenue1 + revenue2;
-					double orderingCost1 = variCost[0] * action1;
-					double orderingCost2 = variCost[1] * action2;
-					double orderingCosts = orderingCost1 + orderingCost2;
-					double salValue = 0;
-					if (IniState.getPeriod() == T) {
-						salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
-					}
-					return revenue - orderingCosts + salValue;
-				};
+		ImmediateValueFunction<CashStateMulti, Actions, Demands, Double> immediateValue
+		= (IniState, Actions, RandomDemands) -> {
+			double action1 = Actions.getFirstAction();
+			double action2 = Actions.getSecondAction();
+			double demand1 = RandomDemands.getFirstDemand();
+			double demand2 = RandomDemands.getSecondDemand();
+			double endInventory1 = Math.max(0, IniState.getIniInventory1() + action1 - demand1);
+			double endInventory2 = Math.max(0, IniState.getIniInventory2() + action2 - demand2);
+			double revenue1 = price[0] * (IniState.getIniInventory1() + action1 - endInventory1);
+			double revenue2 = price[1] * (IniState.getIniInventory2() + action2 - endInventory2);
+			double revenue = revenue1 + revenue2;
+			double orderingCost1 = variCost[0] * action1;
+			double orderingCost2 = variCost[1] * action2;
+			double orderingCosts = orderingCost1 + orderingCost2;
+			double salValue = 0;
+			if (IniState.getPeriod() == T) {
+				salValue = salPrice[0] * endInventory1 + salPrice[1] * endInventory2;
+			}
+			return revenue - orderingCosts + salValue;
+		};
 	    	
 		// State Transition Function
 
