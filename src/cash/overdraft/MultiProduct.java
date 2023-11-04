@@ -9,6 +9,7 @@ import sdp.cash.multiItem.CashStateMulti;
 import sdp.cash.multiItem.Demands;
 import sdp.cash.multiItem.GetPmfMulti;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
+import sdp.inventory.StateTransition.StateTransitionFunction;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
 
@@ -124,6 +125,39 @@ public class MultiProduct {
 			double cashIncrement = cashBalanceAfter - IniState.getIniCash();
 			return cashIncrement;
 		};
+		
+		// State Transition Function
+		StateTransitionFunction<CashStateMulti, Actions, Demands, CashStateMulti> stateTransition = (IniState, Actions, RandomDemands) -> {
+			double endInventory1 = IniState.getIniInventory1() + Actions.getFirstAction() - RandomDemands.getFirstDemand();
+			endInventory1 = Math.max(0, endInventory1);
+			double endInventory2 = IniState.getIniInventory2() + Actions.getSecondAction() - RandomDemands.getSecondDemand();
+			endInventory2 = Math.max(0, endInventory2);
+			double nextCash = IniState.getIniCash() + immediateValue.apply(IniState, Actions, RandomDemands);
+			nextCash = nextCash > maxCashState ? maxCashState : nextCash;
+			nextCash = nextCash < minCashState ? minCashState : nextCash;
+			endInventory1 = endInventory1 > maxInventoryState ? maxInventoryState : endInventory1;
+			endInventory2 = endInventory2 < minInventoryState ? minInventoryState : endInventory2;
+			nextCash = (int) nextCash;  // rounding states to save computing time
+			endInventory1 = (int) endInventory1;
+			endInventory2 = (int) endInventory2;
+			return new CashStateMulti(IniState.getPeriod() + 1, endInventory1, endInventory2, nextCash);
+		};
+		
+		
+		/*******************************************************************
+		 * Solve
+		 */
+		CashRecursionMulti recursion = new CashRecursionMulti(discountFactor, PmfMulti, buildActionList,
+				                             stateTransition, immediateValue, T);
+		int period = 1;
+		CashStateMulti iniState = new CashStateMulti(period, iniI1, iniI2, iniCash);
+		long currTime = System.currentTimeMillis();
+		double finalValue = iniCash + recursion.getExpectedValue(iniState);
+		System.out.println("final optimal cash  is " + finalValue);
+		System.out.println("optimal order quantity in the first priod is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
+				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
+		double time = (System.currentTimeMillis() - currTime) / 1000;
+		System.out.println("running time is " + time + "s");		
 		
 	}
 
