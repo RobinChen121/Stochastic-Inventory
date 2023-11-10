@@ -31,8 +31,8 @@ public class WorkforcePlanning {
 
 	public static void main(String[] args) {
 		double[] turnoverRate;
-		//turnoverRate = new double[] {0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9};
-		turnoverRate = new double[8];
+		turnoverRate = new double[] {0.5, 0.8, 0.5, 0.8};
+		//turnoverRate = new double[8];
 		Arrays.fill(turnoverRate, 0.9);
 		int T = turnoverRate.length;
 		
@@ -40,8 +40,8 @@ public class WorkforcePlanning {
 		double fixCost = 50;
 		double unitVariCost = 0;
 		double salary = 30;
-		double unitPenalty = 2200;		
-		int[] minStaffNum = {40, 40, 40, 40, 40, 40, 40, 40};	
+		double unitPenalty = 100;		
+		int[] minStaffNum = {40, 40, 40, 40};	
 		
 		int maxHireNum = 1000;
 		int maxX = maxHireNum; // for drawing pictures
@@ -111,27 +111,27 @@ public class WorkforcePlanning {
 		long currTime = System.currentTimeMillis();
 		SimulatesS simulate = new SimulatesS(recursion, T, turnoverRate);
 		
-//		double opt = recursion.getExpectedValue(initialState);
-//		System.out.println("final optimal expected cost is: " + opt);
-//		int optQ = recursion.getAction(initialState);
-//		System.out.println("optimal hiring number in the first priod is : " + optQ);
-//		double time = (System.currentTimeMillis() - currTime) / 1000;
-//		System.out.println("running time is " + time + "s");
-//		double[][] optTable = recursion.getOptTable();
+		double opt = recursion.getExpectedValue(initialState);
+		System.out.println("final optimal expected cost is: " + opt);
+		int optQ = recursion.getAction(initialState);
+		System.out.println("optimal hiring number in the first priod is : " + optQ);
+		double time = (System.currentTimeMillis() - currTime) / 1000;
+		System.out.println("running time is " + time + "s");
+		double[][] optTable = recursion.getOptTable();
 		
 		
 		/*******************************************************************
 		 * find s and S from SDP and simulate.
 		 * when >= s, not order.
 		 */
-//		FitsS findsS = new FitsS(Integer.MAX_VALUE, T);
-//		double[][] optsS = findsS.getSinglesS(optTable);
-//		System.out.println("single s, S level: " + Arrays.deepToString(optsS));
-//		
-//		double sim  = simulate.simulatesS(initialState, optsS);
-//		
-//		System.out.printf("simulated value is %.2f\n", sim);
-//		System.out.printf("simulated gap is %.2f%%\n", (sim - opt)*100/opt);
+		FitsS findsS = new FitsS(Integer.MAX_VALUE, T);
+		double[][] optsS = findsS.getSinglesS(optTable);
+		System.out.println("single s, S level: " + Arrays.deepToString(optsS));
+		
+		double sim  = simulate.simulatesS(initialState, optsS);
+		
+		System.out.printf("simulated value is %.2f\n", sim);
+		System.out.printf("simulated gap is %.2f%%\n", (sim - opt)*100/opt);
 		
 		
 		/*******************************************************************
@@ -141,13 +141,13 @@ public class WorkforcePlanning {
 		MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
 		
 		double mipObj = mip.pieceApprox(segmentNum);
-//		System.out.printf("mip gap is %.2f%%\n", (mipObj - opt)*100/opt);
+		System.out.printf("mip gap is %.2f%%\n", (mipObj - opt)*100/opt);
 		double[][] sS = mip.getsS(segmentNum);
 		System.out.println("s, S by mip are: " + Arrays.deepToString(sS));
 		double sim2 = simulate.simulatesS(initialState, sS);
 
 		System.out.printf("simulated value is %.2f\n", sim2);
-//		System.out.printf("simulated gap for mipSS is %.2f%%\n", (sim2 - opt)*100/opt);
+		System.out.printf("simulated gap for mipSS is %.2f%%\n", (sim2 - opt)*100/opt);
 		
 		
 		/*******************************************************************

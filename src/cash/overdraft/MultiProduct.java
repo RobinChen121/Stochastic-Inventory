@@ -147,17 +147,17 @@ public class MultiProduct {
 		/*******************************************************************
 		 * Solve
 		 */
-		CashRecursionMulti recursion = new CashRecursionMulti(discountFactor, PmfMulti, buildActionList,
-				                             stateTransition, immediateValue, T);
-		int period = 1;
-		CashStateMulti iniState = new CashStateMulti(period, iniI1, iniI2, iniCash);
-		long currTime = System.currentTimeMillis();
-		double finalValue = iniCash + recursion.getExpectedValue(iniState);
-		System.out.println("final optimal cash  is " + finalValue);
-		System.out.println("optimal order quantity in the first priod is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
-				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
-		double time = (System.currentTimeMillis() - currTime) / 1000;
-		System.out.println("running time is " + time + "s");		
+//		CashRecursionMulti recursion = new CashRecursionMulti(discountFactor, PmfMulti, buildActionList,
+//				                             stateTransition, immediateValue, T);
+//		int period = 1;
+//		CashStateMulti iniState = new CashStateMulti(period, iniI1, iniI2, iniCash);
+//		long currTime = System.currentTimeMillis();
+//		double finalValue = iniCash + recursion.getExpectedValue(iniState);
+//		System.out.println("final optimal cash  is " + finalValue);
+//		System.out.println("optimal order quantity in the first priod is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
+//				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
+//		double time = (System.currentTimeMillis() - currTime) / 1000;
+//		System.out.println("running time is " + time + "s");		
 		
 	}
 

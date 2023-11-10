@@ -441,7 +441,7 @@ public class MIPWorkforce {
 			    	for (int j = 0; j <= t; j++) {
 			    		double p = 1;
 			    		for (int k = j; k <= t; k++)
-			    			p = p * (1 - turnoverRate[k+tt]);
+			    			p = p * (1 - turnoverRate[k+tt]); // suitable for dynamic turnover rate
 			    		double[][] result = piecewise(segmentNum, minStaffNum[t+tt], 1 - p);
 			    		double[] slope = result[0];
 			    		double[] intercept = result[1];
