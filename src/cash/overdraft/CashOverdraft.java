@@ -32,9 +32,9 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashOverdraft {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 15, 10};
+		double[] meanDemand = {20, 35, 20};
 		
-		double[] overheadCost = {50, 50, 50};
+		double[] overheadCost = {100, 100, 100};
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
@@ -46,8 +46,8 @@ public class CashOverdraft {
 		double r1 = 0;
 		double r2 = 0.1;
 		double r3 = 1; // penalty interest rate for overdraft exceeding the limit
-		double limit = 100; // overdraft limit
-		double interestFreeAmount = 20;
+		double limit = 1000; // overdraft limit
+		double interestFreeAmount = 200;
 		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;

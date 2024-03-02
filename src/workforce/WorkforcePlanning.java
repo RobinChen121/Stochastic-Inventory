@@ -31,7 +31,7 @@ public class WorkforcePlanning {
 
 	public static void main(String[] args) {
 		double[] turnoverRate;
-		turnoverRate = new double[] {0.5, 0.8, 0.5, 0.8};
+		turnoverRate = new double[] {0.5, 0.8, 0.5};
 		//turnoverRate = new double[8];
 		Arrays.fill(turnoverRate, 0.9);
 		int T = turnoverRate.length;
@@ -154,62 +154,62 @@ public class WorkforcePlanning {
 		 * Drawing
 		 * xQ
 		 */
-//		double[][] xQ = new double[xLength][2];
-//		int index = 0;
-//		for (int initialInventory = minX; initialInventory <= maxX; initialInventory++) {
-//			period = 1;
-//			xQ[index][0] = initialInventory;
-//			recursion.getExpectedValue(new StaffState(period, initialInventory));
-//			xQ[index][1] = recursion.getAction(new StaffState(period, initialInventory));
-//			index++;
-//		}
-//		Drawing.drawXQ(xQ);
-//		
-//		/*******************************************************************
-//		 * Drawing
-//		 * G(y, x), G should also related with x since x affected the demand distribution.
-//		 * since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again.
-//		 * must redefine stateTransition function and immediate Function.
-//		 */
-//		StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
-//			int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
-//			return new StaffState(state.period + 1, nextStaffNum);
-//		};
-//
-//		ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
-//			double fixHireCost;
-//			double variHireCost;
-//			int nextStaffNum;
-//			if (state.period == 1) {
-//				fixHireCost = 0;
-//				variHireCost = unitVariCost * state.iniStaffNum;
-//				nextStaffNum = state.iniStaffNum - randomDemand;
-//			}
-//			else {
-//				fixHireCost = action > 0 ? fixCost : 0;
-//				variHireCost = unitVariCost * action;
-//				nextStaffNum = state.iniStaffNum + action - randomDemand;
-//			}
-//			double salaryCost = salary * nextStaffNum;
-//			int t = state.period - 1;
-//			double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
-//			double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
-//			return totalCosts;
-//		};
-//
-//		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition2, immediateValue2, pmf, T);
-//		
-//		double[][] yG = new double[xLength][2];
-//		index = 0;
-//		for (int initialStaff = minX; initialStaff <= maxX; initialStaff++) {
-//			yG[index][0] = initialStaff;
-//			yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff), iniStaffNum);
-//			index++;
-//		}
-//		CheckKConvexity CheckK = new CheckKConvexity();
-//		CheckK.check(yG, fixCost);
-//		Drawing.drawSimpleG(yG);
-//		Drawing.drawGAndsS(yG, fixCost);
+		double[][] xQ = new double[xLength][2];
+		int index = 0;
+		for (int initialInventory = minX; initialInventory <= maxX; initialInventory++) {
+			period = 1;
+			xQ[index][0] = initialInventory;
+			recursion.getExpectedValue(new StaffState(period, initialInventory));
+			xQ[index][1] = recursion.getAction(new StaffState(period, initialInventory));
+			index++;
+		}
+		Drawing.drawXQ(xQ);
+		
+		/*******************************************************************
+		 * Drawing
+		 * G(y, x), G should also related with x since x affected the demand distribution.
+		 * since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again.
+		 * must redefine stateTransition function and immediate Function.
+		 */
+		StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
+			int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
+			return new StaffState(state.period + 1, nextStaffNum);
+		};
+
+		ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
+			double fixHireCost;
+			double variHireCost;
+			int nextStaffNum;
+			if (state.period == 1) {
+				fixHireCost = 0;
+				variHireCost = unitVariCost * state.iniStaffNum;
+				nextStaffNum = state.iniStaffNum - randomDemand;
+			}
+			else {
+				fixHireCost = action > 0 ? fixCost : 0;
+				variHireCost = unitVariCost * action;
+				nextStaffNum = state.iniStaffNum + action - randomDemand;
+			}
+			double salaryCost = salary * nextStaffNum;
+			int t = state.period - 1;
+			double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
+			double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
+			return totalCosts;
+		};
+
+		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition2, immediateValue2, pmf, T);
+		
+		double[][] yG = new double[xLength][2];
+		index = 0;
+		for (int initialStaff = minX; initialStaff <= maxX; initialStaff++) {
+			yG[index][0] = initialStaff;
+			yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff), iniStaffNum);
+			index++;
+		}
+		CheckKConvexity CheckK = new CheckKConvexity();
+		CheckK.check(yG, fixCost);
+		Drawing.drawSimpleG(yG);
+		Drawing.drawGAndsS(yG, fixCost);
 		
 //		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition, immediateValue, turnoverRate, truncQuantile);
 //		double opt2 = recursion2.getExpectedValueNoHireFirst(initialState);
