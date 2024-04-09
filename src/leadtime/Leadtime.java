@@ -23,7 +23,7 @@ public class Leadtime {
 
 	public static void main(String[] args) {
 		double initialInventory = 0; 
-	      double[] meanDemand = {10, 20, 10};
+	      double[] meanDemand = {10, 10, 10};
 	      
 	      double truncationQuantile = 0.9999;  
 	      double stepSize = 1; 

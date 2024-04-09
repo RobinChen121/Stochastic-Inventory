@@ -31,7 +31,7 @@ public class SingleProductLeadtime {
 		double variCost = 1;
 		double holdingCost = 0;
 		double price = 10;
-		double salvageValue = 0.5;
+		double salvageValue = 0;
 		int leadtime = 1;
 
 		double iniCash = 0;
@@ -40,8 +40,8 @@ public class SingleProductLeadtime {
 		double r2 = 0.1;
 		double r3 = 1; // penalty interest rate for overdraft exceeding the limit
 		double limit = 1000; // overdraft limit
-		double interestFreeAmount = 200;
-		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
+		double interestFreeAmount = 0;
+		double maxOrderQuantity = 150; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -80,7 +80,7 @@ public class SingleProductLeadtime {
 			else if(cashBalanceBefore >= -interestFreeAmount)
 				interest = 0;
 			else if (cashBalanceBefore >= -limit)
-				interest = r2 * (-cashBalanceBefore - interestFreeAmount);
+				interest = r1 * (-cashBalanceBefore - interestFreeAmount);
 			else 
 				interest = r3 * (-cashBalanceBefore - limit) + r2 * (limit - interestFreeAmount);
 

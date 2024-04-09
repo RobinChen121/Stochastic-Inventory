@@ -19,6 +19,7 @@ import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
+import umontreal.ssj.probdist.UniformDist;
 
 
 public class CLSP {
@@ -159,8 +160,8 @@ public class CLSP {
 	public static void main(String[] args) {
 		
 		  
-	      double initialInventory = 0; 
-	      double[] meanDemand = {10, 10};
+	      double initialInventory = 4; 
+	      double[] meanDemand = {20, 20, 20, 20, 20, 20};
 	      
 	      double truncationQuantile = 0.9999;  
 	      double stepSize = 1; 
@@ -168,16 +169,17 @@ public class CLSP {
 	      double maxState = 300;
 	      int T = meanDemand.length;
 
-	      double fixedOrderingCost = 0; 
-	      double proportionalOrderingCost = 1; 
-	      double holdingCost = 2;
-	      double penaltyCost = 10;
+	      double fixedOrderingCost = 20; 
+	      double proportionalOrderingCost = 2; 
+	      double holdingCost = 1;
+	      double penaltyCost = 3;
 	      
 	      int maxOrderQuantity = 100;
 	      
 	      Distribution[] distributions = IntStream.iterate(0, i -> i + 1)
 	                                              .limit(T)
-	                                              .mapToObj(i -> new PoissonDist(meanDemand[i]))
+	                                              // .mapToObj(i -> new PoissonDist(meanDemand[i]))
+	                                              .mapToObj(i -> new UniformDist(0, meanDemand[i]))
 	                                              //.mapToObj(i -> new NormalDist(meanDemand[i], 0.25 * meanDemand[i]))
 	                                              .toArray(Distribution[]::new); // replace for loop
 	      double[] supportLB = IntStream.iterate(0, i -> i + 1)
