@@ -50,11 +50,14 @@ public class CashLeadtimeRecursion {
 			double[] feasibleActions = getFeasibleActions.apply(state);
 			double[][] dAndP = pmf[s.getPeriod() - 1]; // demandAndPossibility
 			double[] QValues = new double[feasibleActions.length];
-			double val = -Double.MAX_VALUE;
+			double val = -Double.MAX_VALUE;			
 
 			double bestOrderQty = 0;
 			for (int i = 0; i < feasibleActions.length; i++) {
 				double orderQty = feasibleActions[i]; //
+//				if (s.getPeriod() == 1) { // only for debugging
+//					orderQty = 43;
+//				}
 				double thisQValue = 0;								
 				for (int j = 0; j < dAndP.length; j++) {
 					thisQValue += dAndP[j][1] * immediateValue.apply(s, orderQty, dAndP[j][0]);

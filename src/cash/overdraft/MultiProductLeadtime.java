@@ -20,7 +20,8 @@ import umontreal.ssj.probdist.GammaDist;
 *@date: Apr 2, 2024, 7:24:49 PM
 *@desp: multi product overdraft with leadtime 1 period;
 *
-* running very slow: even for 2 periods 2 products, integer inventory and cash for states, running time is 326s
+* running very slow: even for 2 periods 2 products, integer inventory and cash for states, running time is 326s;
+* 3 periods or more will be burdensome for DP;
 *
 */
 

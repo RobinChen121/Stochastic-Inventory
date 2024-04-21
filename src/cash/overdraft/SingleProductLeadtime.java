@@ -41,7 +41,7 @@ public class SingleProductLeadtime {
 		double r3 = 1; // penalty interest rate for overdraft exceeding the limit
 		double limit = 1000; // overdraft limit
 		double interestFreeAmount = 0;
-		double maxOrderQuantity = 150; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -80,7 +80,7 @@ public class SingleProductLeadtime {
 			else if(cashBalanceBefore >= -interestFreeAmount)
 				interest = 0;
 			else if (cashBalanceBefore >= -limit)
-				interest = r1 * (-cashBalanceBefore - interestFreeAmount);
+				interest = r2 * (-cashBalanceBefore - interestFreeAmount);
 			else 
 				interest = r3 * (-cashBalanceBefore - limit) + r2 * (limit - interestFreeAmount);
 
@@ -103,7 +103,7 @@ public class SingleProductLeadtime {
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			// cash is integer or not
-			nextCash = Math.round(nextCash * 10) / 10; // affect computation time much
+			//nextCash = Math.round(nextCash * 10) / 10; // affect computation time much
 			return new CashLeadtimeState(state.getPeriod() + 1, nextInventory, nextCash, nextPreQ);
 		};
 		

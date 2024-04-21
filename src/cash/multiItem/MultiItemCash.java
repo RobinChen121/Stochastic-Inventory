@@ -3,7 +3,9 @@
  * @email: 15011074486@163.com
  * @date: Jun 18, 2019, 9:49:16 PM
  * @Desc: This class is to build a stochastic dynamic programming model for a cash constrained problem 
- *        with two products
+ *        with two products;
+ *        
+ *        something wrong in pmfMulti;
  *        
  *
  * 
@@ -132,7 +134,7 @@ public class MultiItemCash {
 //				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
 //		double time = (System.currentTimeMillis() - currTime) / 1000;
 //		System.out.println("running time is " + time + "s");
-//		
+		
 //		
 //		
 //		/*******************************************************************

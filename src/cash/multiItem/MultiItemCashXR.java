@@ -3,7 +3,10 @@
  * @email: 15011074486@163.com
  * @date: Jun 18, 2019, 9:49:16 PM
  * @Desc: This class is to build a stochastic dynamic programming model for a cash constrained problem 
- *        with two products, the states used are x, R and the action is y
+ *        with two products, the states used are x, R and the action is y;
+ *        
+ *        4 periods running time is 80s;
+ *        2 periods running time is 0.5s;
  *        
  *
  * 
@@ -49,7 +52,7 @@ public class MultiItemCashXR {
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj: alpha is alpha, and lambda is beta(beta)
-		int T = 2; // horizon length
+		int T = 4; // horizon length
 		double[] meanDemands = new double[] {10, 3};	
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
 		double[] beta = {10, 1}; // higher variance vs lower variance
