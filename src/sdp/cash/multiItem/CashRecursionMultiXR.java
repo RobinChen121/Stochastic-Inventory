@@ -74,6 +74,7 @@ public class CashRecursionMultiXR {
 			double[] bestYs = new double[] {0, 0};
 			for (int i = 0; i < actions.size(); i++) {
 				double[] thisActions = actions.get(i);
+				// double[] thisActions = {24, 16};
 				double thisActionsValue = 0;
 				for (int j = 0; j < dAndP.length; j++) {
 					double[] thisDemands = new double[] {dAndP[j][0],  dAndP[j][1]};

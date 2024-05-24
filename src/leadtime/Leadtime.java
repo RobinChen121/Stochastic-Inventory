@@ -11,6 +11,7 @@ import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
+import umontreal.ssj.probdist.NormalDist;
 
 /**
 *@author: zhenchen

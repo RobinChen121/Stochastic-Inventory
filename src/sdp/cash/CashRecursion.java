@@ -106,7 +106,7 @@ public class CashRecursion {
 				double orderQty = feasibleActions[i];
 				
 //				if (s.getPeriod() == 1) { // only for debugging
-//					orderQty = 15;
+//					orderQty = 13.8;
 //				}
 				
 				double thisQValue = 0;								

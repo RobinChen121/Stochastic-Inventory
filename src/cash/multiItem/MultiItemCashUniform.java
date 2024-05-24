@@ -30,24 +30,24 @@ import umontreal.ssj.probdist.Distribution;
  */
 public class MultiItemCashUniform {
 	public static void main(String[] args) {
-		double[] price = {4, 10};
-		double[] variCost = {2, 4};  // higher margin vs lower margin
+		double[] price = {5, 10};
+		double[] variCost = {1, 2};  // higher margin vs lower margin
 
-		double iniCash = 20;  // initial cash
+		double iniCash = 0;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 
 		double depositeRate = 0;
-		double[] salPrice = {1, 1};
+		double[] salPrice = {0.5, 1};
 
-		int T = 5; // horizon length		
+		int T = 2; // horizon length		
 		double truncationQuantile = 0.999;
 		int stepSize = 1;
 		double minCashState = 0;
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
 		int maxInventoryState = 200;
-		int Qbound = 100;
+		int Qbound = 50;
 		double discountFactor = 1;
 
 		int N = 10; // possible number of demand values
@@ -73,10 +73,10 @@ public class MultiItemCashUniform {
 			int miny2 = (int) s.getIniInventory2();
 			for (int i = miny1; i < miny1 + Qbound; i++)
 				for (int j = miny2; j < miny2 + Qbound; j++) {
-					if (variCost[0] * i + variCost[1] * j < s.getIniR() + 0.1) {
+					//if (variCost[0] * i + variCost[1] * j < s.getIniR() + 0.1) {
 						double[] thisActions = {i, j};
 						actions.add(thisActions);
-					}					
+					//}					
 				}
 			return actions;
 		};

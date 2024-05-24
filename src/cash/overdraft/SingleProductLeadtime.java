@@ -7,12 +7,11 @@ import java.util.stream.IntStream;
 import sdp.cash.CashLeadtimeState;
 import sdp.cash.CashLeadtimeRecursion;
 import sdp.inventory.GetPmf;
-import sdp.inventory.LeadtimeRecursion;
-import sdp.inventory.LeadtimeState;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.probdist.PoissonDist;
+import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.NormalDist;
 
 /**
 *@author: zhenchen
@@ -24,9 +23,9 @@ import umontreal.ssj.probdist.PoissonDist;
 public class SingleProductLeadtime {
 	
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 35, 20};
+		double[] meanDemand = {80, 80};
 		
-		double[] overheadCost = {100, 100, 100};
+		double[] overheadCost = {100, 100, 100, 100, 100};
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
@@ -35,13 +34,13 @@ public class SingleProductLeadtime {
 		int leadtime = 1;
 
 		double iniCash = 0;
-		double r0 = 0.01;
+		double r0 = 0;
 		double r1 = 0;
 		double r2 = 0.1;
 		double r3 = 1; // penalty interest rate for overdraft exceeding the limit
 		double limit = 1000; // overdraft limit
 		double interestFreeAmount = 0;
-		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
@@ -54,10 +53,18 @@ public class SingleProductLeadtime {
 
 		// get demand possibilities for each period
 		int T = meanDemand.length;
-		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
-				.toArray(PoissonDist[]::new);
-		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
+		Distribution dist = new NormalDist(meanDemand[0], 0.25 * meanDemand[0]);
+		System.out.println(dist.getMean());
+		System.out.println();
+
+		
+//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+//				.mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
+//				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
+//				//.mapToObj(i -> new GammaDist(meanDemand[0]* beta[1], beta[1]))
+//				.toArray(Distribution[]::new);
+		
+		double[][][] pmf = new GetPmf(dist, truncationQuantile, stepSize).getpmf();
 
 		// feasible actions
 		Function<CashLeadtimeState, double[]> getFeasibleAction = s -> {
