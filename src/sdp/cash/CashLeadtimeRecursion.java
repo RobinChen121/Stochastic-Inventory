@@ -56,7 +56,7 @@ public class CashLeadtimeRecursion {
 			for (int i = 0; i < feasibleActions.length; i++) {
 				double orderQty = feasibleActions[i]; //
 //				if (s.getPeriod() == 1) { // only for debugging
-//					orderQty = 43;
+//					orderQty = 36;
 //				}
 				double thisQValue = 0;								
 				for (int j = 0; j < dAndP.length; j++) {

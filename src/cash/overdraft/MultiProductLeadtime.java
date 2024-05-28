@@ -36,7 +36,7 @@ public class MultiProductLeadtime {
 		int iniI1 = 0;  // initial inventory
 		int iniI2 = 0;
 		
-		double r0 = 0.01; // deposite rate
+		double r0 = 0; // deposite rate
 		double r1 = 0.1;  // overdraft rate
 		double r2 = 1; // penalty interest rate for overdraft exceeding the limit
 		double limit = 100; // overdraft limit
@@ -56,7 +56,7 @@ public class MultiProductLeadtime {
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj library: alpha is alpha, and lambda is beta(beta)
-		int T = 2; // horizon length
+		int T = 3; // horizon length
 		double[] overheadCost = new double[T];
 		Arrays.fill(overheadCost, 100); 
 		double[] meanDemands = new double[] {30, 10};		

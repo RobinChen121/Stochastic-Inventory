@@ -1,5 +1,7 @@
 package cash.overdraft;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -12,63 +14,64 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdist.NormalDist;
+import umontreal.ssj.probdist.PoissonDist;
 
 /**
 *@author: zhenchen
 *@date: Mar 1, 2024, 6:21:34 PM
-*@desp: TODO
+*@desp: 4 periods, demand is 20 each period, running time 50s;
+* poisson distribution is faster computed than normal distribution.
+* 4 periods, 20 mean demand may be the maximum computational capacity for java, otherwise memory errors;
 *
 */
 
 public class SingleProductLeadtime {
 	
 	public static void main(String[] args) {
-		double[] meanDemand = {80, 80};
+		double[] meanDemand = {20, 10, 20, 10};
 		
-		double[] overheadCost = {100, 100, 100, 100, 100};
+		int T = meanDemand.length;		
+		double[] overheadCost = new double[T];
+		Arrays.fill(overheadCost, 50);
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
 		double price = 10;
-		double salvageValue = 0;
+		double salvageValue = 0.5*variCost;
 		int leadtime = 1;
 
 		double iniCash = 0;
 		double r0 = 0;
 		double r1 = 0;
 		double r2 = 0.1;
-		double r3 = 1; // penalty interest rate for overdraft exceeding the limit
-		double limit = 1000; // overdraft limit
+		double r3 = 2; // penalty interest rate for overdraft exceeding the limit
+		double limit = 500; // overdraft limit
 		double interestFreeAmount = 0;
-		double maxOrderQuantity = 200; // maximum ordering quantity when having enough cash
+		double maxOrderQuantity = 30; // maximum ordering quantity when having enough cash
 
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minInventoryState = 0;
-		double maxInventoryState = 100;
+		double maxInventoryState = 60;
 		double minCashState = -200;
-		double maxCashState = 800;
+		double maxCashState = 300;
 		double discountFactor = 1;
 		
 
-		// get demand possibilities for each period
-		int T = meanDemand.length;
-		Distribution dist = new NormalDist(meanDemand[0], 0.25 * meanDemand[0]);
-		System.out.println(dist.getMean());
-		System.out.println();
-
+		// get demand possibilities for each period		
+		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+				//.mapToObj(i -> new NormalDist(meanDemand[i], 0.5*meanDemand[i])) // can be changed to other distributions
+				.mapToObj(i -> new PoissonDist(meanDemand[i]))
+				//.mapToObj(i -> new GammaDist(meanDemand[0]* beta[1], beta[1]))
+				.toArray(Distribution[]::new);
 		
-//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
-//				.mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
-//				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
-//				//.mapToObj(i -> new GammaDist(meanDemand[0]* beta[1], beta[1]))
-//				.toArray(Distribution[]::new);
-		
-		double[][][] pmf = new GetPmf(dist, truncationQuantile, stepSize).getpmf();
+		double[][][] pmf = new GetPmf(distributions, truncationQuantile, stepSize).getpmf();
 
 		// feasible actions
 		Function<CashLeadtimeState, double[]> getFeasibleAction = s -> {
-			double maxQ = maxOrderQuantity; // Math.max(s.iniCash/variCost, 0);//
+			double maxQ = maxOrderQuantity; //- (s.getPeriod()-1)*10; // Math.max(s.iniCash/variCost, 0);//
+			if (s.getPeriod() == T)
+				maxQ = 0;
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -110,7 +113,7 @@ public class SingleProductLeadtime {
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			// cash is integer or not
-			//nextCash = Math.round(nextCash * 10) / 10; // affect computation time much
+			//nextCash = Math.round(nextCash * 1) / 1; // affect computation time much
 			return new CashLeadtimeState(state.getPeriod() + 1, nextInventory, nextCash, nextPreQ);
 		};
 		

@@ -54,12 +54,12 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 10};
+		double[] meanDemand = {10, 10, 10};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
 		double iniCash = 0;
 		double fixOrderCost = 0;
-		double variCost = 2;
+		double variCost = 1;
 		double price = 10;
 		double depositeRate = 0;
 		double salvageValue = 0.5*variCost;
@@ -84,8 +84,8 @@ public class CashConstraint {
 		double[] beta = {10, 1};
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 				//.mapToObj(i -> new NormalDist(meanDemand[i], Math.sqrt(meanDemand[i]))) // can be changed to other distributions
-				//.mapToObj(i -> new PoissonDist(meanDemand[i]))
-				.mapToObj(i -> new GammaDist(meanDemand[0]* beta[1], beta[1]))
+				.mapToObj(i -> new PoissonDist(meanDemand[i]))
+				//.mapToObj(i -> new GammaDist(meanDemand[0]* beta[1], beta[1]))
 				.toArray(Distribution[]::new);
 
 //		double[] values1 = {6, 7};
