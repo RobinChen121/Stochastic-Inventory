@@ -14,6 +14,7 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.cash.multiItem.CashRecursionMulti;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.PoissonDist;
 
 /**
 *@author: zhenchen
@@ -42,7 +43,7 @@ public class MultiProductLeadtime {
 		double limit = 100; // overdraft limit
 		double interestFreeAmount = 2000;
 		
-		double Qbound = 250; // maximum ordering quantity when having enough cash
+		double Qbound = 40; // maximum ordering quantity when having enough cash
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minInventoryState = 0;
@@ -59,7 +60,7 @@ public class MultiProductLeadtime {
 		int T = 3; // horizon length
 		double[] overheadCost = new double[T];
 		Arrays.fill(overheadCost, 100); 
-		double[] meanDemands = new double[] {30, 10};		
+		double[] meanDemands = new double[] {20, 10};		
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
 		double[] beta = {20, 3}; // lower variance vs higher variance
 		
@@ -70,13 +71,13 @@ public class MultiProductLeadtime {
 		
 		int N = demand.length; // number of products
 		// get demand possibilities for each period
-		Distribution[][] distributions =  new GammaDist[N][T];
-		//Distribution[][] distributions =  new PoissonDist[m][T];
-		//Distribution[][] distributions =  new NormalDist[m][T];
+		//Distribution[][] distributions =  new GammaDist[N][T];
+		Distribution[][] distributions =  new PoissonDist[N][T];
+		//Distribution[][] distributions =  new NormalDist[N][T];
 		for (int i = 0; i < N; i++)
 			for (int t = 0; t < T; t++) {
-				distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
-				//distributions[i][t] = new PoissonDist(demand[i][t]);
+				// distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
+				distributions[i][t] = new PoissonDist(demand[i][t]);
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
 			}	
 		GetPmfMulti PmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);

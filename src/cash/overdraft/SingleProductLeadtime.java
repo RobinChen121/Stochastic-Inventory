@@ -28,7 +28,7 @@ import umontreal.ssj.probdist.PoissonDist;
 public class SingleProductLeadtime {
 	
 	public static void main(String[] args) {
-		double[] meanDemand = {20, 10, 20, 10};
+		double[] meanDemand = {10, 10, 10, 10};
 		
 		int T = meanDemand.length;		
 		double[] overheadCost = new double[T];
