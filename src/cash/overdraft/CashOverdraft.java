@@ -32,9 +32,11 @@ import umontreal.ssj.probdist.PoissonDist;
 public class CashOverdraft {
 
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 10, 10};
+		double[] meanDemand = {20, 20, 20, 20};
 		
-		double[] overheadCost = {0, 0, 0};
+		int T = meanDemand.length;
+		double[] overheadCost = new double[T];
+		Arrays.fill(overheadCost, 100);
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
@@ -44,8 +46,8 @@ public class CashOverdraft {
 		double iniCash = 0;
 		double r0 = 0;
 		double r1 = 0;
-		double r2 = 0;
-		double r3 = 0; // penalty interest rate for overdraft exceeding the limit
+		double r2 = 0.1;
+		double r3 = 2; // penalty interest rate for overdraft exceeding the limit
 		double limit = 1000; // overdraft limit
 		double interestFreeAmount = 0;
 		double maxOrderQuantity = 100; // maximum ordering quantity when having enough cash
@@ -60,7 +62,7 @@ public class CashOverdraft {
 		
 
 		// get demand possibilities for each period
-		int T = meanDemand.length;
+		
 		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 				.mapToObj(i -> new PoissonDist(meanDemand[i])) // can be changed to other distributions
 				.toArray(PoissonDist[]::new);

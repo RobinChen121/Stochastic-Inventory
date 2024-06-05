@@ -14,6 +14,7 @@ import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.cash.multiItem.CashRecursionMulti;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.PoissonDist;
 
 /**
 *@author: zhenchen
@@ -38,11 +39,11 @@ public class MultiProductLeadtime {
 		
 		double r0 = 0; // deposite rate
 		double r1 = 0.1;  // overdraft rate
-		double r2 = 1; // penalty interest rate for overdraft exceeding the limit
-		double limit = 100; // overdraft limit
-		double interestFreeAmount = 2000;
+		double r2 = 2; // penalty interest rate for overdraft exceeding the limit
+		double limit = 500; // overdraft limit
+		double interestFreeAmount = 0;
 		
-		double Qbound = 250; // maximum ordering quantity when having enough cash
+		double Qbound = 50; // maximum ordering quantity when having enough cash
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minInventoryState = 0;
@@ -56,12 +57,12 @@ public class MultiProductLeadtime {
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj library: alpha is alpha, and lambda is beta(beta)
-		int T = 3; // horizon length
+		int T = 2; // horizon length
 		double[] overheadCost = new double[T];
-		Arrays.fill(overheadCost, 100); 
-		double[] meanDemands = new double[] {30, 10};		
+		Arrays.fill(overheadCost, 50); 
+		double[] meanDemands = new double[] {20, 10};		
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
-		double[] beta = {20, 3}; // lower variance vs higher variance
+		double[] beta = {10, 1}; // lower variance vs higher variance
 		
 		for (int t = 0; t < T; t++) {
 			demand[0][t] = meanDemands[0];
@@ -71,7 +72,7 @@ public class MultiProductLeadtime {
 		int N = demand.length; // number of products
 		// get demand possibilities for each period
 		Distribution[][] distributions =  new GammaDist[N][T];
-		//Distribution[][] distributions =  new PoissonDist[m][T];
+		//Distribution[][] distributions =  new PoissonDist[N][T];
 		//Distribution[][] distributions =  new NormalDist[m][T];
 		for (int i = 0; i < N; i++)
 			for (int t = 0; t < T; t++) {
@@ -85,7 +86,7 @@ public class MultiProductLeadtime {
 		Function<CashStateMultiLead, ArrayList<Actions>> buildActionList = s -> {
 			ArrayList<Actions> actions = new ArrayList<>();
 			for (int i = 0; i < Qbound; i++)
-				for (int j = 0; j < Qbound/2; j++) {
+				for (int j = 0; j < Qbound; j++) {
 					Actions thisAction = new Actions(i, j);
 					actions.add(thisAction);				
 				}
@@ -120,9 +121,12 @@ public class MultiProductLeadtime {
 			if (cashBalanceBefore >= 0)
 				interest = -r0 * cashBalanceBefore;
 			else if(cashBalanceBefore >= -interestFreeAmount)
-				interest = r1 * (-cashBalanceBefore );
+				interest = 0;
 			else if (cashBalanceBefore >= -limit) 
-				interest = r2 * (-cashBalanceBefore - limit);
+				interest = r1 * (-cashBalanceBefore - interestFreeAmount);
+			else 
+				interest = r2 * (-cashBalanceBefore - limit) + r1 * (limit - interestFreeAmount);
+
 			double cashBalanceAfter = cashBalanceBefore - interest + revenue + salValue;
 			double cashIncrement = cashBalanceAfter - IniState.getIniCash();
 			return cashIncrement;
