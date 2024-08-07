@@ -3,6 +3,7 @@ package cash.overdraft;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import sdp.cash.multiItem.Actions;
 import sdp.cash.multiItem.CashRecursionMultiLead;
@@ -12,8 +13,10 @@ import sdp.cash.multiItem.GetPmfMulti;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.cash.multiItem.CashRecursionMulti;
+import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
+import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 /**
@@ -21,8 +24,45 @@ import umontreal.ssj.probdist.PoissonDist;
 *@date: Apr 2, 2024, 7:24:49 PM
 *@desp: multi product overdraft with leadtime 1 period;
 *
-* running very slow: even for 2 periods 2 products, integer inventory and cash for states, running time is 326s;
-* 3 periods or more will be burdensome for DP;
+* running very slow for normal demands; 2 periods gamma demands very fast;
+* 3 periods or more for normal, gamma or Poison will be burdensome for DP, 3 hour no solution;
+* 
+* 3 periods for 3 value discrete distribution, final optimal cash  is 91.26875; final optimal cash  is 441.57499999999993 for overhead cost 0;
+* final optimal cash  is 272.23749999999995 for overhead cost 50 (Q1 = 40, Q2 = 20);
+* optimal order quantity in the first priod is :  Q1 = 40, Q2 = 20
+* running time is 137.0s;
+* double[][] values = {{20, 30, 40}, {10, 15, 20}};
+* double[][] probs = {{0.25, 0.5, 0.25}, {0.25, 0.5, 0.25}};
+* 
+* double[] price = {5, 10};
+		double[] variCost = {1, 2};  // lower margin vs higher margin
+		double[] salValueUnit = Arrays.stream(variCost).map(a -> a*0.5).toArray();
+		
+		double iniCash = 0;  // initial cash
+		int iniI1 = 0;  // initial inventory
+		int iniI2 = 0;
+		
+		double r0 = 0; // deposite rate
+		double r1 = 0.1;  // overdraft rate
+		double r2 = 2; // penalty interest rate for overdraft exceeding the limit
+		double limit = 500; // overdraft limit
+		double interestFreeAmount = 0;
+		
+		double Qbound = 45; // maximum ordering quantity when having enough cash
+		double truncationQuantile = 0.9999;
+		int stepSize = 1;
+		double minInventoryState = 0;
+		double maxInventoryState = 200;
+		double minCashState = -500;
+		double maxCashState = 5000;
+		double discountFactor = 1;
+		
+		int T = 3; // horizon length
+		double[] overheadCost = new double[T];
+		Arrays.fill(overheadCost, 100); 
+		double[] meanDemands = new double[] {30, 15};		
+		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
+		double[] beta = {10, 1}; // lower variance vs higher variance
 *
 */
 
@@ -39,11 +79,11 @@ public class MultiProductLeadtime {
 		
 		double r0 = 0; // deposite rate
 		double r1 = 0.1;  // overdraft rate
-		double r2 = 1; // penalty interest rate for overdraft exceeding the limit
-		double limit = 100; // overdraft limit
-		double interestFreeAmount = 2000;
+		double r2 = 2; // penalty interest rate for overdraft exceeding the limit
+		double limit = 500; // overdraft limit
+		double interestFreeAmount = 0;
 		
-		double Qbound = 40; // maximum ordering quantity when having enough cash
+		double Qbound = 42; // maximum ordering quantity when having enough cash
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minInventoryState = 0;
@@ -59,10 +99,10 @@ public class MultiProductLeadtime {
 		// gamma in ssj library: alpha is alpha, and lambda is beta(beta)
 		int T = 3; // horizon length
 		double[] overheadCost = new double[T];
-		Arrays.fill(overheadCost, 100); 
-		double[] meanDemands = new double[] {20, 10};		
+		Arrays.fill(overheadCost, 50); 
+		double[] meanDemands = new double[] {30, 15};		
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
-		double[] beta = {20, 3}; // lower variance vs higher variance
+		double[] beta = {10, 1}; // lower variance vs higher variance
 		
 		for (int t = 0; t < T; t++) {
 			demand[0][t] = meanDemands[0];
@@ -71,14 +111,26 @@ public class MultiProductLeadtime {
 		
 		int N = demand.length; // number of products
 		// get demand possibilities for each period
-		//Distribution[][] distributions =  new GammaDist[N][T];
-		Distribution[][] distributions =  new PoissonDist[N][T];
-		//Distribution[][] distributions =  new NormalDist[N][T];
+//		Distribution[][] distributions =  new GammaDist[N][T];
+		//Distribution[][] distributions =  new PoissonDist[N][T];
+//		Distribution[][] distributions =  new NormalDist[N][T];
+		double[][] values = {{20, 30, 40}, {10, 15, 20}};
+		double[][] probs = {{0.25, 0.5, 0.25}, {0.25, 0.5, 0.25}};
+		Distribution[][] distributions =  new DiscreteDistribution[N][T];
+//		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
+//		.mapToObj(i -> new DiscreteDistribution(values[i], probs[i], values[i].length)) // can be changed to other distributions
+//		.toArray(DiscreteDistribution[]::new);	
+		
 		for (int i = 0; i < N; i++)
 			for (int t = 0; t < T; t++) {
-				// distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
-				distributions[i][t] = new PoissonDist(demand[i][t]);
-				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
+//				 distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
+				// distributions[i][t] = new PoissonDist(demand[i][t]);
+//				if (N == 0)
+//					distributions[i][t]= new NormalDist(demand[i][t], 0.25 * demand[i][t]);
+//				else {
+//					distributions[i][t]= new NormalDist(demand[i][t], 0.5 * demand[i][t]);
+//				}
+				distributions[i][t] = new DiscreteDistribution(values[i], probs[i], values[i].length);
 			}	
 		GetPmfMulti PmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);
 		
@@ -120,9 +172,9 @@ public class MultiProductLeadtime {
 			double interest = 0;
 			if (cashBalanceBefore >= 0)
 				interest = -r0 * cashBalanceBefore;
-			else if(cashBalanceBefore >= -interestFreeAmount)
+			else if(cashBalanceBefore >= -limit)
 				interest = r1 * (-cashBalanceBefore );
-			else if (cashBalanceBefore >= -limit) 
+			else 
 				interest = r2 * (-cashBalanceBefore - limit);
 			double cashBalanceAfter = cashBalanceBefore - interest + revenue + salValue;
 			double cashIncrement = cashBalanceAfter - IniState.getIniCash();
