@@ -4,8 +4,6 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.DoubleStream;
 
-import javax.annotation.processing.Generated;
-
 import org.apache.commons.math3.util.Precision;
 
 import cern.colt.function.IntIntDoubleFunction;
@@ -13,7 +11,7 @@ import milp.GenerateScenarioTree;
 
 /**
  * @author chen
- * @date ：2022 July 25, 22:38:27 
+ * @date 2022 July 25, 22:38:27 
  * @ the nonlinear optimization package in java is not very suitable to generate scenarios, probabilities so close
  *
  */

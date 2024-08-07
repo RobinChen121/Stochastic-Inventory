@@ -101,6 +101,7 @@ public class MultiProductLeadtime {
 		double[] overheadCost = new double[T];
 		Arrays.fill(overheadCost, 50); 
 		double[] meanDemands = new double[] {30, 15};		
+
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
 		double[] beta = {10, 1}; // lower variance vs higher variance
 		
@@ -138,7 +139,7 @@ public class MultiProductLeadtime {
 		Function<CashStateMultiLead, ArrayList<Actions>> buildActionList = s -> {
 			ArrayList<Actions> actions = new ArrayList<>();
 			for (int i = 0; i < Qbound; i++)
-				for (int j = 0; j < Qbound/2; j++) {
+				for (int j = 0; j < Qbound; j++) {
 					Actions thisAction = new Actions(i, j);
 					actions.add(thisAction);				
 				}
@@ -172,10 +173,13 @@ public class MultiProductLeadtime {
 			double interest = 0;
 			if (cashBalanceBefore >= 0)
 				interest = -r0 * cashBalanceBefore;
-			else if(cashBalanceBefore >= -limit)
-				interest = r1 * (-cashBalanceBefore );
+			else if(cashBalanceBefore >= -interestFreeAmount)
+				interest = 0;
+			else if (cashBalanceBefore >= -limit) 
+				interest = r1 * (-cashBalanceBefore - interestFreeAmount);
 			else 
-				interest = r2 * (-cashBalanceBefore - limit);
+				interest = r2 * (-cashBalanceBefore - limit) + r1 * (limit - interestFreeAmount);
+
 			double cashBalanceAfter = cashBalanceBefore - interest + revenue + salValue;
 			double cashIncrement = cashBalanceAfter - IniState.getIniCash();
 			return cashIncrement;

@@ -28,6 +28,7 @@ import umontreal.ssj.probdist.PoissonDist;
 public class SingleProductLeadtime {
 	
 	public static void main(String[] args) {
+
 		double[] meanDemand = {15, 15, 15, 15};
 		
 		int T = meanDemand.length;		
