@@ -28,11 +28,11 @@ import umontreal.ssj.probdist.PoissonDist;
 public class SingleProductLeadtime {
 	
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 10, 10, 10};
+		double[] meanDemand = {15, 15, 15, 15};
 		
 		int T = meanDemand.length;		
 		double[] overheadCost = new double[T];
-		Arrays.fill(overheadCost, 50);
+		Arrays.fill(overheadCost, 100);
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
