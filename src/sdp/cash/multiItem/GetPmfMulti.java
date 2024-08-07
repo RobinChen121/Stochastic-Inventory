@@ -39,9 +39,9 @@ public class GetPmfMulti {
 	
 	
 	public double[][] getPmf(int t){
-		stepSize = 1;
-		if (t > 4)
-			stepSize = 4;
+//		stepSize = 1;
+//		if (t > 4)
+//			stepSize = 4;
 		
 		if(distributionGeneral[0][t] instanceof NormalDist) {
 			NormalDist distribution1 = new NormalDist(distributionGeneral[0][t].getMean(), distributionGeneral[0][t].getStandardDeviation());
@@ -152,7 +152,24 @@ public class GetPmfMulti {
 			return pmf;
 		}
 	
-		return null;	
+		if(distributionGeneral[0][t] instanceof DiscreteDistribution) {
+			DiscreteDistribution distribution1 = (DiscreteDistribution) distributionGeneral[0][t];
+			DiscreteDistribution distribution2 = (DiscreteDistribution) distributionGeneral[1][t];
+			int demandLength1 = distribution1.getN();
+			int demandLength2 = distribution2.getN();
+			double[][] pmf = new double[demandLength1 * demandLength2][3];
+			int index = 0;
+			for (int i = 0; i < demandLength1; i++)
+				for (int j = 0; j < demandLength2; j++) {	
+					pmf[index][0] = distribution1.getValue(i);
+					pmf[index][1] = distribution2.getValue(j);
+					pmf[index][2] = distribution1.prob(i) * distribution2.prob(j);
+					index++;
+				}
+			return pmf;
+		}
+		
+		return null;
 	}
 	
 	
