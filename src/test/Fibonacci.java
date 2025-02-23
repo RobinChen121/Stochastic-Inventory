@@ -1,7 +1,7 @@
 package test;
 
 /**
-*@author: zhenchen
+*@author: zhen chen
 *@date: Feb 22, 2025, 10:00:44 PM
 *@desp: TODO
 *
@@ -33,7 +33,7 @@ public class Fibonacci {
 	}
 
 	public static void main(String[] args) {
-		int n = 13000; 
+		int n = 2500;
 		long currTime = System.currentTimeMillis();
 		System.out.println("Fibonacci(" + n + ") = " + fibonacciMemoization(n));
 		double time = (System.currentTimeMillis() - currTime)/ 1000.0;
