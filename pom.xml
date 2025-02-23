@@ -58,6 +58,11 @@ https://packages.atlassian.com/maven-3rdparty/">
     <version>4.1.2</version>
 </dependency>
 
+<dependency>
+      <groupId>com.gurobi</groupId>
+      <artifactId>gurobi</artifactId>
+      <version>12.0.1</version>
+</dependency>
 
 
 </dependencies>

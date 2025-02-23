@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
-import cern.jet.random.Beta;
 import gurobi.GRB;
 import gurobi.GRB.IntParam;
 import gurobi.GRBEnv;
@@ -28,6 +27,7 @@ import sdp.cash.CashState;
 import sdp.sampling.CartesianProduct;
 import sdp.sampling.Sampling;
 import umontreal.ssj.probdist.Distribution;
+
 
 /**
  * @author chen

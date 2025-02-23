@@ -78,7 +78,7 @@ public class MultiProductLeadtime {
 		int iniI2 = 0;
 		
 		double r0 = 0; // deposite rate
-		double r1 = 0.1;  // overdraft rate
+		double r1 = 0;  // overdraft rate
 		double r2 = 2; // penalty interest rate for overdraft exceeding the limit
 		double limit = 500; // overdraft limit
 		double interestFreeAmount = 0;
@@ -99,7 +99,7 @@ public class MultiProductLeadtime {
 		// gamma in ssj library: alpha is alpha, and lambda is beta(beta)
 		int T = 3; // horizon length
 		double[] overheadCost = new double[T];
-		Arrays.fill(overheadCost, 50); 
+		Arrays.fill(overheadCost, 0); 
 		double[] meanDemands = new double[] {30, 15};		
 
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
