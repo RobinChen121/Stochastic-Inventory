@@ -13,7 +13,7 @@ import gurobi.GRB.IntParam;
 
 /**
  * generate scenario tree for known distributions.
- * the objective is higher order function, guribo can not solve at present.
+ * the objective is higher order function, gurobi can not solve at present.
  * 
  * @author chen
  *
