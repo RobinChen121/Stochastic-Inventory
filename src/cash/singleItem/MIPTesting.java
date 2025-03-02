@@ -1,4 +1,4 @@
-package cash.strongconstraint;
+package cash.singleItem;
 
 import java.util.Map;
 import java.util.TreeMap;

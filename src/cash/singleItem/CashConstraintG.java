@@ -1,21 +1,14 @@
 
-package cash.strongconstraint;
+package cash.singleItem;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import sdp.cash.RecursionG;
-import sdp.cash.StateY;
 import sdp.inventory.GetPmf;
-import sdp.inventory.State;
-import sdp.inventory.StateTransition.StateTransitionFunction;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.GammaDist;
-import umontreal.ssj.probdist.NormalDist;
-import umontreal.ssj.probdist.PoissonDist;
 
 /**
  * @author: Zhen Chen

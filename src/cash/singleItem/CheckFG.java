@@ -1,7 +1,7 @@
 /**
  * @date: Jun 7, 2020
  */
-package cash.strongconstraint;
+package cash.singleItem;
 
 import java.util.function.Function;
 import java.util.stream.DoubleStream;

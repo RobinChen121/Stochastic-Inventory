@@ -1,30 +1,18 @@
-package cash.strongconstraint;
+package cash.singleItem;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
-import cash.strongconstraint.FindsCS.FindCCrieria;
-import milp.MipCashConstraint;
+import cash.singleItem.FindsCS.FindCCrieria;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashRecursion.OptDirection;
 import sdp.cash.CashSimulation;
-import sdp.inventory.CheckKConvexity;
-import sdp.inventory.Drawing;
 import sdp.inventory.GetPmf;
-import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import sdp.write.WriteToCsv;
 import sdp.cash.CashState;
-import umontreal.ssj.probdist.DiscreteDistribution;
 import umontreal.ssj.probdist.Distribution;
-import umontreal.ssj.probdist.GammaDist;
-import umontreal.ssj.probdist.NormalDist;
 import umontreal.ssj.probdist.PoissonDist;
 
 /**

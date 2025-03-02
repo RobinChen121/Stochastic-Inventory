@@ -1,13 +1,12 @@
-package cash.strongconstraint;
+package cash.singleItem;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
-import cash.strongconstraint.FindsCS.FindCCrieria;
+import cash.singleItem.FindsCS.FindCCrieria;
 import milp.MipCashConstraint;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashRecursion.OptDirection;

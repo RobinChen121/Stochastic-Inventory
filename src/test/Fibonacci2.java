@@ -1,11 +1,10 @@
 package test;
 
 /**
-*@author: zhenchen
-*@date: Feb 22, 2025, 10:28:36 PM
-*@desp: TODO
-*
-*/
+ * @author: zhenchen
+ * @date: Feb 22, 2025, 10:28:36 PM
+ * @desp: TODO
+ */
 
 public class Fibonacci2 {
     // Recursive Fibonacci
@@ -32,7 +31,7 @@ public class Fibonacci2 {
         long startTime = System.nanoTime();
         fibRecursive(40);
         long endTime = System.nanoTime();
-        System.out.println("Java recursive Fibonacci time: " + (endTime - startTime)/1000000000.0 + " seconds");
+        System.out.println("Java recursive Fibonacci time: " + (endTime - startTime) / 1000000000.0 + " seconds");
 
         startTime = System.nanoTime();
         fibIterative(30);

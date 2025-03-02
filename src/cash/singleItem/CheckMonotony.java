@@ -1,13 +1,13 @@
 /**
  * @date: Jun 4, 2020
  */
-package cash.strongconstraint;
+package cash.singleItem;
 
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
-import cash.strongconstraint.FindsCS.FindCCrieria;
+import cash.singleItem.FindsCS.FindCCrieria;
 import sdp.cash.CashRecursion;
 import sdp.cash.CashState;
 import sdp.cash.CashRecursion.OptDirection;

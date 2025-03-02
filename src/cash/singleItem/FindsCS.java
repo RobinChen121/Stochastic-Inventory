@@ -1,4 +1,4 @@
-package cash.strongconstraint;
+package cash.singleItem;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 
-import sdp.cash.CashState;
 import sdp.inventory.State;
 import umontreal.ssj.probdist.Distribution;
 import umontreal.ssj.probdist.PoissonDist;
