@@ -79,7 +79,9 @@ public class CLSP {
 
 //    ConcurrentSkipListMap<State, Double> cacheActions = new ConcurrentSkipListMap<>();
 //    ConcurrentSkipListMap<State, Double> cacheValues = new ConcurrentSkipListMap<>();
-//
+    // 理论上 hashmap 更快，但是
+    // 在递归过程中，你一边遍历 HashMap（例如通过 entrySet() 或 keySet()），
+    // 一边修改它（例如 put 或 remove），就会抛出 ConcurrentModificationException。
     ConcurrentSkipListMap<State, Double> cacheActions = new ConcurrentSkipListMap<>(keyComparator);
     ConcurrentSkipListMap<State, Double> cacheValues = new ConcurrentSkipListMap<>(keyComparator);
 

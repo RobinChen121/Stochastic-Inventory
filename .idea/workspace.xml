@@ -5,23 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1e01a02f-8a15-4747-be7d-1aacb5f0f8d7" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/capacitated/CLSP.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/capacitated/CLSP.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CashConstraint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CashConstraint.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CashConstraintDraw.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CashConstraintDraw.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CashConstraintG.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CashConstraintG.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CashConstraintGx.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CashConstraintGx.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CashConstraintLookPolicy.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CashConstraintLookPolicy.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CashConstraintTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CashConstraintTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CashConstraintTesting.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CashConstraintTesting.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CashConstraintXR.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CashConstraintXR.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CheckFG.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CheckFG.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/CheckMonotony.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CheckMonotony.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/FindsCS.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/FindsCS.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/MIPTesting.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/MIPTesting.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/strongconstraint/SingleCrossTesting.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/SingleCrossTesting.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/Fibonacci2.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/Fibonacci2.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,6 +15,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$USER_HOME$/Library/Java/JavaVirtualMachines/openjdk-23.0.2/Contents/Home/lib/src.zip!/java.base/java/util/HashMap.java" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
@@ -60,11 +48,11 @@
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.sourceCode",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.Fibonacci">
     <configuration name="Fibonacci" type="Application" factoryName="Application" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="test.Fibonacci" />
       <module name="Stochastic-Dynamic-Programming-master" />
@@ -140,6 +128,10 @@
       <workItem from="1740738377828" duration="641000" />
       <workItem from="1740747034062" duration="8771000" />
       <workItem from="1740847131567" duration="25602000" />
+      <workItem from="1740923646882" duration="108000" />
+      <workItem from="1740996120508" duration="5308000" />
+      <workItem from="1741047384724" duration="613000" />
+      <workItem from="1741079218239" duration="2107000" />
     </task>
     <servers />
   </component>
