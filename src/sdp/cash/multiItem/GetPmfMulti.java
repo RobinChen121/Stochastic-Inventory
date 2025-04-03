@@ -122,7 +122,9 @@ public class GetPmfMulti {
 				for (int j = 0; j < demandLength2; j++) {				
 					pmf[index][0] = supportLB[0] + i * stepSize;
 					pmf[index][1] = supportLB[1] + j * stepSize;
-					pmf[index][2] = distribution1.prob(i) * distribution2.prob(j) / probilitySum;							
+					int demand1 = (int)pmf[index][0];
+					int demand2 = (int)pmf[index][1];
+					pmf[index][2] = distribution1.prob(demand1) * distribution2.prob(demand2) / probilitySum;
 					index++;
 				}	
 			

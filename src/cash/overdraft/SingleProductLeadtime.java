@@ -29,15 +29,15 @@ public class SingleProductLeadtime {
 	
 	public static void main(String[] args) {
 
-		double[] meanDemand = {15, 15, 15, 15};
+		double[] meanDemand = {10, 10};
 		
 		int T = meanDemand.length;		
 		double[] overheadCost = new double[T];
-		Arrays.fill(overheadCost, 100);
+		Arrays.fill(overheadCost, 0);
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double holdingCost = 0;
-		double price = 10;
+		double price = 5;
 		double salvageValue = 0.5*variCost;
 		int leadtime = 1;
 
@@ -114,7 +114,7 @@ public class SingleProductLeadtime {
 			nextInventory = nextInventory > maxInventoryState ? maxInventoryState : nextInventory;
 			nextInventory = nextInventory < minInventoryState ? minInventoryState : nextInventory;
 			// cash is integer or not
-			//nextCash = Math.round(nextCash * 1) / 1; // affect computation time much
+			nextCash = Math.round(nextCash * 100) / 100.0; // affect computation time much, seems not.
 			return new CashLeadtimeState(state.getPeriod() + 1, nextInventory, nextCash, nextPreQ);
 		};
 		
@@ -129,8 +129,8 @@ public class SingleProductLeadtime {
 		double opt = recursion.getExpectedValue(initialState);
 		System.out.println("final optimal expected value is: " + opt);
 		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
-		double time = (System.currentTimeMillis() - currTime) / 1000;
-		System.out.println("running time is " + time + "s");
+		double time = (System.currentTimeMillis() - currTime);
+		System.out.println("running time is " + time + "ms");
 		
 		
 		double[][] optTable = recursion.getOptTable();	

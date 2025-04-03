@@ -29,10 +29,25 @@ import umontreal.ssj.probdist.PoissonDist;
 * 
 * 3 periods for 3 value discrete distribution, final optimal cash  is 91.26875; final optimal cash  is 441.57499999999993 for overhead cost 0;
 * final optimal cash  is 272.23749999999995 for overhead cost 50 (Q1 = 40, Q2 = 20);
-* optimal order quantity in the first priod is :  Q1 = 40, Q2 = 20
+* optimal order quantity in the first period is :  Q1 = 40, Q2 = 20
 * running time is 137.0s;
+ *
 * double[][] values = {{20, 30, 40}, {10, 15, 20}};
 * double[][] probs = {{0.25, 0.5, 0.25}, {0.25, 0.5, 0.25}};
+ * final optimal cash  is 91.19499999999998
+ * optimal order quantity in the first period is :  Q1 = 40, Q2 = 20
+ * running time is 2863.0s
+ *
+ * when T = 2, final optimal cash  is -17.800000000000008
+ * optimal order quantity in the first period is :  Q1 = 40, Q2 = 20
+ * running time is 0.0s
+ *
+ * 3 periods:
+ * double[][] values = {{10, 30}, {5, 15}};
+ * double[][] probs = {{0.5, 0.5}, {0.5, 0.5}};
+ * final optimal cash  is -76.56
+ * optimal order quantity in the first period is :  Q1 = 30, Q2 = 15
+ * running time is 1568.0s
 * 
 * double[] price = {5, 10};
 		double[] variCost = {1, 2};  // lower margin vs higher margin
@@ -77,13 +92,13 @@ public class MultiProductLeadtime {
 		int iniI1 = 0;  // initial inventory
 		int iniI2 = 0;
 		
-		double r0 = 0; // deposite rate
-		double r1 = 0;  // overdraft rate
+		double r0 = 0; // deposit rate
+		double r1 = 0.1;  // overdraft rate
 		double r2 = 2; // penalty interest rate for overdraft exceeding the limit
 		double limit = 500; // overdraft limit
 		double interestFreeAmount = 0;
 		
-		double Qbound = 42; // maximum ordering quantity when having enough cash
+		double Qbound = 50; // maximum ordering quantity when having enough cash
 		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minInventoryState = 0;
@@ -99,8 +114,8 @@ public class MultiProductLeadtime {
 		// gamma in ssj library: alpha is alpha, and lambda is beta(beta)
 		int T = 3; // horizon length
 		double[] overheadCost = new double[T];
-		Arrays.fill(overheadCost, 0); 
-		double[] meanDemands = new double[] {30, 15};		
+		Arrays.fill(overheadCost, 100);
+		double[] meanDemands = new double[] {10, 10};
 
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
 		double[] beta = {10, 1}; // lower variance vs higher variance
@@ -113,24 +128,20 @@ public class MultiProductLeadtime {
 		int N = demand.length; // number of products
 		// get demand possibilities for each period
 //		Distribution[][] distributions =  new GammaDist[N][T];
-		//Distribution[][] distributions =  new PoissonDist[N][T];
+//		Distribution[][] distributions =  new PoissonDist[N][T];
 //		Distribution[][] distributions =  new NormalDist[N][T];
-		double[][] values = {{20, 30, 40}, {10, 15, 20}};
-		double[][] probs = {{0.25, 0.5, 0.25}, {0.25, 0.5, 0.25}};
+		double[][] values = {{10, 30}, {5, 15}};
+		double[][] probs = {{0.5, 0.5}, {0.5, 0.5}};
 		Distribution[][] distributions =  new DiscreteDistribution[N][T];
 //		Distribution[] distributions = IntStream.iterate(0, i -> i + 1).limit(T)
 //		.mapToObj(i -> new DiscreteDistribution(values[i], probs[i], values[i].length)) // can be changed to other distributions
-//		.toArray(DiscreteDistribution[]::new);	
+//		.toArray(DiscreteDistribution[]::new);
 		
 		for (int i = 0; i < N; i++)
 			for (int t = 0; t < T; t++) {
 //				 distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
-				// distributions[i][t] = new PoissonDist(demand[i][t]);
-//				if (N == 0)
-//					distributions[i][t]= new NormalDist(demand[i][t], 0.25 * demand[i][t]);
-//				else {
-//					distributions[i][t]= new NormalDist(demand[i][t], 0.5 * demand[i][t]);
-//				}
+//				 distributions[i][t]= new NormalDist(demand[i][t], 0.5 * demand[i][t]);
+//				 distributions[i][t] = new PoissonDist(demand[i][t]);
 				distributions[i][t] = new DiscreteDistribution(values[i], probs[i], values[i].length);
 			}	
 		GetPmfMulti PmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);
@@ -158,8 +169,10 @@ public class MultiProductLeadtime {
 			double preQ2 = IniState.getPreQ2();
 			double endInventory1 = Math.max(0, IniState.getIniInventory1() + preQ1 - demand1);
 			double endInventory2 = Math.max(0, IniState.getIniInventory2() + preQ2 - demand2);
-			double revenue1 = price[0] * (IniState.getIniInventory1() + preQ1 - endInventory1);
-			double revenue2 = price[1] * (IniState.getIniInventory2() + preQ2 - endInventory2);
+//			double revenue1 = price[0] * (IniState.getIniInventory1() + preQ1 - endInventory1);
+//			double revenue2 = price[1] * (IniState.getIniInventory2() + preQ2 - endInventory2);
+			double revenue1 = price[0] * Math.min(demand1, IniState.getIniInventory1() + preQ1);
+			double revenue2 = price[1] * Math.min(IniState.getIniInventory2() + preQ2 , demand2);
 			double revenue = revenue1 + revenue2;
 			double orderingCost1 = variCost[0] * action1;
 			double orderingCost2 = variCost[1] * action2;
@@ -203,7 +216,7 @@ public class MultiProductLeadtime {
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			endInventory1 = endInventory1 > maxInventoryState ? maxInventoryState : endInventory1;
 			endInventory2 = endInventory2 < minInventoryState ? minInventoryState : endInventory2;
-			nextCash = (int) nextCash;  //  rounding states to save computing time
+//			nextCash = (int) nextCash;  //  rounding states to save computing time
 			endInventory1 = (int) endInventory1;
 			endInventory2 = (int) endInventory2;
 			return new CashStateMultiLead(IniState.getPeriod() + 1, endInventory1, endInventory2, nextPreQ1, nextPreQ2, nextCash);
@@ -220,7 +233,7 @@ public class MultiProductLeadtime {
 		long currTime = System.currentTimeMillis();
 		double finalValue = iniCash + recursion.getExpectedValue(iniState);
 		System.out.println("final optimal cash  is " + finalValue);
-		System.out.println("optimal order quantity in the first priod is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
+		System.out.println("optimal order quantity in the first period is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
 				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
 		double time = (System.currentTimeMillis() - currTime) / 1000;
 		System.out.println("running time is " + time + "s");	

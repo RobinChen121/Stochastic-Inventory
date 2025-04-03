@@ -42,10 +42,10 @@ public class CashConstraint {
 	
 	// d=[8, 10, 10], iniCash=20, K=10; price=5, v=1; h = 1
 	public static void main(String[] args) {
-		double[] meanDemand = {10, 10, 10};
+		double[] meanDemand = {10, 10, 10, 10, 10, 10};
 		//double[] meanDemand = {20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
 		double iniInventory = 0;
-		double iniCash = 0;
+		double iniCash = 100;
 		double fixOrderCost = 0;
 		double variCost = 1;
 		double price = 10;
@@ -61,7 +61,7 @@ public class CashConstraint {
 		int stepSize = 1;
 		double minInventoryState = 0;
 		double maxInventoryState = 500;
-		double minCashState = -1000; // can affect results, should be smaller than minus fixedOrderCost
+		double minCashState = 0; // can affect results, should be smaller than minus fixedOrderCost
 		double maxCashState = 2000;
 		double penaltyCost = 0; // large penalty cost cause big gaps for simulation results, since may generate zero demand
 		
@@ -94,8 +94,8 @@ public class CashConstraint {
 		// feasible actions
 		Function<CashState, double[]> getFeasibleAction = s -> {
 			double maxQ = 
-						maxOrderQuantity;
-//			         (int) Math.min(maxOrderQuantity, Math.max(0, (s.getIniCash() - overheadCost - fixOrderCost) / variCost));
+//						maxOrderQuantity;
+			         (int) Math.min(maxOrderQuantity, Math.max(0, (s.getIniCash() - overheadCost - fixOrderCost) / variCost));
 			return DoubleStream.iterate(0, i -> i + stepSize).limit((int) maxQ + 1).toArray();
 		};
 
@@ -141,11 +141,11 @@ public class CashConstraint {
 		CashState initialState = new CashState(period, iniInventory, iniCash);
 		long currTime = System.currentTimeMillis();
 		recursion.setTreeMapCacheAction();
-		double finalValue = iniCash + recursion.getExpectedValue(initialState);
-		System.out.println("final optimal cash  is " + finalValue);
+		double finalValue = recursion.getExpectedValue(initialState);
+		System.out.println("final optimal cash increment is " + finalValue);
 		System.out.println("optimal order quantity in the first priod is : " + recursion.getAction(initialState));
-		double time = (System.currentTimeMillis() - currTime) / 1000;
-		System.out.println("running time is " + time + "s");
+		double time = (System.currentTimeMillis() - currTime);
+		System.out.println("running time is " + time + "ms");
 		
 
 		
