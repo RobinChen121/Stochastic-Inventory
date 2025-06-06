@@ -89,10 +89,11 @@ public class StaffRecursion {
 			double val = Double.MAX_VALUE;
 			for (int i = 0; i < feasibleActions.length; i++) {
 				int orderQty = feasibleActions[i];
-				if (iniStaffNum + orderQty >= pmfs[t].length)
-					continue;
-				double[][] pmf = pmfs[t][iniStaffNum + orderQty];				
-				double thisQValue = 0;			
+				int hireUpTo = iniStaffNum + orderQty;
+				if (hireUpTo >= pmfs[t].length - 1) // important iniStaffNum + orderQty >= pmfs[t].length
+					hireUpTo = pmfs[t].length - 1;
+				double[][] pmf = pmfs[t][hireUpTo];
+				double thisQValue = 0;
 				for (int j = 0; j < pmf.length; j++) {
 					int demand = (int) pmf[j][0];
 					double thisValue = immediateValue.apply(s, orderQty, demand);

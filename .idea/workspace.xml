@@ -6,11 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="1e01a02f-8a15-4747-be7d-1aacb5f0f8d7" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/overdraft/MultiProductLeadtime.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/overdraft/MultiProductLeadtime.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/overdraft/SingleProductLeadtime.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/overdraft/SingleProductLeadtime.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cash/singleItem/CashConstraint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/cash/singleItem/CashConstraint.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/sdp/cash/multiItem/CashRecursionMultiLead.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/sdp/cash/multiItem/CashRecursionMultiLead.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/sdp/cash/multiItem/GetPmfMulti.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/sdp/cash/multiItem/GetPmfMulti.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/workforce/StaffRecursion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/workforce/StaffRecursion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/workforce/WorkforcePlanning.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/workforce/WorkforcePlanning.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,6 +38,7 @@
     &quot;Application.GenerateScenarioTree.executor&quot;: &quot;Run&quot;,
     &quot;Application.MultiProductLeadtime.executor&quot;: &quot;Run&quot;,
     &quot;Application.SingleProductLeadtime.executor&quot;: &quot;Run&quot;,
+    &quot;Application.WorkforcePlanning.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
@@ -55,7 +53,7 @@
     &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -122,6 +120,14 @@
       <workItem from="1743496504484" duration="1994000" />
       <workItem from="1743524439761" duration="2044000" />
       <workItem from="1743590626490" duration="1134000" />
+      <workItem from="1743889762453" duration="56000" />
+      <workItem from="1744027058553" duration="19000" />
+      <workItem from="1745245053256" duration="636000" />
+      <workItem from="1748969566693" duration="4723000" />
+      <workItem from="1749037938226" duration="4158000" />
+      <workItem from="1749112609674" duration="9008000" />
+      <workItem from="1749196462800" duration="3646000" />
+      <workItem from="1749213955902" duration="3344000" />
     </task>
     <servers />
   </component>
