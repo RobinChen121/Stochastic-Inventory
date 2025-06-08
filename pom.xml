@@ -20,8 +20,8 @@ https://packages.atlassian.com/maven-3rdparty/">
     </resources>
     
   </build>
-  
-  <dependencies>
+
+    <dependencies>
   	<dependency> <!-- ssj -->
   		<groupId>ca.umontreal.iro.simul</groupId>
   		<artifactId>ssj</artifactId>
@@ -35,7 +35,12 @@ https://packages.atlassian.com/maven-3rdparty/">
     	<version>1.0.19</version>
 	</dependency>
   
-  
+  <dependency>
+    <groupId>com.gurobi</groupId>
+    <artifactId>gurobi</artifactId>
+    <version>12.0.2</version>
+</dependency>
+
   <!-- https://mvnrepository.com/artifact/colt/colt -->
 	<dependency>
     	<groupId>colt</groupId>

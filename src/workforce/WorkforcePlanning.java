@@ -30,17 +30,14 @@ import umontreal.ssj.probdist.Distribution;
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] turnoverRate;
-		turnoverRate = new double[] {0.5};
-		//turnoverRate = new double[8];
-		Arrays.fill(turnoverRate, 0.9);
+		double[] turnoverRate = {0.1, 0.1, 0.1};
 		int T = turnoverRate.length;
 		
 		int iniStaffNum = 0;
 		double fixCost = 50;
 		double unitVariCost = 0;
 		double salary = 30;
-		double unitPenalty = 100;		
+		double unitPenalty = 40;		
 		int[] minStaffNum = {40, 40, 40, 40};	
 		
 		int maxHireNum = 500;
@@ -99,7 +96,7 @@ public class WorkforcePlanning {
 			int t = state.period - 1;
 			double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
 			double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
-			return totalCosts;
+			return (Double) totalCosts;
 		};
 		
 		/*******************************************************************
@@ -194,7 +191,7 @@ public class WorkforcePlanning {
 			int t = state.period - 1;
 			double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
 			double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
-			return totalCosts;
+			return (Double) totalCosts;
 		};
 
 		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition2, immediateValue2, pmf, T);

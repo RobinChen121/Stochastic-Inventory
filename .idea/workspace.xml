@@ -5,7 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1e01a02f-8a15-4747-be7d-1aacb5f0f8d7" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.classpath" beforeDir="false" afterPath="$PROJECT_DIR$/.classpath" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" afterPath="$PROJECT_DIR$/.settings/org.eclipse.jdt.core.prefs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/workforce/StaffRecursion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/workforce/StaffRecursion.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/workforce/WorkforcePlanning.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/workforce/WorkforcePlanning.java" afterDir="false" />
     </list>
@@ -31,6 +35,7 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Application.BinaryMILP.executor&quot;: &quot;Run&quot;,
     &quot;Application.CLSP.executor&quot;: &quot;Run&quot;,
     &quot;Application.CashConstraint.executor&quot;: &quot;Run&quot;,
     &quot;Application.Fibonacci.executor&quot;: &quot;Run&quot;,
@@ -44,7 +49,7 @@
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/zhenchen/Documents/Stochastic-Inventory&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/chenzhen/Stochastic-Inventory&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -53,28 +58,35 @@
     &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.javacompiler&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
   <component name="RunManager">
-    <configuration default="true" type="JetRunConfigurationType">
-      <module name="Stochastic-Inventory" />
+    <configuration name="WorkforcePlanning" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="workforce.WorkforcePlanning" />
+      <module name="Stochastic-Dynamic-Programming-master" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="workforce.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
-      <module name="Stochastic-Inventory" />
-      <option name="filePath" />
-      <method v="2" />
-    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.WorkforcePlanning" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-125ca727e0f0-intellij.indexing.shared.core-IU-243.24978.46" />
-        <option value="bundled-js-predefined-d6986cc7102b-76f8388c3a79-JavaScript-IU-243.24978.46" />
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
       </set>
     </attachedChunks>
   </component>
@@ -128,6 +140,12 @@
       <workItem from="1749112609674" duration="9008000" />
       <workItem from="1749196462800" duration="3646000" />
       <workItem from="1749213955902" duration="3344000" />
+      <workItem from="1749293495650" duration="1392000" />
+      <workItem from="1749295111782" duration="116000" />
+      <workItem from="1749295236086" duration="379000" />
+      <workItem from="1749295624977" duration="864000" />
+      <workItem from="1749296706462" duration="1664000" />
+      <workItem from="1749320249344" duration="524000" />
     </task>
     <servers />
   </component>

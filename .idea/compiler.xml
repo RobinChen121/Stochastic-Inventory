@@ -10,9 +10,5 @@
         <module name="Stochastic-Dynamic-Programming-master" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="MySDP" target="1.8" />
-      <module name="Stochastic-Inventory" target="1.5" />
-    </bytecodeTargetLevel>
   </component>
 </project>

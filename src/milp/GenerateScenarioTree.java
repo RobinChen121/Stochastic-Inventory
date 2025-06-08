@@ -11,6 +11,7 @@ import gurobi.GRBQuadExpr;
 import gurobi.GRBVar;
 import gurobi.GRB.IntParam;
 
+
 /**
  * generate scenario tree for known distributions.
  * the objective is higher order function, gurobi can not solve at present.
