@@ -104,9 +104,6 @@ public class StaffRecursion {
 						thisQValue += pmf[j][1] * getExpectedValue(newState);
 					}
 				}
-				if (t == 0 && i >= 119) {
-					int a = 0;
-				}
 			        
 				QValues[i] = thisQValue;
 				if (QValues[i] < val) {
