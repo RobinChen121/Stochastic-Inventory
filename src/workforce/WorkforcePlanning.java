@@ -201,8 +201,10 @@ public class WorkforcePlanning {
 		for (int initialStaff = minX; initialStaff <= maxX; initialStaff++) {
 			yG[index][0] = initialStaff;
 			yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff), iniStaffNum);
+
 			index++;
 		}
+
 		CheckKConvexity CheckK = new CheckKConvexity();
 		CheckK.check(yG, fixCost);
 		Drawing.drawSimpleG(yG);

@@ -138,20 +138,20 @@ public class StaffRecursion {
 			for (int i = 0; i < feasibleActions.length; i++) {
 				int orderQty = feasibleActions[i];
 				double[][] pmf;
-				int hireUpTo = s.iniStaffNum + orderQty;
-				if (s.iniStaffNum + orderQty >= pmfs[t].length - 1) 
-					hireUpTo = pmfs[t].length - 1;
-				pmf = pmfs[t][hireUpTo];
-//				if (s.period == 1) {
-//					if (s.iniStaffNum  >= pmfs[t].length)
-//						continue;
-//					pmf = pmfs[t][s.iniStaffNum];
-//				}
-//				else {
-//					if (s.iniStaffNum + orderQty >= pmfs[t].length) 
-//						continue;
-//					pmf = pmfs[t][s.iniStaffNum + orderQty];
-//				}
+//				int hireUpTo = s.iniStaffNum + orderQty;
+//				if (s.iniStaffNum + orderQty >= pmfs[t].length - 1) 
+//					hireUpTo = pmfs[t].length - 1;
+//				pmf = pmfs[t][hireUpTo];
+				if (s.period == 1) {
+					if (s.iniStaffNum  >= pmfs[t].length)
+						continue;
+					pmf = pmfs[t][s.iniStaffNum];
+				}
+				else {
+					if (s.iniStaffNum + orderQty >= pmfs[t].length) 
+						continue;
+					pmf = pmfs[t][s.iniStaffNum + orderQty];
+				}
 				
 				double thisQValue = 0;								
 				for (int j = 0; j < pmf.length; j++) {
