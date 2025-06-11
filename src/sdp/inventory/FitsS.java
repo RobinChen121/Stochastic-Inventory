@@ -32,8 +32,9 @@ public class FitsS {
 	/**
 	 * 
 	 * @param optTable   [t, i, Q] in each row
-	 * @param maxOrderQuantity  maximum ordreing quantity
+	 * @param maxOrderQuantity  maximum ordering quantity
 	 * @return return s level index in one period
+	 * it does not consider the situation that order 0 and then order again
 	 */
 	public int[] levelIndex(double[][] optTable) {
 		ArrayList<Integer> indexArr = new ArrayList<>();

@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="1e01a02f-8a15-4747-be7d-1aacb5f0f8d7" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/workforce/StaffRecursion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/workforce/StaffRecursion.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/workforce/WorkforcePlanning.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/workforce/WorkforcePlanning.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/sdp/inventory/FitsS.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/sdp/inventory/FitsS.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,8 +80,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
-        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
+        <option value="bundled-jdk-9823dce3aa75-125ca727e0f0-intellij.indexing.shared.core-IU-243.24978.46" />
+        <option value="bundled-js-predefined-d6986cc7102b-76f8388c3a79-JavaScript-IU-243.24978.46" />
       </set>
     </attachedChunks>
   </component>
@@ -145,6 +144,7 @@
       <workItem from="1749467002750" duration="3716000" />
       <workItem from="1749498512015" duration="154000" />
       <workItem from="1749498740923" duration="3734000" />
+      <workItem from="1749642375169" duration="5823000" />
     </task>
     <servers />
   </component>
