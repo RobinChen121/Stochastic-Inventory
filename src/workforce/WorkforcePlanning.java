@@ -30,7 +30,7 @@ import umontreal.ssj.probdist.Distribution;
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] turnoverRate = {0.1, 0.1, 0.1};
+		double[] turnoverRate = {0.8, 0.5, 0.1};
 		int T = turnoverRate.length;
 		
 		int iniStaffNum = 0;
@@ -145,22 +145,22 @@ public class WorkforcePlanning {
 
 		System.out.printf("simulated value is %.2f\n", sim2);
 		System.out.printf("simulated gap for mipSS is %.2f%%\n", (sim2 - opt)*100/opt);
-		
+		int index;
 		
 		/*******************************************************************
 		 * Drawing
 		 * xQ
 		 */
-		double[][] xQ = new double[xLength][2];
-		int index = 0;
-		for (int initialInventory = minX; initialInventory <= maxX; initialInventory++) {
-			period = 1;
-			xQ[index][0] = initialInventory;
-			recursion.getExpectedValue(new StaffState(period, initialInventory));
-			xQ[index][1] = recursion.getAction(new StaffState(period, initialInventory));
-			index++;
-		}
-		Drawing.drawXQ(xQ);
+//		double[][] xQ = new double[xLength][2];
+//		index = 0;
+//		for (int initialInventory = minX; initialInventory <= maxX; initialInventory++) {
+//			period = 1;
+//			xQ[index][0] = initialInventory;
+//			recursion.getExpectedValue(new StaffState(period, initialInventory));
+//			xQ[index][1] = recursion.getAction(new StaffState(period, initialInventory));
+//			index++;
+//		}
+//		Drawing.drawXQ(xQ);
 		
 		/*******************************************************************
 		 * Drawing
