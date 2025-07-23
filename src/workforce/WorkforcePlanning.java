@@ -30,7 +30,7 @@ import umontreal.ssj.probdist.Distribution;
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] turnoverRate = {0.8, 0.5, 0.1};
+		double[] turnoverRate = {0.6, 0.5, 0.4};
 		int T = turnoverRate.length;
 		
 		int iniStaffNum = 0;
@@ -44,7 +44,7 @@ public class WorkforcePlanning {
 		int maxX = 600; // maxHireNum // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
-		int segmentNum = 54; // n segment result in n+1 lines
+		int segmentNum = 10; // n segment result in n+1 lines
 		
 		int minX = 0;
 		int xLength = maxX - minX + 1;
