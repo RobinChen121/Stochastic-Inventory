@@ -38,7 +38,7 @@ public class WorkforcePlanning {
 		double unitVariCost = 0;
 		double salary = 30;
 		double unitPenalty = 40;		
-		int[] minStaffNum = {40, 40, 40, 40};	
+		int[] minStaffNum = {40, 40, 40};
 		
 		int maxHireNum = 500;
 		int maxX = 600; // maxHireNum // for drawing pictures

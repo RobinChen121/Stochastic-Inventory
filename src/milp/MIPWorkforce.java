@@ -145,6 +145,7 @@ public class MIPWorkforce {
 			// Create empty environment, set options, and start
 			GRBEnv env = new GRBEnv(true);		
 			//env.set("logFile", "mip-chance.log");
+			env.set(GRB.IntParam.OutputFlag, 0);
 			env.start();
 			
 			// Create empty model
@@ -157,13 +158,19 @@ public class MIPWorkforce {
 		    GRBVar[] x = new GRBVar[T];
 		    GRBVar[] z = new GRBVar[T];
 		    GRBVar[][] P = new GRBVar[T][T];
+			String var_name;
 		    for (int t = 0; t < T; t++) {
-		    	y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "y");
-		    	u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "u");
-		    	x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "x");
-		    	z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "z");
+				var_name = "y_" + t;
+		    	y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, var_name);
+				var_name = "u_" + t;
+				u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, var_name);
+				var_name = "x_" + t;
+		    	x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, var_name);
+				var_name = "z_" + t;
+		    	z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, var_name);
 		    	for (int j = 0; j <= t; j++) {
-		    		P[j][t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "P");
+					var_name = "P" + "_" + j + "_" + t;
+		    		P[j][t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, var_name);
 		    	}
 		    } 
 		    
@@ -289,7 +296,6 @@ public class MIPWorkforce {
 		    
 		    // Optimize model
 			model.optimize();
-//			model.write("test.lp");
 			    
 			// output results
 			double thisObj = model.get(GRB.DoubleAttr.ObjVal);
@@ -327,7 +333,8 @@ public class MIPWorkforce {
 			try {
 				// use Gurobi to solve the mip model
 				// Create empty environment, set options, and start
-				GRBEnv env = new GRBEnv(true);		
+				GRBEnv env = new GRBEnv(true);
+				env.set(GRB.IntParam.OutputFlag, 0);
 				//env.set("logFile", "mip-chance.log");
 				env.start();
 				
@@ -341,14 +348,20 @@ public class MIPWorkforce {
 			    GRBVar[] x = new GRBVar[T-tt];
 			    GRBVar[] z = new GRBVar[T-tt];
 			    GRBVar[][] P = new GRBVar[T-tt][T-tt];
+				String var_name;
 			    for (int t = 0; t < T-tt; t++) {
-			    	y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "y");
-			    	u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "u");
-			    	x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "x");
-			    	z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "z");
-			    	for (int j = 0; j <= t; j++) {
-			    		P[j][t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "P");
-			    	}
+					var_name = "y_" + t;
+					y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, var_name);
+					var_name = "u_" + t;
+					u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, var_name);
+					var_name = "x_" + t;
+					x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, var_name);
+					var_name = "z_" + t;
+					z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, var_name);
+					for (int j = 0; j <= t; j++) {
+						var_name = "P" + "_" + j + "_" + t;
+						P[j][t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, var_name);
+					}
 			    } 
 			    GRBVar S = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "S");
 			    
@@ -379,7 +392,7 @@ public class MIPWorkforce {
 			    
 			    
 			    // M can not be too large, or a slight difference of P[j][t] affects results
-			    int M = 10*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
+			    int M = 50*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
 			    for (int t = 0; t < T-tt; t++) {	
 			    	GRBLinExpr left1 = new GRBLinExpr();	
 			    	
@@ -490,6 +503,7 @@ public class MIPWorkforce {
 			try {
 				GRBEnv env = new GRBEnv(true);		
 				//env.set("logFile", "mip-chance.log");
+				env.set(GRB.IntParam.OutputFlag, 0);
 				env.start();
 				
 				// Create empty model
@@ -502,14 +516,20 @@ public class MIPWorkforce {
 			    GRBVar[] x = new GRBVar[T-tt];
 			    GRBVar[] z = new GRBVar[T-tt];
 			    GRBVar[][] P = new GRBVar[T-tt][T-tt];
-			    for (int t = 0; t < T-tt; t++) {
-			    	y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "y");
-			    	u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "u");
-			    	x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "x");
-			    	z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "z");
-			    	for (int j = 0; j <= t; j++) {
-			    		P[j][t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, "P");
-			    	}
+			    String var_name;
+				for (int t = 0; t < T-tt; t++) {
+					var_name = "y_" + t;
+					y[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, var_name);
+					var_name = "u_" + t;
+					u[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, var_name);
+					var_name = "x_" + t;
+					x[t] = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, var_name);
+					var_name = "z_" + t;
+					z[t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, var_name);
+					for (int j = 0; j <= t; j++) {
+						var_name = "P" + "_" + j + "_" + t;
+						P[j][t] = model.addVar(0.0, 1, 0.0, GRB.BINARY, var_name);
+					}
 			    } 
 			    GRBVar S = model.addVar(0.0, Double.MAX_VALUE, 0.0, GRB.CONTINUOUS, "S");
 						    
@@ -541,7 +561,7 @@ public class MIPWorkforce {
 			    model.addConstr(S, GRB.EQUAL, mid, null);
 			    
 			    // M can not be too large, or a slight difference of P[j][t] affects results
-			    int M = 10*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
+			    int M = 50*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
 			    for (int t = 0; t < T-tt; t++) {	
 			    	GRBLinExpr left1 = new GRBLinExpr();	
 			    	
@@ -619,6 +639,7 @@ public class MIPWorkforce {
 			    
 			    // Optimize model
 				model.optimize();
+				model.write("test.lp");
 				double Gmid = model.get(GRB.DoubleAttr.ObjVal) + unitVariCost*S.get(GRB.DoubleAttr.X);
 				if (Gmid < GS + fixCost)
 					high = mid - stepSize;
@@ -642,6 +663,7 @@ public class MIPWorkforce {
 			// Create empty environment, set options, and start
 			GRBEnv env = new GRBEnv(true);		
 			//env.set("logFile", "mip-chance.log");
+			env.set(GRB.IntParam.OutputFlag, 0);
 			env.start();
 			
 			// Create empty model
