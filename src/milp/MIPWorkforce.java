@@ -470,6 +470,7 @@ public class MIPWorkforce {
 			    
 			    // Optimize model
 				model.optimize();
+//				model.write("piecewise.lp");
 				    
 				// output results
 				double Sv = Math.round(S.get(GRB.DoubleAttr.X));
@@ -639,7 +640,7 @@ public class MIPWorkforce {
 			    
 			    // Optimize model
 				model.optimize();
-				model.write("test.lp");
+//				model.write("piecewise.lp");
 				double Gmid = model.get(GRB.DoubleAttr.ObjVal) + unitVariCost*S.get(GRB.DoubleAttr.X);
 				if (Gmid < GS + fixCost)
 					high = mid - stepSize;

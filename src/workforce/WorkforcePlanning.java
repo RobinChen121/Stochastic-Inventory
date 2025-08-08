@@ -30,14 +30,14 @@ import umontreal.ssj.probdist.Distribution;
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] turnoverRate = {0.6, 0.5, 0.4};
+		double[] turnoverRate = {0.5, 0.5, 0.5};
 		int T = turnoverRate.length;
 		
 		int iniStaffNum = 0;
-		double fixCost = 50;
-		double unitVariCost = 0;
-		double salary = 30;
-		double unitPenalty = 40;		
+		double fixCost = 100;
+		double unitVariCost = 10;
+		double salary = 20;
+		double unitPenalty = 80;
 		int[] minStaffNum = {40, 40, 40};
 		
 		int maxHireNum = 500;
