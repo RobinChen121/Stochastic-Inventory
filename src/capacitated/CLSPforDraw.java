@@ -22,7 +22,7 @@ import umontreal.ssj.probdist.PoissonDist;
  * @email: 15011074486@163.com
  * @date: Jul 9, 2018---12:48:56 PM
  * @description: solving capacitated lot sizing problem, and drawing some
- *               pictures for analysis; a best example for draw k convex of
+ *               pictures for analysis; a good example for draw k convex of
  *               poisson demands : double fixedOrderingCost = 500; double
  *               variOrderingCost = 0; double penaltyCost = 10; double[]
  *               meanDemand = {9, 23, 53, 29}; double holdingCost = 2; int
