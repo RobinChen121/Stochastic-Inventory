@@ -194,8 +194,8 @@ public class CLSP {
 
 
     public static void main(String[] args) {
-        double initialInventory = 0;
-        double[] meanDemand = {9, 16, 47, 78, 32, 57, 101, 78, 150, 138};
+        double initialInventory = 1;
+        double[] meanDemand = {9, 23, 53, 29};
 //        Arrays.fill(meanDemand, 20);
 
         double truncationQuantile = 0.99999;
@@ -205,11 +205,10 @@ public class CLSP {
         int T = meanDemand.length;
 
         double fixedOrderingCost = 500;
-        double proportionalOrderingCost = 2;
-        double holdingCost = 1;
+        double proportionalOrderingCost = 0;
+        double holdingCost = 2;
         double penaltyCost = 10;
-
-        int maxOrderQuantity = 215;
+        int maxOrderQuantity = 60;
 
         Distribution[] distributions = IntStream.iterate(0, i -> i + 1)
                 .limit(T)
