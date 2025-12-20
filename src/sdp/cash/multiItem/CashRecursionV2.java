@@ -100,16 +100,20 @@ public class CashRecursionV2 {
 
 			for (int i = 0; i < ystars.size(); i++) {
 				double[] thisActions = ystars.get(i);
-//				if (s.getPeriod() == 2 && s.iniCash > 51)
-//					thisActions = new double[] {11, 11};
+//				if (s.getPeriod() == 1)
+//					thisActions = new double[] {5, 3};
 				double thisActionsValue = 0;
 				for (int j = 0; j < dAndP.length; j++) {
 					double[] thisDemands = new double[] { dAndP[j][0], dAndP[j][1] };
 					CashStateMulti newState = stateTransition.apply(s, thisActions, thisDemands);
-					if (s.getPeriod() < T)
-						thisActionsValue += dAndP[j][2] * discountFactor * getExpectedValueV(newState);
-					else
-						thisActionsValue += dAndP[j][2] * discountFactor * boundFinalCash.apply(newState);
+					if (s.getPeriod() < T) {
+						thisActionsValue = getExpectedValueV(newState);
+						thisActionsValue += dAndP[j][2] * discountFactor * thisActionsValue;
+					}
+					else {
+						thisActionsValue = boundFinalCash.apply(newState);
+						thisActionsValue += dAndP[j][2] * discountFactor * thisActionsValue ;
+					}
 				}
 				if (variCost[0] * thisActions[0] + variCost[1] * thisActions[1] < s.iniCash + 0.1) { // for computing y heads
 					if (thisActionsValue > val ) {

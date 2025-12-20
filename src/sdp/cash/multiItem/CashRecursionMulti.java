@@ -94,7 +94,7 @@ public class CashRecursionMulti {
 			Actions bestActions = new Actions(0, 0);
 			for (int i = 0; i < actions.size(); i++) {
 				Actions thisActions = actions.get(i);
-				//thisActions = new Actions(9, 8);
+//				thisActions = new Actions(2, 2);
 				double thisActionsValue = 0;
 				for (int j = 0; j < dAndP.length; j++) {
 					Demands thisDemands = new Demands((int) dAndP[j][0], (int) dAndP[j][1]);

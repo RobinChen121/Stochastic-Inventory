@@ -25,30 +25,31 @@ import umontreal.ssj.probdist.UniformIntDist;
  * @author chen
  * @email: 15011074486@163.com
  * @Date: 2021 Feb 25, 19:48:25
- * @Description: multi item cash constrained problem for states (x1, x2, w)
+ * @Description: multi item cash constrained problem for states (x1, x2, w);
+ * there may be something wrong in the codes; 12-20-2025;
  * 
  */
 public class MultiItemCashXW {
 
 	public static void main(String[] args) {
-		double[] price = {2, 10};
-		double[] variCost = {1, 1};  // higher margin vs lower margin
+		double[] price = {1.2, 2};
+		double[] variCost = {1, 1.5};  // higher margin vs lower margin
 		double depositeRate = 0;		
 		
-		double iniCash = 10;  // initial cash
-		int iniInventory1 = 0;  // initial inventory
-		int iniInventory2 = 0;
+		double iniCash = 5.3;  // initial cash
+		int iniInventory1 = 1;  // initial inventory
+		int iniInventory2 = 3;
 			
 		// gamma distribution:mean demand is shape / beta and variance is shape / beta^2
 		// beta = 1 / scale
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj: alpha is alpha, and lambda is beta(beta)
-		int T = 4; // horizon length
-		double[] meanDemands = new double[] {10, 3};
+		int T = 1; // horizon length
+		double[] meanDemands = new double[] {10, 5};
 		
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
-		double[] beta = {10, 1}; // higher variance vs lower variance
+		double[] beta = {2.5, 1.25}; // higher variance vs lower variance
 		
 		double d1 = meanDemands[0];
 		double d2 = meanDemands[1];
@@ -67,7 +68,7 @@ public class MultiItemCashXW {
 		double minCashState = 0;
 		double maxCashState = 10000;
 		int minInventoryState = 0;	
-		int maxInventoryState = 200;
+		int maxInventoryState = 100;
 		int Qbound = 20;
 		double discountFactor = 1;
 		
@@ -125,24 +126,24 @@ public class MultiItemCashXW {
 		= (IniState, actions, RandomDemands) -> {
 			double x1 = IniState.getIniInventory1();
 			double x2 = IniState.getIniInventory2();
-			double y1 = actions[0];
-			double y2 = actions[1];
-			double endInventory1 =  y1 - RandomDemands[0];
+			double q1 = actions[0];
+			double q2 = actions[1];
+			double endInventory1 =  q1 + x1 - RandomDemands[0];
 			endInventory1 = Math.max(0, endInventory1);
-			double endInventory2 = y2  - RandomDemands[1];
+			double endInventory2 = q2 + x2  - RandomDemands[1];
 			endInventory2 = Math.max(0, endInventory2);
 
-			double revenue1 = p1 * Math.min(y1, RandomDemands[0]);
-			double revenue2 = p2 * Math.min(y2, RandomDemands[1]);
-			double nextW = revenue1 + revenue2 + (1 + depositeRate) * (IniState.getIniCash() - v1 * (y1-x1)
-										- v2 * (y2-x2));  // revise
+			double revenue1 = p1 * Math.min(q1 + x1, RandomDemands[0]);
+			double revenue2 = p2 * Math.min(q2 + x2, RandomDemands[1]);
+			double nextW = revenue1 + revenue2 + (1 + depositeRate) * (IniState.getIniCash() - v1 * (q1)
+										- v2 * (q2));  // revise
 			
-			endInventory1 = Math.round(endInventory1 * 10) / 10;  // rounding the states to one decimal 10.0
-			endInventory2 = Math.round(endInventory2 * 10) / 10;
-			nextW = Math.round(nextW * 10) / 10;
+//			endInventory1 = Math.round(endInventory1 * 10) / 10;  // rounding the states to one decimal 10.0
+//			endInventory2 = Math.round(endInventory2 * 10) / 10;
+//			nextW = Math.round(nextW * 1.0) / 1.0;
 			
-			nextW = nextW > maxCashState ? maxCashState : nextW;
-			nextW = nextW < minCashState ? minCashState : nextW;
+//			nextW = nextW > maxCashState ? maxCashState : nextW;
+//			nextW = nextW < minCashState ? minCashState : nextW;
 			endInventory1 = endInventory1 > maxInventoryState ? maxInventoryState : endInventory1;
 			endInventory2 = endInventory2 < minInventoryState ? minInventoryState : endInventory2;
 			
@@ -159,13 +160,13 @@ public class MultiItemCashXW {
 		long currTime = System.currentTimeMillis();
 		double finalValue = recursion.getExpectedValueV(iniState);
 		System.out.println("final optimal cash  is " + finalValue);
-		System.out.println("optimal order quantity in the first priod is :  y1 = " + recursion.getAction(iniState)[0]
-				                      + ", y2 = " + recursion.getAction(iniState)[1]);
+		System.out.println("optimal order quantity in the first period is :  q1 = " + recursion.getAction(iniState)[0]
+				                      + ", q2 = " + recursion.getAction(iniState)[1]);
 		double time = (System.currentTimeMillis() - currTime) / 1000.0;
 		System.out.println("running time is " + time + "s");
 		
 		double[] optY = recursion.getYStar(iniState);
-		System.out.println("optimal order quantity y* in the first priod is : " + Arrays.toString(optY));		
+		System.out.println("optimal order quantity y* in the first period is : " + Arrays.toString(optY));
 
 		
 		/*******************************************************************

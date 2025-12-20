@@ -38,12 +38,12 @@ public class MultiItemCashXR {
 
 
 	public static void main(String[] args) {
-		double[] price = {5, 10};
-		double[] variCost = {1, 2};  // higher margin vs lower margin
+		double[] price = {1.2, 2};
+		double[] variCost = {1, 1.5};  // higher margin vs lower margin
 		
-		double iniCash = 0;  // initial cash
-		int iniInventory1 = 0;  // initial inventory
-		int iniInventory2 = 0;
+		double iniCash = 5.3;  // initial cash
+		int iniInventory1 = 3;  // initial inventory
+		int iniInventory2 = 1;
 		
 		double depositeRate = 0;
 		
@@ -52,10 +52,10 @@ public class MultiItemCashXR {
 		// shape = demand * beta
 		// variance = demand / beta
 		// gamma in ssj: alpha is alpha, and lambda is beta(beta)
-		int T = 2; // horizon length
-		double[] meanDemands = new double[] {20, 10};	
+		int T = 1; // horizon length
+		double[] meanDemands = new double[] {10, 5};
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
-		double[] beta = {10, 1}; // higher variance vs lower variance
+		double[] beta = {2,5, 1.25}; // higher variance vs lower variance
 		
 		double[] salPrice = Arrays.stream(variCost).map(a -> a * 0.5).toArray();	
 		
@@ -77,13 +77,13 @@ public class MultiItemCashXR {
 		double discountFactor = 1;
 		
 		// get demand possibilities for each period
-		//Distribution[][] distributions =  new GammaDist[m][T];
-		Distribution[][] distributions =  new PoissonDist[m][T];
+		Distribution[][] distributions =  new GammaDist[m][T];
+//		Distribution[][] distributions =  new PoissonDist[m][T];
 		//Distribution[][] distributions =  new NormalDist[m][T];
 		for (int i = 0; i < m; i++)
 			for (int t = 0; t < T; t++) {
-				// distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
-				distributions[i][t] = new PoissonDist(demand[i][t]);
+				 distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
+//				distributions[i][t] = new PoissonDist(demand[i][t]);
 				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
 			}
 		
@@ -94,10 +94,10 @@ public class MultiItemCashXR {
 			int miny2 = (int) s.getIniInventory2();
 			for (int i = miny1; i < miny1 + Qbound; i++)
 				for (int j = miny2; j < miny2 + Qbound; j++) {
-				//	if (variCost[0] * i + variCost[1] * j < s.getIniR() + 0.1) {
+					if (variCost[0] * i + variCost[1] * j < s.getIniR() + 0.1) {
 						double[] thisActions = {i, j};
 						actions.add(thisActions);
-				//	}					
+					}
 				}
 			return actions;
 		};

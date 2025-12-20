@@ -154,7 +154,7 @@ public class RecursionG {
 	
 	
 	/**
-	 * @param a* in each period
+	 * @param optY: a* in each period
 	 * @return simulate results for the policy proposed by Chao (2008)
 	 */
 	public double simulateAStar(double[] optY, int sampleNum) {

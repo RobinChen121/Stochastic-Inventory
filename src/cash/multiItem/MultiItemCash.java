@@ -24,6 +24,8 @@ import sdp.cash.multiItem.GetPmfMulti;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.StateTransition.StateTransitionFunction;
 import sdp.write.WriteToExcelTxt;
+import umontreal.ssj.probdist.Distribution;
+import umontreal.ssj.probdist.GammaDist;
 import umontreal.ssj.probdistmulti.BiNormalDist;
 
 
@@ -31,23 +33,32 @@ public class MultiItemCash {
 
 
 	public static void main(String[] args) {
-		double[] price = {4, 50};
-		double[] variCost = {2, 4};  // higher margin vs lower margin
+		double[] price = {1.2, 2};
+		double[] variCost = {1, 1.5};  // higher margin vs lower margin
 		
-		double iniCash = 100;  // initial cash
+		double iniCash = 10;  // initial cash
 		int iniInventory1 = 0;  // initial inventory
 		int iniInventory2 = 0;
 		
 		
-		double[][] demand = {{ 5, 6}, { 5, 6}}; // higher average demand vs lower average demand
-		double[] coe = {0.25, 0.25}; // higher variance vs lower variance
+//		double[][] demand = {{ 5, 6}, { 5, 6}}; // higher average demand vs lower average demand
+//		double[] coe = {0.25, 0.25}; // higher variance vs lower variance
+
+		int T = 4; // horizon length
+		double[] meanDemands = new double[] {10, 5};
+
+		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
+		double[] beta = {2.5, 1.25}; // higher variance vs lower variance
+		double d1 = meanDemands[0];
+		double d2 = meanDemands[1];
+		for (int t = 0; t < T; t++) {
+			demand[0][t] = d1;
+			demand[1][t] = d2;
+		}
 		
+		double[] salPrice = {0.5, 0.75};
 		
-		double[] salPrice = {1, 1};
-		
-		int T = demand[0].length; // horizon length
-		
-		double truncationQuantile = 0.999;
+		double truncationQuantile = 0.9999;
 		int stepSize = 1;
 		double minCashState = 0;
 		double maxCashState = 10000;
@@ -55,14 +66,27 @@ public class MultiItemCash {
 		
 		
 		int maxInventoryState = 200;
-		int Qbound = 100;
+		int Qbound = 40;
 		double discountFactor = 1;
 		
+//		// get demand possibilities for each period
+//		BiNormalDist[] distributions =  new BiNormalDist[T];
+//		for (int t = 0; t < T; t++)
+//			distributions[t] = new BiNormalDist(demand[0][t], coe[0] * demand[0][t], demand[1][t], coe[1] * demand[1][t], 0);
+
 		// get demand possibilities for each period
-		BiNormalDist[] distributions =  new BiNormalDist[T];
-		for (int t = 0; t < T; t++)
-			distributions[t] = new BiNormalDist(demand[0][t], coe[0] * demand[0][t], demand[1][t], coe[1] * demand[1][t], 0);
-		
+		int m = demand.length; // number of products
+		Distribution[][] distributions =  new GammaDist[m][T];
+		//Distribution[][] distributions =  new PoissonDist[m][T];
+		//Distribution[][] distributions =  new NormalDist[m][T];
+		//Distribution[][] distributions =  new UniformIntDist[m][T];
+		for (int i = 0; i < m; i++)
+			for (int t = 0; t < T; t++) {
+				distributions[i][t] = new GammaDist(demand[i][t]* beta[i], beta[i]);
+				//distributions[i][t] = new UniformIntDist((int)(demand[i][t] * 0.6), (int)(demand[i][t] * 1.4));
+				//distributions[i][t] = new PoissonDist(demand[i][t]);
+				//distributions[i][t]= new NormalDist(demand[i][t], 0.1 * demand[i][t]);
+			}
 
 		
 		// build action list for two items
@@ -112,38 +136,38 @@ public class MultiItemCash {
 			nextCash = nextCash < minCashState ? minCashState : nextCash;
 			endInventory1 = endInventory1 > maxInventoryState ? maxInventoryState : endInventory1;
 			endInventory2 = endInventory2 < minInventoryState ? minInventoryState : endInventory2;
-			nextCash = (int) nextCash;  // rounding states to save computing time
-			endInventory1 = (int) endInventory1;
-			endInventory2 = (int) endInventory2;
+//			nextCash = (int) nextCash;  // rounding states to save computing time
+//			endInventory1 = (int) endInventory1;
+//			endInventory2 = (int) endInventory2;
 			return new CashStateMulti(IniState.getPeriod() + 1, endInventory1, endInventory2, nextCash);
 		};
 		
-//		GetPmfMulti pmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);
-//		
-//		/*******************************************************************
-//		 * Solve
-//		 */
-//		CashRecursionMulti recursion = new CashRecursionMulti(discountFactor, pmfMulti, buildActionList,
-//				                             stateTransition, immediateValue, T);
-//		int period = 1;
-//		CashStateMulti iniState = new CashStateMulti(period, iniInventory1, iniInventory2, iniCash);
-//		long currTime = System.currentTimeMillis();
-//		double finalValue = iniCash + recursion.getExpectedValue(iniState);
-//		System.out.println("final optimal cash  is " + finalValue);
-//		System.out.println("optimal order quantity in the first priod is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
-//				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
-//		double time = (System.currentTimeMillis() - currTime) / 1000;
-//		System.out.println("running time is " + time + "s");
+		GetPmfMulti pmfMulti = new GetPmfMulti(distributions, truncationQuantile, stepSize);
+
+		/*******************************************************************
+		 * Solve
+		 */
+		CashRecursionMulti recursion = new CashRecursionMulti(discountFactor, pmfMulti, buildActionList,
+				                             stateTransition, immediateValue, T);
+		int period = 1;
+		CashStateMulti iniState = new CashStateMulti(period, iniInventory1, iniInventory2, iniCash);
+		long currTime = System.currentTimeMillis();
+		double finalValue = iniCash + recursion.getExpectedValue(iniState);
+		System.out.println("final optimal cash  is " + finalValue);
+		System.out.println("optimal order quantity in the first priod is :  Q1 = " + recursion.getAction(iniState).getFirstAction()
+				                      + ", Q2 = " + recursion.getAction(iniState).getSecondAction());
+		double time = (System.currentTimeMillis() - currTime) / 1000;
+		System.out.println("running time is " + time + "s");
 		
-//		
-//		
+
+
 //		/*******************************************************************
 //		 * Simulating sdp results
-//		 * 
+//		 *
 //		 * simulating results a little lower than SDP
 //		 */
-//		int sampleNum = 10000;		
-//		CashSimulationMulti simuation = new CashSimulationMulti(sampleNum, distributions, discountFactor, 
+//		int sampleNum = 10000;
+//		CashSimulationMulti simuation = new CashSimulationMulti(sampleNum, distributions, discountFactor,
 //				 recursion, stateTransition, immediateValue);
 //		double simFinalValue = simuation.simulateSDPGivenSamplNum(iniState);
 //		System.out.println(simFinalValue);

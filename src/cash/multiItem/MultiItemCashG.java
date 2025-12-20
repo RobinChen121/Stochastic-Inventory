@@ -33,20 +33,20 @@ public class MultiItemCashG {
 
 
 	public static void main(String[] args) {
-		double[] price = {2, 10};
-		double[] variCost = {1, 2};  // higher margin vs lower margin
+		double[] price = {1.2, 2};
+		double[] variCost = {1, 1.5}; // higher margin vs lower margin
 		
 		double iniCash = 10;  // initial cash
 		int[] iniInventory = {0, 0};  // initial inventory
 		
-		int d = 1; // compute G(d)
+		int product_index= 2; // for compute G
 		int T = 4;
 		
 		// mean demand is shape * scale and variance is shape * scale^2
-		double[] meanDemands = new double[] {10, 3};
+		double[] meanDemands = new double[] {10, 5};
 		
 		double[][] demand = new double[2][T]; // higher average demand vs lower average demand
-		double[] beta = {10, 1}; // higher variance vs lower variance	
+		double[] beta = {2.5, 1.25}; // higher variance vs lower variance
 		double d1 = meanDemands[0];
 		double d2 = meanDemands[1];
 		for (int t = 0; t < T; t++) {
@@ -68,7 +68,7 @@ public class MultiItemCashG {
 		// get shape possibilities for a product in each period
 		GammaDist[] distributions =  new GammaDist[T]; // normal dist for one product
 		for (int t = 0; t < T; t++)
-			distributions[t] = new GammaDist(demand[d-1][t]* beta[d-1], beta[d-1]);
+			distributions[t] = new GammaDist(demand[truncated_T-1][t]* beta[truncated_T-1], beta[truncated_T-1]);
 
 		
 		// build action list for this item
@@ -80,9 +80,9 @@ public class MultiItemCashG {
 		ImmediateValueFunction<State, Double, Double, Double> immediateValue
 		= (IniState, action, randomDemand) -> {
 			double revenue = 0;
-			revenue = (price[d - 1] - variCost[d -1]) * Math.min(IniState.getIniInventory() + action, randomDemand);
+			revenue = (price[product_index- 1] - variCost[product_index-1]) * Math.min(IniState.getIniInventory() + action, randomDemand);
 			if (IniState.getPeriod() == T) {
-				revenue += (salPrice[d - 1] - variCost[d -1]) * Math.max(IniState.getIniInventory() + action - randomDemand, 0);
+				revenue += (salPrice[product_index- 1] - variCost[product_index-1]) * Math.max(IniState.getIniInventory() + action - randomDemand, 0);
 			}
 			return revenue;
 		};
@@ -105,7 +105,7 @@ public class MultiItemCashG {
 		RecursionG recursion = new RecursionG(pmf, buildActionList,
 				                             stateTransition, immediateValue);
 		int period = 1;
-		State iniState = new State(period, iniInventory[d - 1]);
+		State iniState = new State(period, iniInventory[product_index- 1]);
 		long currTime = System.currentTimeMillis();
 		double finalValue = iniCash + recursion.getExpectedValue(iniState);
 		System.out.println("final optimal cash  is " + finalValue);
