@@ -1,3 +1,4 @@
 /bin/
 /target/
 *.txt
+.idea/workspace.xml

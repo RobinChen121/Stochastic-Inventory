@@ -1,9 +1,10 @@
 <component name="libraryTable">
   <library name="gurobi">
     <CLASSES>
-      <root url="jar:///Library/gurobi1001/macos_universal2/lib/gurobi.jar!/" />
+      <root url="file://$PROJECT_DIR$/lib" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/lib" recursive="false" />
   </library>
 </component>

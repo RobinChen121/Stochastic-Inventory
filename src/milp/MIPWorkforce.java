@@ -391,7 +391,7 @@ public class MIPWorkforce {
 			    model.addConstr(z[0], GRB.EQUAL, 0, null);
 			    
 			    
-			    // M can not be too large, or a slight difference of P[j][t] affects results
+			    // M can not be too large, or else a slight difference of P[j][t] affects results
 			    int M = 50*Arrays.stream(minStaffNum).sum();//Integer.MAX_VALUE;
 			    for (int t = 0; t < T-tt; t++) {	
 			    	GRBLinExpr left1 = new GRBLinExpr();	

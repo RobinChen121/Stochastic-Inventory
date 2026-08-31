@@ -68,7 +68,7 @@ public class MultiItemCashG {
 		// get shape possibilities for a product in each period
 		GammaDist[] distributions =  new GammaDist[T]; // normal dist for one product
 		for (int t = 0; t < T; t++)
-			distributions[t] = new GammaDist(demand[truncated_T-1][t]* beta[truncated_T-1], beta[truncated_T-1]);
+			distributions[t] = new GammaDist(demand[product_index-1][t]* beta[product_index-1], beta[product_index-1]);
 
 		
 		// build action list for this item

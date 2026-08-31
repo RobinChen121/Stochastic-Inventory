@@ -25,26 +25,29 @@ import umontreal.ssj.probdist.Distribution;
  * @description: optimal ordering quantity for a single period problem is 
  * F^{-1}(((\pi-h)(1-p)-v)/(\pi(1-p)))+w = y*.
  *
- *not only (s, S) policy optimal, (R, S) may also be optimal 
+ * not only (s, S) policy optimal, (R, S) may also be optimal;
+ * For 12 periods, the running time of c++ without parallel is 5.14s while java is 94s.
  */
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] turnoverRate = {0.5, 0.5, 0.5};
+		double[] turnoverRate = {0.1, 0.3, 0.5, 0.5, 0.3, 0.1};
+//		double[] turnoverRate = {0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3};
 		int T = turnoverRate.length;
 		
 		int iniStaffNum = 0;
-		double fixCost = 100;
-		double unitVariCost = 10;
-		double salary = 20;
-		double unitPenalty = 80;
-		int[] minStaffNum = {40, 40, 40};
+		double fixCost = 4000;
+		double unitVariCost = 0;
+		double salary = 2000;
+		double unitPenalty = 3000;
+		int[] minStaffNum = new int[T];
+		Arrays.fill(minStaffNum, 50);
 		
 		int maxHireNum = 500;
 		int maxX = 600; // maxHireNum // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
-		int segmentNum = 10; // n segment result in n+1 lines
+		int segmentNum = 5; // n segment result in n+1 lines
 		
 		int minX = 0;
 		int xLength = maxX - minX + 1;
@@ -135,12 +138,21 @@ public class WorkforcePlanning {
 		 * piecewise MIP
 		 */
 		System.out.println("**********************************************");
+		currTime = System.currentTimeMillis();
 		MIPWorkforce mip = new MIPWorkforce(iniStaffNum, fixCost, unitVariCost, salary, unitPenalty, minStaffNum, turnoverRate);
-		
+
 		double mipObj = mip.pieceApprox(segmentNum);
+		time = System.currentTimeMillis() - currTime;
+		System.out.println("running time is " + time + "ms");
 		System.out.printf("mip gap is %.2f%%\n", (mipObj - opt)*100/opt);
+
+		currTime = System.currentTimeMillis();
 		double[][] sS = mip.getsS(segmentNum);
+		System.out.println("\n");
+
 		System.out.println("s, S by mip are: " + Arrays.deepToString(sS));
+		time = System.currentTimeMillis() - currTime;
+		System.out.println("running time is " + time + "ms");
 		double sim2 = simulate.simulatesS(initialState, sS);
 
 		System.out.printf("simulated value is %.2f\n", sim2);
@@ -168,47 +180,47 @@ public class WorkforcePlanning {
 		 * since comupteIfAbsent, we need initializing a new class to draw Gy; if not, java would not compute sdp again.
 		 * must redefine stateTransition function and immediate Function.
 		 */
-		StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
-			int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
-			return new StaffState(state.period + 1, nextStaffNum);
-		};
-
-		ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
-			double fixHireCost;
-			double variHireCost;
-			int nextStaffNum;
-			if (state.period == 1) {
-				fixHireCost = 0;
-				variHireCost = unitVariCost * state.iniStaffNum;
-				nextStaffNum = state.iniStaffNum - randomDemand;
-			}
-			else {
-				fixHireCost = action > 0 ? fixCost : 0;
-				variHireCost = unitVariCost * action;
-				nextStaffNum = state.iniStaffNum + action - randomDemand;
-			}
-			double salaryCost = salary * nextStaffNum;
-			int t = state.period - 1;
-			double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
-			double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;			
-			return (Double) totalCosts;
-		};
-
-		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition2, immediateValue2, pmf, T);
-		
-		double[][] yG = new double[xLength][2];
-		index = 0;
-		for (int initialStaff = minX; initialStaff <= maxX; initialStaff++) {
-			yG[index][0] = initialStaff;
-			yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff), iniStaffNum);
-
-			index++;
-		}
-
-		CheckKConvexity CheckK = new CheckKConvexity();
-		CheckK.check(yG, fixCost);
-		Drawing.drawSimpleG(yG);
-		Drawing.drawGAndsS(yG, fixCost);
+//		StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition2 = (state, action, randomDemand) -> {
+//			int nextStaffNum = state.period == 1 ? state.iniStaffNum - randomDemand : state.iniStaffNum + action - randomDemand;
+//			return new StaffState(state.period + 1, nextStaffNum);
+//		};
+//
+//		ImmediateValueFunction<StaffState, Integer, Integer, Double> immediateValue2 = (state, action, randomDemand) -> {
+//			double fixHireCost;
+//			double variHireCost;
+//			int nextStaffNum;
+//			if (state.period == 1) {
+//				fixHireCost = 0;
+//				variHireCost = unitVariCost * state.iniStaffNum;
+//				nextStaffNum = state.iniStaffNum - randomDemand;
+//			}
+//			else {
+//				fixHireCost = action > 0 ? fixCost : 0;
+//				variHireCost = unitVariCost * action;
+//				nextStaffNum = state.iniStaffNum + action - randomDemand;
+//			}
+//			double salaryCost = salary * nextStaffNum;
+//			int t = state.period - 1;
+//			double penaltyCost = nextStaffNum > minStaffNum[t] ? 0 : unitPenalty * (minStaffNum[t] - nextStaffNum);
+//			double totalCosts = fixHireCost + variHireCost + salaryCost + penaltyCost;
+//			return (Double) totalCosts;
+//		};
+//
+//		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition2, immediateValue2, pmf, T);
+//
+//		double[][] yG = new double[xLength][2];
+//		index = 0;
+//		for (int initialStaff = minX; initialStaff <= maxX; initialStaff++) {
+//			yG[index][0] = initialStaff;
+//			yG[index][1] = recursion2.getExpectedValue(new StaffState(period, initialStaff), iniStaffNum);
+//
+//			index++;
+//		}
+//
+//		CheckKConvexity CheckK = new CheckKConvexity();
+//		CheckK.check(yG, fixCost);
+//		Drawing.drawSimpleG(yG);
+//		Drawing.drawGAndsS(yG, fixCost);
 		
 //		StaffRecursion recursion2 = new StaffRecursion(getFeasibleAction, stateTransition, immediateValue, turnoverRate, truncQuantile);
 //		double opt2 = recursion2.getExpectedValueNoHireFirst(initialState);
