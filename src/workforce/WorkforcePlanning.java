@@ -12,12 +12,7 @@ import sdp.inventory.State;
 import sdp.inventory.ImmediateValue.ImmediateValueFunction;
 import sdp.inventory.Recursion.OptDirection;
 import sdp.inventory.StateTransition.StateTransitionFunction;
-import umontreal.ssj.probdist.BinomialDist;
-import umontreal.ssj.probdist.DiscreteDistribution;
-import umontreal.ssj.probdist.DiscreteDistributionInt;
-import umontreal.ssj.probdist.Distribution;
-
-
+import umontreal.ssj.probdist.*;
 
 
 /**
@@ -31,9 +26,12 @@ import umontreal.ssj.probdist.Distribution;
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] turnoverRate = {0.1, 0.3, 0.5, 0.5, 0.3, 0.1};
+		double[] turnoverRate = {0.1, 0.3, 0.5};
 //		double[] turnoverRate = {0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3};
 		int T = turnoverRate.length;
+
+		PoissonDist dist = new PoissonDist(20);
+		System.out.println(dist.inverseFInt(0.0001));
 		
 		int iniStaffNum = 0;
 		double fixCost = 4000;

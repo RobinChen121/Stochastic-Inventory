@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="gurobi">
+  <library name="gurobi (">
     <CLASSES>
       <root url="file://$PROJECT_DIR$/lib" />
     </CLASSES>
