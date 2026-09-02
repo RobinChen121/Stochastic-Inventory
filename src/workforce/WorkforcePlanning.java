@@ -26,12 +26,10 @@ import umontreal.ssj.probdist.*;
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] turnoverRate = {0.1, 0.3, 0.5};
+		double[] turnoverRate = {0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3, 0.1, 0.1, 0.1};
 //		double[] turnoverRate = {0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3};
 		int T = turnoverRate.length;
 
-		PoissonDist dist = new PoissonDist(20);
-		System.out.println(dist.inverseFInt(0.0001));
 		
 		int iniStaffNum = 0;
 		double fixCost = 4000;
@@ -42,7 +40,7 @@ public class WorkforcePlanning {
 		Arrays.fill(minStaffNum, 50);
 		
 		int maxHireNum = 500;
-		int maxX = 600; // maxHireNum // for drawing pictures
+		int maxX = 500; // maxHireNum // for drawing pictures
 		int stepSize = 1;
 		boolean isForDrawGy = true;
 		int segmentNum = 5; // n segment result in n+1 lines
