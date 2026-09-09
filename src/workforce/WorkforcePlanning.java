@@ -22,18 +22,19 @@ import umontreal.ssj.probdist.*;
  *
  * not only (s, S) policy optimal, (R, S) may also be optimal;
  * For 12 periods, the running time of c++ without parallel is 5.14s while java is 94s.
+ * Using hashmap can be 1/3 faster.
  */
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] turnoverRate = {0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3, 0.1, 0.1, 0.1};
+		double[] turnoverRate = {0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4};
 //		double[] turnoverRate = {0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3};
 		int T = turnoverRate.length;
 
 		
 		int iniStaffNum = 0;
 		double fixCost = 4000;
-		double unitVariCost = 0;
+		double unitVariCost = 100;
 		double salary = 2000;
 		double unitPenalty = 3000;
 		int[] minStaffNum = new int[T];

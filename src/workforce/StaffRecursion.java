@@ -14,8 +14,8 @@ import umontreal.ssj.probdist.DiscreteDistributionInt;
 import umontreal.ssj.probdist.Distribution;
 
 public class StaffRecursion {
-	Map<StaffState, Double> cacheValues = new ConcurrentSkipListMap<>();
-	Map<StaffState, Integer> cacheActions = new ConcurrentSkipListMap<>();
+	Map<StaffState, Double> cacheValues;
+	Map<StaffState, Integer> cacheActions;
 	
 	Function<StaffState, int[]> getFeasibleAction;
 	StateTransitionFunction<StaffState, Integer, Integer, StaffState> stateTransition;
@@ -30,9 +30,9 @@ public class StaffRecursion {
 		this.stateTransition = stateTransition;
 		this.immediateValue = immediateValue;
 		this.dimissionRate = dimissionRate;
-		
-		Comparator<StaffState> keyComparator = (o1, o2) -> o1.period > o2.period ? 1 : 
-			o1.period == o2.period ? o1.iniStaffNum > o2.iniStaffNum ? 1 : 
+
+		Comparator<StaffState> keyComparator = (o1, o2) -> o1.period > o2.period ? 1 :
+			o1.period == o2.period ? o1.iniStaffNum > o2.iniStaffNum ? 1 :
 				o1.iniStaffNum == o2.iniStaffNum ? 0 : -1 : -1;
 		this.cacheActions = new ConcurrentSkipListMap<>(keyComparator);
 		this.cacheValues = new ConcurrentSkipListMap<>(keyComparator);
@@ -45,9 +45,9 @@ public class StaffRecursion {
 		this.immediateValue = immediateValue;
 		this.pmfs = pmf;
 		this.T = T;
-		
-		Comparator<StaffState> keyComparator = (o1, o2) -> o1.period > o2.period ? 1 : 
-			o1.period == o2.period ? o1.iniStaffNum > o2.iniStaffNum ? 1 : 
+
+		Comparator<StaffState> keyComparator = (o1, o2) -> o1.period > o2.period ? 1 :
+			o1.period == o2.period ? o1.iniStaffNum > o2.iniStaffNum ? 1 :
 				o1.iniStaffNum == o2.iniStaffNum ? 0 : -1 : -1;
 		this.cacheActions = new ConcurrentSkipListMap<>(keyComparator);
 		this.cacheValues = new ConcurrentSkipListMap<>(keyComparator);
@@ -79,7 +79,7 @@ public class StaffRecursion {
 	 * @return
 	 */
 	public double getExpectedValue(StaffState state) {
-		return this.cacheValues.computeIfAbsent(state, s -> {	
+		return this.cacheValues.computeIfAbsent(state, s -> {
 			int[] feasibleActions = getFeasibleAction.apply(state);
 			int iniStaffNum = state.iniStaffNum;
 			int t = state.period - 1;
@@ -125,7 +125,7 @@ public class StaffRecursion {
 	 * @return
 	 */
 	public double getExpectedValue(StaffState state, int hireUpStaffNum) {
-		return this.cacheValues.computeIfAbsent(state, s -> {	
+		return this.cacheValues.computeIfAbsent(state, s -> {
 			int[] feasibleActions = getFeasibleAction.apply(s);
 			int t = state.period - 1;
 					
@@ -180,7 +180,7 @@ public class StaffRecursion {
 	 * @return
 	 */
 	public double getExpectedValue2(StaffState state, int realStaffNum) {
-		return this.cacheValues.computeIfAbsent(state, s -> {	
+		return this.cacheValues.computeIfAbsent(state, s -> {
 			int[] feasibleActions = getFeasibleAction.apply(s);
 			int iniStaffNum = s.period == 1 ? realStaffNum : s.iniStaffNum;
 			int t = state.period - 1;
@@ -231,7 +231,7 @@ public class StaffRecursion {
 	 * @return
 	 */
 	public double getExpectedValueNoHireFirst(StaffState state) {
-		return this.cacheValues.computeIfAbsent(state, s -> {	
+		return this.cacheValues.computeIfAbsent(state, s -> {
 			int[] feasibleActions = getFeasibleAction.apply(state);
 			int iniStaffNum = state.iniStaffNum;
 			int t = state.period - 1;
@@ -289,7 +289,7 @@ public class StaffRecursion {
 	 * @return
 	 */
 	public double getExpectedValue2(StaffState state) {
-		return this.cacheValues.computeIfAbsent(state, s -> {	
+		return this.cacheValues.computeIfAbsent(state, s -> {
 			int[] feasibleActions = getFeasibleAction.apply(state);
 			int iniStaffNum = state.iniStaffNum;
 			int t = state.period - 1;
