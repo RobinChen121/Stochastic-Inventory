@@ -24,7 +24,7 @@ import umontreal.ssj.probdist.NormalDist;
 
 /**
 * @author Zhen Chen
-* @date: 2018年12月1日 上午9:51:52  
+* @date: 2018-12-1, 9:51:52
 * @email: 15011074486@163.com,
 * @licence: MIT licence. 
 *
@@ -33,6 +33,7 @@ import umontreal.ssj.probdist.NormalDist;
 * @note: this class need cplex.jar    
 *        12 periods will exceed cplex default size.
 */
+
 
 public class MipRSCallback {
 	double[] meanDemand; 
@@ -48,6 +49,10 @@ public class MipRSCallback {
 	int partionNum;
 	boolean outputResults;
 	double[] cumSumDemand;
+
+	static {
+		System.load("/Users/zhenchen/Applications/CPLEX_Studio_Community222/cplex/bin/arm64_osx/libcplex2220.dylib");
+	}
 	
 	public MipRSCallback(double[] meanDemand, double[] sigma, double iniInventory, Double fixOrderCost, double variCost, double holdingCost,
 				double penaltyCost, int partionNum, boolean outputResults) {
@@ -413,6 +418,7 @@ public class MipRSCallback {
 		}		
 		return 0;
 	}
+
 
 
 

@@ -27,7 +27,7 @@ import umontreal.ssj.probdist.*;
 public class WorkforcePlanning {
 
 	public static void main(String[] args) {
-		double[] turnoverRate = {0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4};
+		double[] turnoverRate = {0.4, 0.4, 0.4, 0.6, 0.4, 0.4, 0.4, 0.5, 0.4, 0.4, 0.4, 0.4};
 //		double[] turnoverRate = {0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3};
 		int T = turnoverRate.length;
 
